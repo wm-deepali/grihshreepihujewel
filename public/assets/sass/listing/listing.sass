@@ -1,0 +1,1018 @@
+@import '../_var'
+
+@mixin swiper-nav($top: 36%, $out: 22px)
+  .swiper-slide
+    height: auto
+  .swiper-group
+    position: absolute
+    inset: 0
+    z-index: 5
+    display: block
+    pointer-events: none
+    button
+      position: absolute
+      top: $top
+      display: flex
+      align-items: center
+      justify-content: center
+      width: 46px
+      @include media(1280)
+        width: 44px
+      @include media(1024)
+        width: 42px
+      @include media(991)
+        width: 40px
+      @include media(768)
+        width: 36px
+      @include media(540)
+        width: 34px
+      height: 46px
+      @include media(1280)
+        height: 44px
+      @include media(1024)
+        height: 42px
+      @include media(991)
+        height: 40px
+      @include media(768)
+        height: 36px
+      @include media(540)
+        height: 34px
+      margin: 0
+      padding: 0
+      background: var(--white)
+      border: 1px solid var(--border)
+      border-radius: 50%
+      box-shadow: rgba(0, 0, 0, 0.12) 0px 8px 22px
+      color: var(--black)
+      opacity: 1
+      transform: translateY(-50%)
+      pointer-events: auto
+      cursor: pointer
+      transition: all 0.4s ease
+      i
+        color: inherit
+        font-size: 14px
+        pointer-events: none
+        @include media(768)
+          font-size: 12px
+        @include media(540)
+          font-size: 11px
+      svg
+        width: 16px
+        height: 16px
+        pointer-events: none
+        @include media(540)
+          width: 14px
+          height: 14px
+      &:hover
+        background: var(--primary)
+        border-color: var(--primary)
+        color: var(--white)
+      &.swiper-button-disabled, &.disabled
+        opacity: 0.35
+        pointer-events: none
+        cursor: default
+      &.swiper-button-lock
+        display: none
+      &.btn-prev
+        right: auto
+        left: -$out
+        @include media(1360)
+          left: 8px
+        @include media(768)
+          left: 4px
+      &.btn-next
+        left: auto
+        right: -$out
+        @include media(1360)
+          right: 8px
+        @include media(768)
+          right: 4px
+
+.product-banner
+  position: relative
+  overflow: hidden
+  margin-top: calc(var(--headerheight) - 10px)
+  margin-bottom: 30px
+  @include media(1024)
+    margin-bottom: 28px
+  @include media(768)
+    margin-bottom: 24px
+    margin-top: calc(var(--headerheight) - 4px)
+  @include media(540)
+    margin-bottom: 20px
+  background: var(--bg)
+  border-bottom: 1px solid var(--border)
+  isolation: isolate
+  &::before
+    content: ""
+    position: absolute
+    inset: 0
+    z-index: 0
+    background-image: radial-gradient(circle at center, color-mix(in srgb, var(--primary) 14%, transparent) 1.2px, transparent 1.8px)
+    background-size: 26px 26px
+    @include media(540)
+      background-size: 20px 20px
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, transparent 55%)
+    mask-image: linear-gradient(90deg, #000 0%, transparent 55%)
+    pointer-events: none
+  .container
+    position: relative
+    z-index: 2
+  .crumb
+    display: flex
+    align-items: center
+    flex-wrap: wrap
+    @include media(540)
+      flex-wrap: nowrap
+    gap: 10px
+    @include media(540)
+      gap: 8px
+    margin: 0
+    padding: 20px 0 0
+    @include media(1024)
+      padding-top: 18px
+    @include media(768)
+      padding-top: 16px
+    @include media(540)
+      padding-top: 14px
+    list-style: none
+    justify-content: flex-start
+    @include media(768)
+      justify-content: center
+    @include media(540)
+      justify-content: center
+      overflow-x: auto
+      white-space: nowrap
+      scrollbar-width: none
+      &::-webkit-scrollbar
+        display: none
+    li
+      flex-shrink: 0
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(768)
+        font-size: 11px
+      @include media(540)
+        font-size: 10px
+      font-weight: 500
+      text-transform: uppercase
+      letter-spacing: 0.14em
+      @include media(540)
+        letter-spacing: 0.1em
+      a
+        color: var(--black)
+        font-size: inherit
+        transition: color 0.3s ease
+        &:hover
+          color: var(--primary)
+      i
+        display: block
+        font-size: 10px
+        opacity: 0.5
+      &.current
+        color: var(--primary)
+  .banner-grid
+    display: grid
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr)
+    @include media(768)
+      grid-template-columns: 1fr
+    align-items: center
+    gap: 56px
+    @include media(1280)
+      gap: 44px
+    @include media(1024)
+      gap: 36px
+    @include media(991)
+      gap: 28px
+    @include media(768)
+      gap: 0
+    padding: 18px 0 36px
+    @include media(1280)
+      padding: 18px 0 34px
+    @include media(1024)
+      padding: 16px 0 32px
+    @include media(768)
+      padding: 0 0 30px
+    @include media(540)
+      padding: 0 0 26px
+  .banner-content
+    align-self: center
+    max-width: 580px
+    @include media(1280)
+      max-width: 540px
+    @include media(1024)
+      max-width: 520px
+    @include media(991)
+      max-width: 460px
+    @include media(768)
+      max-width: 100%
+      padding-top: 22px
+      text-align: center
+    @include media(540)
+      padding-top: 18px
+    .eyebrow
+      display: inline-flex
+      align-items: center
+      gap: 12px
+      @include media(540)
+        gap: 10px
+      margin-bottom: 14px
+      @include media(540)
+        margin-bottom: 12px
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+      font-weight: 600
+      text-transform: uppercase
+      letter-spacing: 0.3em
+      @include media(1024)
+        letter-spacing: 0.26em
+      @include media(991)
+        letter-spacing: 0.24em
+      @include media(540)
+        letter-spacing: 0.2em
+      &::before
+        content: ""
+        width: 6px
+        height: 6px
+        background: var(--primary)
+        transform: rotate(45deg)
+    .banner-title
+      margin: 0 0 12px
+      @include media(540)
+        margin-bottom: 10px
+    .banner-desc
+      max-width: 470px
+      @include media(1024)
+        max-width: 420px
+      @include media(768)
+        max-width: 520px
+      margin: 0 0 22px
+      @include media(1024)
+        margin-bottom: 20px
+      @include media(768)
+        margin: 0 auto 20px
+      @include media(540)
+        margin: 0 auto 18px
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 15px
+      @include media(1024)
+        font-size: 14px
+      @include media(540)
+        font-size: 13px
+      line-height: 1.7
+    .banner-btns
+      display: flex
+      align-items: center
+      flex-wrap: wrap
+      gap: 12px
+      @include media(768)
+        justify-content: center
+      @include media(540)
+        flex-direction: column
+        align-items: stretch
+        gap: 10px
+      margin: 0 0 20px
+      @include media(540)
+        margin-bottom: 18px
+      .btn
+        @include media(540)
+          width: 100%
+          justify-content: center
+          text-align: center
+    .banner-cats
+      display: flex
+      align-items: center
+      flex-wrap: wrap
+      gap: 10px 14px
+      @include media(768)
+        justify-content: center
+      @include media(540)
+        gap: 10px
+      .cats-label
+        flex: 0 0 auto
+        color: var(--text)
+        font-family: $Poppins
+        font-size: 11px
+        @include media(540)
+          width: 100%
+          font-size: 10px
+          text-align: center
+        font-weight: 600
+        text-transform: uppercase
+        letter-spacing: 0.2em
+    .banner-chips
+      display: flex
+      align-items: center
+      flex-wrap: wrap
+      @include media(768)
+        justify-content: center
+      gap: 8px
+      margin: 0
+      padding: 0
+      list-style: none
+      a
+        display: inline-flex
+        align-items: center
+        padding: 8px 16px
+        @include media(540)
+          padding: 7px 13px
+        border: 1px solid var(--border)
+        border-radius: 50px
+        background: var(--white)
+        color: var(--black)
+        font-family: $Poppins
+        font-size: 11px
+        @include media(540)
+          font-size: 10px
+        font-weight: 500
+        text-transform: uppercase
+        letter-spacing: 0.12em
+        cursor: pointer
+        transition: all 0.3s ease
+        &:hover
+          background: var(--primary)
+          border-color: var(--primary)
+          color: var(--white)
+  .banner-collage
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    grid-template-rows: repeat(2, minmax(0, 1fr))
+    gap: 12px
+    @include media(540)
+      gap: 10px
+    width: 100%
+    max-width: 440px
+    @include media(1280)
+      max-width: 420px
+    @include media(1024)
+      max-width: 400px
+    @include media(768)
+      max-width: 420px
+    @include media(540)
+      max-width: 100%
+    height: clamp(260px, calc(100vh - var(--headerheight) - 200px), 340px)
+    @include media(768)
+      height: 300px
+    @include media(540)
+      height: 240px
+    margin: 0 0 0 auto
+    @include media(768)
+      margin: 26px auto 0
+    @include media(540)
+      margin: 22px auto 0
+    .col-item
+      position: relative
+      margin: 0
+      overflow: hidden
+      border-radius: 14px
+      @include media(768)
+        border-radius: 12px
+      @include media(540)
+        border-radius: 10px
+      background: var(--gray)
+      img
+        display: block
+        width: 100%
+        height: 100%
+        object-fit: cover
+        object-position: center
+        transition: transform 1.2s ease
+      &:hover img
+        transform: scale(1.06)
+    .col-big
+      grid-row: 1 / span 2
+    .img-tag
+      position: absolute
+      left: 12px
+      right: 12px
+      bottom: 12px
+      @include media(768)
+        left: 10px
+        right: 10px
+        bottom: 10px
+      display: flex
+      align-items: center
+      @include media(540)
+        display: none
+      gap: 10px
+      padding: 10px 14px
+      @include media(1024)
+        padding: 8px 12px
+      border-radius: 10px
+      background: var(--white)
+      box-shadow: 0 10px 26px color-mix(in srgb, var(--text) 14%, transparent)
+      .tag-gem
+        flex: 0 0 auto
+        width: 7px
+        height: 7px
+        background: var(--primary)
+        transform: rotate(45deg)
+      .tag-text
+        display: flex
+        flex-direction: column
+        gap: 3px
+        min-width: 0
+        b
+          color: var(--black)
+          font-family: $Poppins
+          font-size: 13px
+          @include media(1280)
+            font-size: 12px
+          font-weight: 600
+          line-height: 1.2
+        small
+          color: var(--text)
+          font-family: $Poppins
+          font-size: 11px
+          @include media(1280)
+            font-size: 10px
+          line-height: 1.2
+
+.product-secB
+  scroll-margin-top: var(--headerheight)
+  padding: 0 0 70px
+  @include media(1280)
+    padding: 0 0 66px
+  @include media(1024)
+    padding: 0 0 60px
+  @include media(768)
+    padding: 0 0 55px
+  @include media(540)
+    padding: 0 0 50px
+  .tab-nav
+    position: sticky
+    top: calc(var(--headerheight) - -4px)
+    z-index: 10
+    display: flex
+    align-items: center
+    justify-content: flex-start
+    gap: 6px
+    width: fit-content
+    max-width: 100%
+    margin: 0 auto
+    padding: 8px
+    @include media(540)
+      padding: 6px
+      gap: 4px
+    list-style: none
+    background: var(--white)
+    border: 1px solid var(--border)
+    border-radius: 60px
+    box-shadow: rgba(149, 157, 165, 0.18) 0px 10px 30px
+    overflow-x: auto
+    scrollbar-width: none
+    &::-webkit-scrollbar
+      display: none
+    li
+      position: relative
+      flex-shrink: 0
+      display: inline-flex
+      align-items: center
+      padding: 12px 24px
+      @include media(1280)
+        padding: 12px 22px
+      @include media(1024)
+        padding: 11px 20px
+      @include media(768)
+        padding: 10px 17px
+      @include media(540)
+        padding: 10px 15px
+      border-radius: 50px
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+      font-weight: 500
+      text-transform: uppercase
+      letter-spacing: 0.14em
+      @include media(768)
+        letter-spacing: 0.1em
+      @include media(540)
+        letter-spacing: 0.08em
+      white-space: nowrap
+      cursor: pointer
+      transition: all 0.35s ease
+      &::before
+        content: ""
+        flex: 0 0 auto
+        width: 0
+        height: 6px
+        margin-right: 0
+        background: var(--white)
+        transform: rotate(45deg) scale(0)
+        transition: all 0.35s ease
+      &:hover:not(.active)
+        background: color-mix(in srgb, var(--primary) 8%, var(--white))
+        color: var(--primary)
+      &.active
+        background: var(--primary)
+        color: var(--white)
+        box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 32%, transparent)
+        &::before
+          width: 6px
+          margin-right: 10px
+          @include media(540)
+            margin-right: 8px
+          transform: rotate(45deg) scale(1)
+  .tab-nav-content
+    .tabs
+      display: none
+      padding-top: 40px
+      @include media(1024)
+        padding-top: 34px
+      @include media(768)
+        padding-top: 28px
+      @include media(540)
+        padding-top: 24px
+      &.active
+        display: block
+  .prod-toolbar
+    display: flex
+    align-items: center
+    @include media(768)
+      align-items: stretch
+      flex-direction: column
+    justify-content: space-between
+    gap: 16px
+    @include media(1024)
+      gap: 14px
+    @include media(540)
+      gap: 12px
+    margin-bottom: 30px
+    @include media(1024)
+      margin-bottom: 26px
+    @include media(768)
+      margin-bottom: 24px
+    @include media(540)
+      margin-bottom: 22px
+    padding: 14px 0
+    @include media(1024)
+      padding: 12px 0
+    @include media(768)
+      padding: 14px 0 0
+    @include media(540)
+      padding: 12px 0 0
+    border-top: 1px solid var(--border)
+    border-bottom: 1px solid var(--border)
+    @include media(768)
+      border-bottom: 0
+  .prod-count
+    margin: 0
+    color: var(--text)
+    font-family: $Poppins
+    font-size: 14px
+    @include media(768)
+      font-size: 13px
+      text-align: center
+    @include media(540)
+      font-size: 12px
+    letter-spacing: 0.04em
+    b
+      color: var(--black)
+      font-weight: 600
+  .prod-tools
+    display: flex
+    @include media(768)
+      display: grid
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    @include media(540)
+      grid-template-columns: 1fr 1fr
+    align-items: center
+    gap: 16px
+    @include media(1024)
+      gap: 12px
+    @include media(768)
+      gap: 10px
+    @include media(540)
+      gap: 8px
+  .tool-btn
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: 10px
+    @include media(1024)
+      gap: 8px
+    @include media(540)
+      gap: 6px
+    @include media(768)
+      width: 100%
+    padding: 10px 24px
+    @include media(1024)
+      padding: 10px 18px
+    @include media(768)
+      padding: 11px 14px
+    @include media(540)
+      padding: 11px 10px
+    background: transparent
+    border: 1px solid var(--black)
+    border-radius: 50px
+    color: var(--black)
+    font-family: $Poppins
+    font-size: 12px
+    @include media(768)
+      font-size: 11px
+    @include media(540)
+      font-size: 10px
+    font-weight: 500
+    text-transform: uppercase
+    letter-spacing: 0.14em
+    @include media(1024)
+      letter-spacing: 0.12em
+    @include media(540)
+      letter-spacing: 0.1em
+    cursor: pointer
+    transition: all 0.3s ease
+    i
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+    &:hover
+      background: var(--black)
+      color: var(--white)
+  .sort-btn
+    display: none
+    @include media(768)
+      display: inline-flex
+  .prod-sort
+    display: flex
+    @include media(768)
+      display: none
+    align-items: center
+    gap: 12px
+    @include media(1024)
+      gap: 10px
+    label
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(1024)
+        font-size: 11px
+      font-weight: 500
+      text-transform: uppercase
+      letter-spacing: 0.14em
+      @include media(1024)
+        letter-spacing: 0.1em
+      white-space: nowrap
+    .sort-box
+      position: relative
+      .custom-select
+        min-width: 200px
+        &::before
+          display: none
+        @include media(1280)
+          min-width: 190px
+        @include media(1024)
+          min-width: 170px
+        padding: 10px 40px 10px 18px
+        @include media(1024)
+          padding: 10px 36px 10px 14px
+        background: var(--white)
+        border: 1px solid var(--black)
+        border-radius: 50px
+        color: var(--black)
+        font-family: $Poppins
+        font-size: 13px
+        @include media(1024)
+          font-size: 12px
+        cursor: pointer
+        appearance: none
+        outline: none
+        transition: border-color 0.3s ease
+        &:focus
+          border-color: var(--primary)
+      i
+        position: absolute
+        top: 50%
+        right: 16px
+        @include media(1024)
+          right: 14px
+        font-size: 10px
+        transform: translateY(-50%)
+        pointer-events: none
+  .prod-grid
+    display: grid
+    grid-template-columns: repeat(4, minmax(0, 1fr))
+    @include media(1280)
+      grid-template-columns: repeat(4, minmax(0, 1fr))
+    @include media(1024)
+      grid-template-columns: repeat(3, minmax(0, 1fr))
+    @include media(991)
+      grid-template-columns: repeat(3, minmax(0, 1fr))
+    @include media(768)
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    @include media(540)
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    gap: 36px 24px
+    @include media(1280)
+      gap: 32px 20px
+    @include media(1024)
+      gap: 30px 18px
+    @include media(991)
+      gap: 28px 16px
+    @include media(768)
+      gap: 26px 14px
+    @include media(540)
+      gap: 24px 12px
+    .prod_cart
+      min-width: 0
+  .load-more
+    margin-top: 54px
+    @include media(1024)
+      margin-top: 48px
+    @include media(768)
+      margin-top: 44px
+    @include media(540)
+      margin-top: 38px
+    text-align: center
+    .btn
+      @include media(540)
+        display: flex
+        width: 100%
+        justify-content: center
+        text-align: center
+    p
+      margin: 16px 0 0
+      @include media(540)
+        margin-top: 12px
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+      letter-spacing: 0.08em
+
+.product-secC
+  padding: 70px 0
+  @include media(1280)
+    padding: 66px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(768)
+    padding: 55px 0
+  @include media(540)
+    padding: 50px 0
+  .info-wrap
+    display: grid
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr)
+    @include media(991)
+      grid-template-columns: 1fr
+    align-items: center
+    gap: 90px
+    @include media(1280)
+      gap: 60px
+    @include media(1024)
+      gap: 44px
+    @include media(991)
+      gap: 40px
+    @include media(768)
+      gap: 36px
+    @include media(540)
+      gap: 30px
+  .info-media
+    position: relative
+    padding: 0 0 56px
+    @include media(768)
+      padding: 0 0 48px
+    @include media(540)
+      padding: 0 0 40px
+    @include media(991)
+      width: 100%
+      max-width: 460px
+      margin: 0 auto
+    @include media(540)
+      max-width: 100%
+  .info-main
+    position: relative
+    margin: 0
+    width: 82%
+    @include media(540)
+      width: 84%
+    overflow: hidden
+    aspect-ratio: 4 / 5
+    border-radius: 18px
+    @include media(768)
+      border-radius: 16px
+    @include media(540)
+      border-radius: 14px
+    background: var(--gray)
+    img
+      display: block
+      width: 100%
+      height: 100%
+      object-fit: cover
+      object-position: center top
+      transition: transform 1.4s ease
+    &:hover img
+      transform: scale(1.06)
+  .info-sub
+    position: absolute
+    right: 0
+    bottom: 0
+    margin: 0
+    width: 46%
+    @include media(540)
+      width: 44%
+    overflow: hidden
+    aspect-ratio: 1 / 1
+    border: 6px solid var(--white)
+    @include media(540)
+      border-width: 4px
+    border-radius: 16px
+    @include media(540)
+      border-radius: 12px
+    background: var(--gray)
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--text) 16%, transparent)
+    img
+      display: block
+      width: 100%
+      height: 100%
+      object-fit: cover
+      object-position: center
+  .info-tag
+    position: absolute
+    top: 18px
+    left: 18px
+    @include media(540)
+      top: 12px
+      left: 12px
+    display: inline-flex
+    align-items: center
+    gap: 10px
+    @include media(540)
+      gap: 8px
+    padding: 9px 16px
+    @include media(540)
+      padding: 7px 12px
+    border-radius: 50px
+    background: var(--white)
+    color: var(--black)
+    font-family: $Poppins
+    font-size: 11px
+    @include media(540)
+      font-size: 10px
+    font-weight: 600
+    text-transform: uppercase
+    letter-spacing: 0.14em
+    @include media(540)
+      letter-spacing: 0.1em
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 14%, transparent)
+    &::before
+      content: ""
+      flex: 0 0 auto
+      width: 6px
+      height: 6px
+      background: var(--primary)
+      transform: rotate(45deg)
+  .info-right
+    min-width: 0
+    @include media(991)
+      max-width: 640px
+      margin: 0 auto
+    .heading
+      max-width: 540px
+      margin: 0 0 30px
+      @include media(991)
+        margin: 0 auto 26px
+      @include media(540)
+        margin-bottom: 22px
+      text-align: left
+      @include media(991)
+        text-align: center
+      &::after
+        display: none
+      p
+        text-align: inherit
+  .info-grid
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    @include media(540)
+      grid-template-columns: 1fr
+    gap: 16px
+    @include media(1024)
+      gap: 14px
+    @include media(540)
+      gap: 12px
+    margin: 0 0 32px
+    @include media(768)
+      margin-bottom: 28px
+    @include media(540)
+      margin-bottom: 26px
+    padding: 0
+    list-style: none
+  .info_item
+    display: flex
+    align-items: flex-start
+    gap: 16px
+    @include media(1024)
+      gap: 14px
+    @include media(540)
+      gap: 14px
+    padding: 20px
+    @include media(1024)
+      padding: 18px
+    @include media(540)
+      padding: 16px
+    border: 1px solid var(--border)
+    border-radius: 14px
+    @include media(540)
+      border-radius: 12px
+    background: var(--white)
+    text-align: left
+    transition: all 0.3s ease
+    &:hover
+      border-color: var(--primary)
+      transform: translateY(-3px)
+      box-shadow: 0 14px 30px color-mix(in srgb, var(--text) 10%, transparent)
+    .item-icon
+      flex: 0 0 auto
+      display: flex
+      align-items: center
+      justify-content: center
+      width: 46px
+      @include media(1024)
+        width: 44px
+      @include media(540)
+        width: 42px
+      height: 46px
+      @include media(1024)
+        height: 44px
+      @include media(540)
+        height: 42px
+      border-radius: 50%
+      background: color-mix(in srgb, var(--primary) 10%, var(--white))
+      color: var(--primary)
+      font-size: 17px
+      @include media(540)
+        font-size: 16px
+    .item-txt
+      min-width: 0
+      h4
+        margin: 0 0 4px
+        color: var(--black)
+        font-family: $Poppins
+        font-size: 15px
+        @include media(1024)
+          font-size: 14px
+        font-weight: 600
+        line-height: 1.3
+      p
+        margin: 0
+        color: var(--text)
+        font-family: $Poppins
+        font-size: 13px
+        @include media(540)
+          font-size: 12px
+        line-height: 1.6
+  .info-btn
+    @include media(991)
+      text-align: center
+    .btn
+      @include media(540)
+        display: flex
+        width: 100%
+        justify-content: center
+        text-align: center
+
+.product-secD, .product-secE
+  padding: 70px 0
+  @include media(1280)
+    padding: 66px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(768)
+    padding: 55px 0
+  @include media(540)
+    padding: 50px 0
+  .heading
+    margin: 0 auto 36px
+    @include media(1024)
+      margin-bottom: 32px
+    @include media(768)
+      margin-bottom: 26px
+    @include media(540)
+      margin-bottom: 20px
+  .swiper-wrap
+    position: relative
+    .fourSlider
+      padding: 26px 14px 24px
+      margin: 0 -14px
+      @include media(768)
+        padding: 22px 14px 20px
+      @include media(540)
+        padding: 20px 10px
+        margin: 0 -10px
+    @include swiper-nav(36%, 22px)
+
+.product-secD
+  background: var(--bg)
+
+.product-secE
+  scroll-margin-top: var(--headerheight)
+  background: var(--white)

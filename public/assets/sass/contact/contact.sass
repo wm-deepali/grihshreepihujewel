@@ -1,0 +1,1406 @@
+@import '../_var'
+
+$danger: #c62828
+$danger-bg: rgba(198, 40, 40, 0.07)
+
+.contact-secA
+  padding: 70px 0
+  @include media(1280)
+    padding: 64px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(991)
+    padding: 56px 0
+  @include media(768)
+    padding: 46px 0
+  @include media(540)
+    padding: 38px 0
+  overflow: hidden
+  background: var(--white)
+
+  .heading
+    max-width: 600px
+    margin: 0 auto 44px
+    @include media(1024)
+      margin-bottom: 40px
+    @include media(768)
+      margin-bottom: 32px
+    @include media(540)
+      margin-bottom: 24px
+
+  .swiper-wrap
+    position: relative
+
+    .fourSlider
+      margin: 0 -10px
+      @include media(540)
+        margin: 0 -6px
+      padding: 8px 10px 14px
+      @include media(540)
+        padding: 6px 6px 10px
+
+    .swiper-slide
+      height: auto
+
+    .swiper-group
+      position: absolute
+      inset: 0
+      z-index: 5
+      display: block
+      pointer-events: none
+      @media (min-width: 992px)
+        display: none
+
+      button
+        position: absolute
+        top: 46%
+        display: flex
+        align-items: center
+        justify-content: center
+        width: 40px
+        height: 40px
+        @include media(768)
+          width: 34px
+          height: 34px
+        @include media(540)
+          width: 32px
+          height: 32px
+        margin: 0
+        padding: 0
+        background: var(--white)
+        border: 1px solid var(--border)
+        border-radius: 50%
+        box-shadow: rgba(0, 0, 0, 0.12) 0px 8px 22px
+        color: var(--black)
+        opacity: 1
+        transform: translateY(-50%)
+        pointer-events: auto
+        cursor: pointer
+        transition: all 0.4s ease
+
+        i
+          color: inherit
+          font-size: 14px
+          pointer-events: none
+          @include media(768)
+            font-size: 12px
+          @include media(540)
+            font-size: 11px
+
+        &:hover
+          background: var(--primary)
+          border-color: var(--primary)
+          color: var(--white)
+
+        &.swiper-button-disabled, &.disabled
+          opacity: 0.35
+          pointer-events: none
+          cursor: default
+
+        &.swiper-button-lock
+          display: none
+
+        &.btn-prev
+          right: auto
+          left: 4px
+
+        &.btn-next
+          left: auto
+          right: 4px
+
+  .contact_card
+    display: flex
+    flex-direction: column
+    align-items: center
+    height: 100%
+    padding: 34px 22px 28px
+    @include media(1280)
+      padding: 30px 20px 26px
+    @include media(1024)
+      padding: 28px 18px 24px
+    @include media(991)
+      padding: 30px 22px 26px
+    @include media(768)
+      padding: 28px 20px 24px
+    @include media(540)
+      padding: 26px 18px 24px
+    background: var(--bgcolor)
+    border: 1px solid transparent
+    border-radius: 14px
+    @include media(768)
+      border-radius: 12px
+    @include media(540)
+      border-radius: 10px
+    text-align: center
+    transition: all 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+    .contact-icon
+      position: relative
+      display: flex
+      align-items: center
+      justify-content: center
+      flex-shrink: 0
+      width: 68px
+      @include media(1024)
+        width: 62px
+      @include media(768)
+        width: 60px
+      @include media(540)
+        width: 58px
+      height: 68px
+      @include media(1024)
+        height: 62px
+      @include media(768)
+        height: 60px
+      @include media(540)
+        height: 58px
+      margin-bottom: 20px
+      @include media(1024)
+        margin-bottom: 18px
+      @include media(540)
+        margin-bottom: 16px
+      border-radius: 50%
+      background: var(--white)
+      color: var(--primary)
+      font-size: 22px
+      @include media(1024)
+        font-size: 20px
+      @include media(540)
+        font-size: 19px
+      transition: all 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+      &::before
+        content: ''
+        position: absolute
+        inset: 5px
+        border: 1px dashed var(--primary)
+        border-radius: 50%
+        opacity: 0.5
+        transition: all 0.4s ease
+
+      i
+        color: inherit
+
+    h4
+      margin: 0 0 10px
+      color: var(--black)
+      font-family: $Optima
+      font-size: 20px
+      @include media(1280)
+        font-size: 19px
+      @include media(1024)
+        font-size: 18px
+      @include media(540)
+        font-size: 17px
+      font-weight: 600
+      line-height: 1.3
+      transition: color 0.4s ease
+
+    .contact-main
+      display: block
+      max-width: 100%
+      margin: 0 0 6px
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 15px
+      @include media(1024)
+        font-size: 14px
+      @include media(540)
+        font-size: 13px
+      font-weight: 600
+      line-height: 1.5
+      word-break: break-word
+      transition: color 0.4s ease
+
+    a.contact-main:hover
+      color: var(--primary)
+
+    .contact-time
+      display: block
+      margin: 0 0 6px
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 15px
+      @include media(1024)
+        font-size: 14px
+      @include media(540)
+        font-size: 13px
+      font-weight: 600
+      line-height: 1.5
+
+    p
+      max-width: 240px
+      margin: 0
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 13px
+      @include media(1024)
+        font-size: 12.5px
+      @include media(991)
+        font-size: 13px
+      @include media(540)
+        font-size: 12.5px
+      line-height: 1.65
+
+    .contact-cta
+      position: relative
+      display: inline-flex
+      align-items: center
+      gap: 8px
+      margin-top: auto
+      padding-top: 20px
+      @include media(540)
+        padding-top: 16px
+      padding-bottom: 6px
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 11px
+      @include media(540)
+        font-size: 10px
+      font-weight: 600
+      letter-spacing: 0.16em
+      @include media(540)
+        letter-spacing: 0.1em
+      text-transform: uppercase
+      transition: color 0.4s ease
+
+      &::after
+        content: ''
+        position: absolute
+        right: 0
+        bottom: 0
+        left: 0
+        height: 1px
+        background: currentColor
+        transform: scaleX(0.3)
+        transform-origin: center
+        transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+      i
+        font-size: 10px
+        transition: transform 0.4s ease
+
+    &:hover
+      background: var(--white)
+      border-color: var(--primary)
+      box-shadow: rgba(0, 0, 0, 0.08) 0px 14px 30px
+      transform: translateY(-5px)
+
+      .contact-icon
+        background: var(--primary)
+        color: var(--white)
+
+        &::before
+          border-color: var(--white)
+          opacity: 0.8
+
+      h4
+        color: var(--primary)
+
+      .contact-cta
+        color: var(--primary)
+
+        &::after
+          transform: scaleX(1)
+
+        i
+          transform: translateX(4px)
+
+.contact-secB
+  padding: 70px 0
+  @include media(1280)
+    padding: 64px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(991)
+    padding: 56px 0
+  @include media(768)
+    padding: 46px 0
+  @include media(540)
+    padding: 38px 0
+  background: var(--bg)
+
+  .cf-wrap
+    display: grid
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr)
+    @include media(991)
+      grid-template-columns: 1fr
+    align-items: start
+    gap: 64px
+    @include media(1280)
+      gap: 48px
+    @include media(1024)
+      gap: 36px
+    @include media(991)
+      gap: 30px
+    @include media(768)
+      gap: 26px
+    @include media(540)
+      gap: 22px
+
+  .cf-left
+    position: sticky
+    top: 110px
+    @include media(1280)
+      top: 100px
+    @include media(1024)
+      top: 90px
+    @include media(991)
+      position: static
+    min-width: 0
+
+    .heading
+      max-width: 100%
+      margin: 0 0 28px
+      @include media(768)
+        margin-bottom: 24px
+      @include media(540)
+        margin-bottom: 20px
+      text-align: left
+      @include media(991)
+        text-align: center
+
+      p
+        max-width: 460px
+        margin: 0
+        @include media(991)
+          margin: 0 auto
+
+  .cf-media
+    position: relative
+    overflow: hidden
+    margin: 0 0 28px
+    @include media(768)
+      margin-bottom: 24px
+    @include media(540)
+      margin-bottom: 20px
+    aspect-ratio: 16 / 10
+    @include media(991)
+      aspect-ratio: 16 / 8
+    @include media(540)
+      aspect-ratio: 4 / 3
+    border-radius: 16px
+    @include media(768)
+      border-radius: 14px
+    @include media(540)
+      border-radius: 12px
+    background: var(--gray)
+
+    img
+      display: block
+      width: 100%
+      height: 100%
+      object-fit: cover
+      object-position: center
+      transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+    &:hover img
+      transform: scale(1.05)
+
+    &::after
+      content: ''
+      position: absolute
+      inset: 12px
+      @include media(540)
+        inset: 8px
+      border: 1px solid rgba(255, 255, 255, 0.6)
+      border-radius: 10px
+      @include media(540)
+        border-radius: 8px
+      pointer-events: none
+
+    .cf-tag
+      position: absolute
+      left: 22px
+      @include media(768)
+        left: 18px
+      @include media(540)
+        left: 16px
+      bottom: 22px
+      @include media(768)
+        bottom: 18px
+      @include media(540)
+        bottom: 16px
+      z-index: 2
+      padding: 8px 14px
+      @include media(540)
+        padding: 6px 11px
+      background: var(--white)
+      border-radius: 40px
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 10px
+      font-weight: 600
+      letter-spacing: 0.18em
+      @include media(768)
+        letter-spacing: 0.14em
+      @include media(540)
+        letter-spacing: 0.12em
+      text-transform: uppercase
+
+  .cf-steps
+    display: flex
+    flex-direction: column
+    gap: 18px
+    @include media(768)
+      gap: 16px
+    @include media(540)
+      gap: 14px
+    margin: 0
+    padding: 0
+    list-style: none
+
+    li
+      display: flex
+      align-items: flex-start
+      gap: 16px
+      @include media(540)
+        gap: 12px
+
+    .step-no
+      display: flex
+      align-items: center
+      justify-content: center
+      flex-shrink: 0
+      width: 42px
+      @include media(768)
+        width: 40px
+      @include media(540)
+        width: 36px
+      height: 42px
+      @include media(768)
+        height: 40px
+      @include media(540)
+        height: 36px
+      background: var(--white)
+      border: 1px solid var(--primary)
+      border-radius: 50%
+      color: var(--primary)
+      font-family: $Optima
+      font-size: 14px
+      @include media(540)
+        font-size: 12px
+      font-weight: 600
+
+    h4
+      margin: 0 0 3px
+      color: var(--black)
+      font-family: $Optima
+      font-size: 17px
+      @include media(540)
+        font-size: 15px
+      font-weight: 600
+      line-height: 1.3
+
+    p
+      margin: 0
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 13px
+      @include media(540)
+        font-size: 12px
+      line-height: 1.6
+
+  .cf-right
+    min-width: 0
+
+  .cf-card
+    padding: 12px
+    @include media(540)
+      padding: 10px
+    background: var(--white)
+    border: 1px solid var(--border)
+    border-radius: 20px
+    @include media(768)
+      border-radius: 16px
+    @include media(540)
+      border-radius: 14px
+    box-shadow: rgba(149, 157, 165, 0.18) 0 16px 40px
+    @include media(768)
+      box-shadow: rgba(149, 157, 165, 0.18) 0 10px 28px
+
+    .tab-nav
+      display: grid
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+      gap: 8px
+      @include media(540)
+        gap: 6px
+      margin: 0
+      padding: 8px
+      @include media(540)
+        padding: 6px
+      list-style: none
+      background: var(--bg)
+      border-radius: 14px
+      @include media(540)
+        border-radius: 12px
+
+      li
+        display: flex
+        align-items: center
+        gap: 12px
+        @include media(768)
+          gap: 10px
+        @include media(540)
+          flex-direction: column
+          gap: 8px
+          text-align: center
+        padding: 14px 18px
+        @include media(1024)
+          padding: 12px 14px
+        @include media(540)
+          padding: 12px 8px
+        border: 1px solid transparent
+        border-radius: 10px
+        color: var(--black)
+        cursor: pointer
+        transition: all 0.4s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+        .tab-ico
+          display: flex
+          align-items: center
+          justify-content: center
+          flex-shrink: 0
+          width: 42px
+          @include media(768)
+            width: 40px
+          @include media(540)
+            width: 36px
+          height: 42px
+          @include media(768)
+            height: 40px
+          @include media(540)
+            height: 36px
+          border-radius: 50%
+          background: var(--white)
+          color: var(--primary)
+          font-size: 16px
+          @include media(540)
+            font-size: 14px
+          transition: all 0.4s ease
+
+          i
+            color: inherit
+            pointer-events: none
+
+        .tab-txt
+          display: flex
+          flex-direction: column
+          min-width: 0
+          pointer-events: none
+
+          b
+            color: inherit
+            font-family: $Optima
+            color: inheirt
+            font-size: 17px
+            @include media(1024)
+              font-size: 16px
+            @include media(540)
+              font-size: 14px
+            font-weight: 600
+            line-height: 1.3
+            transition: color 0.4s ease
+
+          small
+            margin-top: 2px
+            color: var(--text)
+            font-family: $Poppins
+            font-size: 11px
+            @include media(540)
+              font-size: 10px
+            font-weight: 500
+            letter-spacing: 0.14em
+            @include media(540)
+              letter-spacing: 0.08em
+            text-transform: uppercase
+            transition: color 0.4s ease
+
+        &:hover
+          border-color: var(--primary)
+
+        &.active
+          background: var(--primary)
+          border-color: var(--primary)
+          box-shadow: rgba(0, 0, 0, 0.12) 0 10px 22px
+          color: var(--white)
+
+          .tab-ico
+            background: var(--white)
+            color: var(--primary)
+
+          .tab-txt
+            small,b
+              color: rgba(255, 255, 255, 0.85)
+
+    .tab-nav-content
+      .tabs
+        display: none
+
+        &.active
+          display: block
+
+  .cf-body
+    padding: 28px 22px 20px
+    @include media(1024)
+      padding: 26px 18px 18px
+    @include media(768)
+      padding: 24px 14px 14px
+    @include media(540)
+      padding: 20px 8px 10px
+
+  .cf-intro
+    margin: 0 0 24px
+    @include media(540)
+      margin-bottom: 20px
+    color: var(--text)
+    font-family: $Poppins
+    font-size: 14px
+    @include media(540)
+      font-size: 13px
+    line-height: 1.7
+
+  .cf-title
+    display: block
+    margin-bottom: 12px
+    @include media(540)
+      margin-bottom: 10px
+    color: var(--black)
+    font-family: $Poppins
+    font-size: 12px
+    @include media(540)
+      font-size: 11px
+    font-weight: 600
+    letter-spacing: 0.14em
+    @include media(540)
+      letter-spacing: 0.1em
+    text-transform: uppercase
+
+  .cf-chips
+    position: relative
+    display: flex
+    gap: 8px
+    overflow: auto
+    text-wrap: nowrap
+    white-space: nowrap
+    scrollbar-width: none
+    -ms-overflow-style: none
+
+    &::-webkit-scrollbar
+      display: none
+    @include media(540)
+      gap: 6px
+    margin: 0 0 38px
+    @include media(768)
+      margin-bottom: 34px
+    @include media(540)
+      margin-bottom: 30px
+
+    input
+      position: absolute
+      opacity: 0
+      pointer-events: none
+
+    label
+      display: inline-flex
+      align-items: center
+      padding: 10px 18px
+      @include media(768)
+        padding: 9px 16px
+      @include media(540)
+        padding: 8px 14px
+      border: 1px solid var(--border)
+      border-radius: 50px
+      background: var(--white)
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+      font-weight: 500
+      cursor: pointer
+      transition: all 0.3s ease
+
+      &:hover
+        border-color: var(--primary)
+        color: var(--primary)
+
+    input:checked + label
+      background: var(--primary)
+      border-color: var(--primary)
+      color: var(--white)
+
+    input:focus-visible + label
+      box-shadow: rgba(0, 0, 0, 0.1) 0 0 0 3px
+
+  .form
+    --inputsize: 44px
+
+  .form-grid
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    @include media(540)
+      grid-template-columns: 1fr
+    gap: 34px 32px
+    @include media(1280)
+      gap: 34px 28px
+    @include media(1024)
+      gap: 32px 24px
+    @include media(768)
+      gap: 30px 20px
+    @include media(540)
+      gap: 20px
+
+    .full
+      grid-column: 1 / -1
+
+    .msg-group
+      --textareaheight: 100px
+
+    .form-group
+      &.has-error
+        &::before
+          background: $danger
+
+        label
+          color: $danger
+
+      .error
+        color: $danger
+
+  .submit-grp
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    gap: 14px
+    @include media(540)
+      gap: 12px
+    margin-top: 40px
+    @include media(768)
+      margin-top: 34px
+    @include media(540)
+      margin-top: 30px
+    text-align: center
+
+    .btn
+      gap: 10px
+      justify-content: center
+      @include media(540)
+        width: 100%
+
+      i
+        font-size: 12px
+        transition: transform 0.4s ease
+
+      &:hover i
+        transform: translateX(4px)
+
+  .cf-note
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    gap: 8px
+    color: var(--text)
+    font-family: $Poppins
+    font-size: 12px
+    @include media(540)
+      font-size: 11px
+    font-weight: 300
+
+    i
+      color: var(--primary)
+      font-size: 12px
+      @include media(540)
+        font-size: 11px
+
+.contact-secC
+  padding: 70px 0
+  @include media(1280)
+    padding: 64px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(991)
+    padding: 56px 0
+  @include media(768)
+    padding: 46px 0
+  @include media(540)
+    padding: 38px 0
+  overflow: hidden
+
+  .visit-wrap
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    @include media(991)
+      grid-template-columns: 1fr
+    align-items: stretch
+    gap: 72px
+    @include media(1280)
+      gap: 48px
+    @include media(1024)
+      gap: 40px
+    @include media(991)
+      gap: 34px
+    @include media(768)
+      gap: 28px
+    @include media(540)
+      gap: 24px
+
+  .visit-info
+    display: flex
+    flex-direction: column
+    justify-content: center
+    min-width: 0
+
+    .heading
+      margin: 0 0 32px
+      @include media(1024)
+        margin-bottom: 28px
+      @include media(768)
+        margin-bottom: 24px
+      @include media(540)
+        margin-bottom: 20px
+      text-align: left
+      @include media(768)
+        text-align: center
+
+      p
+        max-width: 520px
+        margin: 0
+        @include media(768)
+          margin: 0 auto
+
+  .visit-list
+    margin: 0
+    padding: 0
+    list-style: none
+
+  .visit_item
+    display: flex
+    align-items: flex-start
+    gap: 20px
+    @include media(1024)
+      gap: 16px
+    @include media(768)
+      flex-direction: column
+      align-items: center
+      gap: 14px
+      text-align: center
+    padding: 22px 0
+    @include media(768)
+      padding: 20px 0
+    @include media(540)
+      padding: 18px 0
+    border-top: 1px solid var(--border)
+
+    &:last-child
+      border-bottom: 1px solid var(--border)
+
+    .visit-icon
+      position: relative
+      display: flex
+      align-items: center
+      justify-content: center
+      flex-shrink: 0
+      width: 58px
+      @include media(1024)
+        width: 54px
+      @include media(540)
+        width: 50px
+      height: 58px
+      @include media(1024)
+        height: 54px
+      @include media(540)
+        height: 50px
+      border-radius: 50%
+      background: var(--white)
+      color: var(--primary)
+      font-size: 19px
+      @include media(1024)
+        font-size: 18px
+      @include media(540)
+        font-size: 16px
+      transition: all 0.5s cubic-bezier(0.2, 0.7, 0.2, 1)
+
+      &::before
+        content: ''
+        position: absolute
+        inset: 5px
+        border: 1px dashed var(--primary)
+        border-radius: 50%
+        opacity: 0.5
+        transition: all 0.4s ease
+
+      i
+        color: inherit
+
+    .visit-txt
+      min-width: 0
+      padding-top: 2px
+
+      small
+        display: inline-flex
+        align-items: center
+        gap: 10px
+        margin-bottom: 6px
+        color: var(--primary)
+        font-family: $Poppins
+        font-size: 11px
+        @include media(540)
+          font-size: 10px
+        font-weight: 600
+        letter-spacing: 0.2em
+        @include media(768)
+          letter-spacing: 0.16em
+        @include media(540)
+          letter-spacing: 0.14em
+        text-transform: uppercase
+
+        &::before
+          content: ''
+          flex: 0 0 auto
+          width: 6px
+          height: 6px
+          background: var(--primary)
+          transform: rotate(45deg)
+
+      address,
+      p,
+      a
+        display: block
+        margin: 0
+        color: var(--black)
+        font-family: $Poppins
+        font-size: 15px
+        @include media(1024)
+          font-size: 14px
+        @include media(540)
+          font-size: 13px
+        font-style: normal
+        font-weight: 500
+        line-height: 1.7
+        transition: color 0.4s ease
+
+      p + p
+        color: var(--text)
+        font-weight: 400
+
+      a:hover
+        color: var(--primary)
+
+    &:hover
+      .visit-icon
+        background: var(--primary)
+        color: var(--white)
+
+        &::before
+          border-color: var(--white)
+          opacity: 0.8
+
+  .visit-btn
+    margin-top: 32px
+    @include media(768)
+      margin-top: 28px
+      text-align: center
+    @include media(540)
+      margin-top: 24px
+
+    .btn
+      gap: 10px
+      @include media(540)
+        width: 100%
+        justify-content: center
+        text-align: center
+
+      i
+        font-size: 12px
+        transition: transform 0.4s ease
+
+      &:hover i
+        transform: translateX(4px)
+
+  .visit-map
+    position: relative
+    min-height: 520px
+    @include media(1280)
+      min-height: 480px
+    @include media(1024)
+      min-height: 440px
+    @include media(991)
+      min-height: 400px
+    @include media(768)
+      min-height: 360px
+    @include media(540)
+      min-height: 300px
+    overflow: hidden
+    border: 1px solid var(--border)
+    border-radius: 14px
+    @include media(768)
+      border-radius: 12px
+    @include media(540)
+      border-radius: 10px
+    background: var(--gray)
+
+    iframe
+      position: absolute
+      inset: 0
+      display: block
+      width: 100%
+      height: 100%
+      border: 0
+
+.contact-secE
+  padding: 70px 0
+  @include media(1280)
+    padding: 64px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(991)
+    padding: 56px 0
+  @include media(768)
+    padding: 46px 0
+  @include media(540)
+    padding: 38px 0
+  overflow: hidden
+  background: var(--bg)
+
+  .faq-wrap
+    display: grid
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr)
+    @include media(991)
+      grid-template-columns: 1fr
+    align-items: start
+    gap: 64px
+    @include media(1280)
+      gap: 48px
+    @include media(1024)
+      gap: 36px
+    @include media(991)
+      gap: 30px
+    @include media(768)
+      gap: 26px
+    @include media(540)
+      gap: 22px
+
+  .faq-left
+    min-width: 0
+    position: sticky
+    top: 110px
+    @include media(1280)
+      top: 100px
+    @include media(1024)
+      top: 90px
+    @include media(991)
+      position: static
+
+    .heading
+      max-width: 100%
+      margin: 0 0 30px
+      @include media(1024)
+        margin-bottom: 26px
+      @include media(768)
+        margin-bottom: 0
+      @include media(540)
+        margin-bottom: 0
+      text-align: left
+      @include media(991)
+        text-align: center
+
+      p
+        max-width: 460px
+        margin: 0
+        @include media(991)
+          margin: 0 auto
+
+  .faq-help
+    padding: 26px 28px
+    @include media(1280)
+      padding: 24px 24px
+    @include media(1024)
+      padding: 22px 22px
+    @include media(991)
+      display: none
+    background: var(--bg)
+    border: 1px solid var(--border)
+    border-radius: 14px
+    @include media(768)
+      border-radius: 12px
+
+    h4
+      margin: 0 0 6px
+      color: var(--black)
+      font-family: $Optima
+      font-size: 20px
+      @include media(1280)
+        font-size: 19px
+      @include media(1024)
+        font-size: 18px
+      font-weight: 600
+      line-height: 1.3
+
+    p
+      margin: 0 0 20px
+      color: var(--text)
+      font-family: $Poppins
+      font-size: 14px
+      @include media(1024)
+        font-size: 13px
+      line-height: 1.6
+
+    .btn
+      i
+        margin-right: 8px
+        font-size: 13px
+
+  .faq-right
+    min-width: 0
+
+  .accordion-wrapper
+    max-width: 100%
+    margin: 0
+
+  .accordion-item
+    overflow: hidden
+    background: var(--white)
+    border: 1px solid var(--border)
+    border-radius: 12px
+    @include media(540)
+      border-radius: 10px
+    transition: border-color 0.4s ease, box-shadow 0.5s ease
+
+    & + .accordion-item
+      margin-top: 12px
+      @include media(540)
+        margin-top: 10px
+
+    .accordion-header
+      display: flex
+      align-items: center
+      justify-content: space-between
+      gap: 16px
+      @include media(768)
+        gap: 14px
+      @include media(540)
+        gap: 12px
+      padding: 18px 22px
+      @include media(1024)
+        padding: 16px 20px
+      @include media(768)
+        padding: 15px 18px
+      @include media(540)
+        padding: 14px 14px
+      cursor: pointer
+
+      h4
+        margin: 0
+        color: var(--black)
+        font-family: $Poppins
+        font-size: 16px
+        @include media(1024)
+          font-size: 15px
+        @include media(540)
+          font-size: 14px
+        font-weight: 500
+        line-height: 1.4
+        transition: color 0.4s ease
+
+    .accordion-icon
+      display: flex
+      align-items: center
+      justify-content: center
+      flex-shrink: 0
+      width: 32px
+      @include media(540)
+        width: 28px
+      height: 32px
+      @include media(540)
+        height: 28px
+      background: var(--white)
+      border: 1px solid var(--border)
+      border-radius: 50%
+      color: var(--black)
+      font-family: $Poppins
+      font-size: 18px
+      @include media(540)
+        font-size: 16px
+      font-weight: 400
+      line-height: 1
+      user-select: none
+      transition: all 0.4s ease
+
+    .accordion-content
+      p
+        max-width: 640px
+        margin: 0
+        padding: 0 22px 18px
+        @include media(1024)
+          padding: 0 20px 16px
+        @include media(768)
+          padding: 0 18px 15px
+        @include media(540)
+          padding: 0 14px 14px
+        color: var(--text)
+        font-family: $Poppins
+        font-size: 14px
+        @include media(540)
+          font-size: 13px
+        line-height: 1.7
+
+    &:hover
+      border-color: var(--primary)
+
+    &.active
+      border-color: var(--primary)
+      box-shadow: rgba(0, 0, 0, 0.08) 0px 12px 28px
+
+      .accordion-icon
+        background: var(--primary)
+        border-color: var(--primary)
+        color: var(--white)
+
+.contact-secD
+  padding: 70px 0
+  @include media(1280)
+    padding: 64px 0
+  @include media(1024)
+    padding: 60px 0
+  @include media(991)
+    padding: 56px 0
+  @include media(768)
+    padding: 46px 0
+  @include media(540)
+    padding: 38px 0
+  background: var(--white)
+
+  .cta-card
+    position: relative
+    display: flex
+    align-items: center
+    min-height: 400px
+    @include media(1280)
+      min-height: 380px
+    @include media(1024)
+      min-height: 370px
+    @include media(991)
+      min-height: 0
+    overflow: hidden
+    border-radius: 24px
+    @include media(768)
+      border-radius: 20px
+    @include media(540)
+      border-radius: 16px
+    background: linear-gradient(120deg, #9a2c4a 0%, #681F32 45%, #2e0b15 100%)
+    isolation: isolate
+
+  .cta-content
+    position: relative
+    z-index: 2
+    width: 100%
+    max-width: 640px
+    @include media(1024)
+      max-width: 600px
+    @include media(991)
+      max-width: none
+    padding: 56px 0 56px 70px
+    @include media(1280)
+      padding-left: 54px
+    @include media(1024)
+      padding: 48px 0 48px 46px
+    @include media(991)
+      padding: 48px 40px
+    @include media(768)
+      padding: 40px 28px
+    @include media(540)
+      padding: 32px 20px
+    text-align: left
+    @include media(991)
+      text-align: center
+
+    .heading
+      margin: 0 0 34px
+      @include media(991)
+        margin-bottom: 30px
+      @include media(768)
+        margin-bottom: 28px
+      @include media(540)
+        margin-bottom: 26px
+      text-align: left
+      @include media(991)
+        text-align: center
+
+      span
+        color: var(--white)
+
+        &::before,
+        &::after
+          display: none
+
+      h3
+        color: var(--white)
+
+      p
+        max-width: 520px
+        margin: 0
+        @include media(991)
+          margin: 0 auto
+        color: rgba(255, 255, 255, 0.9)
+
+  .cta-btns
+    display: flex
+    align-items: center
+    flex-wrap: wrap
+    gap: 14px
+    @include media(768)
+      gap: 12px
+    @include media(991)
+      justify-content: center
+    @include media(540)
+      flex-direction: column
+      align-items: stretch
+      gap: 10px
+
+    .cta-btn
+      display: inline-flex
+      align-items: center
+      justify-content: center
+      gap: 10px
+      flex-shrink: 0
+      height: 46px
+      padding: 0 26px
+      @include media(1024)
+        padding: 0 22px
+      @include media(768)
+        padding: 0 20px
+      border-radius: 40px
+      color: var(--black)
+      @include media(540)
+        width: 100%
+        text-align: center
+
+      i
+        font-size: 12px
+        transition: transform 0.4s ease
+
+      &:hover i
+        transform: translateX(4px)
+
+  .cta-img
+    position: absolute
+    top: 0
+    right: 0
+    bottom: 0
+    z-index: 1
+    width: 46%
+    @include media(1024)
+      width: 44%
+    @include media(991)
+      display: none
+
+    img
+      display: block
+      width: 100%
+      height: 100%
+      object-fit: cover
+      object-position: center
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%)
+      mask-image: linear-gradient(90deg, transparent 0%, #000 45%)
