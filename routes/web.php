@@ -75,20 +75,21 @@ Route::middleware('maintenance.mode')->group(function () {
 
     Route::controller(FrontController::class)->group(function () {
         Route::get('/', 'home')->name('home');
-        Route::get('/faqs', 'faqs')->name('faqs');
-        Route::get('/blog', 'blogs')->name('blogs');
-        Route::get('/about-us', 'about')->name('about');
-        Route::get('/contact', 'contact')->name('contact');
-        Route::get('/products', 'products')->name('products');
-        Route::get('/blog/{slug}', 'blogDetail')->name('blog.show');
-        Route::get('/categories', 'categories')->name('categories');
-        Route::get('/product/{slug}', 'productShow')->name('products.show');
-        Route::get('/category/{slug}', 'categoryShow')->name('category.show');
-        Route::get('/page/{slug}', 'pageDetail')->where('slug', '[a-z0-9\-]+')->name('page.show');
-        Route::post('/contact', 'contactSubmit')->middleware('throttle:5,1')->name('contact.submit');
-        Route::get('/search/suggest', 'searchSuggest')->middleware('throttle:60,1')->name('search.suggest');
-        Route::post('/newsletter/subscribe', 'newsletterSubscribe')->middleware('throttle:5,1')->name('newsletter.subscribe');
-        Route::get('/products/{id}/quick-view', 'quickView')->whereNumber('id')->middleware('throttle:60,1')->name('products.quick-view');
+        Route::view('/about', 'front-pages.about')->name('about');
+        Route::view('/products', 'front-pages.products')->name('products');
+        Route::view('/blogs', 'front-pages.blogs')->name('blogs');
+        Route::view('/blog/{slug}', 'front-pages.blog-detail')->name('blog.show');
+        Route::view('/cart', 'front-pages.cart')->name('cart');
+        Route::view('/categories', 'front-pages.categories')->name('categories');
+        Route::view('/checkout', 'front-pages.checkout')->name('checkout');
+        Route::view('/contact', 'front-pages.contact')->name('contact');
+        Route::view('/dashboard', 'front-pages.dashboard')->name('dashboard');
+        Route::view('/faqs', 'front-pages.faqs')->name('faqs');
+        Route::view('/order-confirmed', 'front-pages.order-confirmed')->name('order-confirmed');
+        Route::view('/payment', 'front-pages.payment')->name('payment');
+        Route::view('/privacy-policy', 'front-pages.privacy-policy')->name('privacy-policy');
+        Route::view('/product', 'front-pages.product-detail')->name('product.show');
+
     });
 
     Route::get('/pincode/check', [PincodeController::class, 'check'])->middleware('throttle:30,1')->name('pincode.check');
