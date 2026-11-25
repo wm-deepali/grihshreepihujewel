@@ -1215,6 +1215,19 @@
   letter-spacing: 0.04em;
   transition: all 0.35s ease;
 }
+/* active brand tab (class is set from Blade, works for any brand id) */
+.ap-main .brand-tabs label.active {
+  background: var(--primary);
+  color: var(--white);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 32%, transparent);
+}
+.ap-main .brand-tabs label.active small {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--white);
+}
+.ap-main .brand-tabs label.active:hover {
+  color: var(--white);
+}
 .ap-main .brand-tabs label:hover {
   color: var(--primary);
 }

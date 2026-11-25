@@ -175,10 +175,10 @@
                         <div class="half-grid">
                           @foreach($cols as [$colTitle, $colItems])
                             <div class="mega-col">
-                              <a href="{{ route('categories') }}" class="col-title">{{ $colTitle }}</a>
+                              <a href="{{ route('products') }}" class="col-title">{{ $colTitle }}</a>
                               <ul>
                                 @foreach($colItems as $item)
-                                  <li><a href="{{ route('categories') }}">{{ $item }}</a></li>
+                                  <li><a href="{{ route('products') }}">{{ $item }}</a></li>
                                 @endforeach
                               </ul>
                             </div>
@@ -194,22 +194,22 @@
             {{-- ============ HOME & LIVING / JEWELLERY ============ --}}
             @foreach($brandMenus as $menu)
               <li class="hasMega">
-                <a href="{{ route('categories') }}">{{ $menu['label'] }} {!! $chev !!}</a>
+                <a href="{{ route('products') }}">{{ $menu['label'] }} {!! $chev !!}</a>
                 <div class="mega-menu mega-brand">
                   <div class="container-fluid">
                     <div class="mega-inner">
                       <div class="mega-main">
                         <div class="half-head">
                           <h4>{{ $menu['title'] }}</h4>
-                          <a href="{{ route('categories') }}" class="head-link">View All Collection {!! $arrow !!}</a>
+                          <a href="{{ route('products') }}" class="head-link">View All Collection {!! $arrow !!}</a>
                         </div>
                         <div class="mega-grid">
                           @foreach($menu['cols'] as [$colTitle, $colItems])
                             <div class="mega-col">
-                              <a href="{{ route('categories') }}" class="col-title">{{ $colTitle }}</a>
+                              <a href="{{ route('products') }}" class="col-title">{{ $colTitle }}</a>
                               <ul>
                                 @foreach($colItems as $item)
-                                  <li><a href="{{ route('categories') }}">{{ $item }}</a></li>
+                                  <li><a href="{{ route('products') }}">{{ $item }}</a></li>
                                 @endforeach
                               </ul>
                             </div>
@@ -221,7 +221,7 @@
                           loading="lazy" />
                         <span class="feature-text">
                           <span class="feature-label">{{ $menu['feature'] }}</span>
-                          <a href="{{ route('categories') }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
+                          <a href="{{ route('products') }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
                         </span>
                       </div>
                     </div>
@@ -268,10 +268,10 @@
 
             {{-- ============ GIFTS ============ --}}
             <li class="hasDrop">
-              <a href="{{ route('categories') }}">Gifts {!! $chev !!}</a>
+              <a href="{{ route('products') }}">Gifts {!! $chev !!}</a>
               <ul class="drop-menu">
                 @foreach($giftLinks as $gift)
-                  <li><a href="{{ route('categories') }}">{{ $gift }}</a></li>
+                  <li><a href="{{ route('products') }}">{{ $gift }}</a></li>
                 @endforeach
               </ul>
             </li>
@@ -297,7 +297,7 @@
                 <ul class="res-list">
                   @foreach($suggestions as [$keys, $img, $name, $cat, $price])
                     <li data-name="{{ $keys }}">
-                      <a href="{{ route('product.show') }}">
+                      <a href="#">
                         <img src="{{ asset('assets/images/home/' . $img) }}" alt="{{ $name }}" />
                         <span class="res-info"><strong>{{ $name }}</strong><small>{{ $cat }}</small></span>
                         <span class="res-price">{{ $price }}</span>
@@ -424,7 +424,7 @@
               <h5>Shop Grih Shree</h5>
               <ul>
                 @foreach($homeCols as [$colTitle, $colItems])
-                  <li><a href="{{ route('categories') }}">{{ $colTitle }}</a></li>
+                  <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
                 @endforeach
               </ul>
             </div>
@@ -433,7 +433,7 @@
               <h5>Shop Pihu Jewel</h5>
               <ul>
                 @foreach($jewelCols as [$colTitle, $colItems])
-                  <li><a href="{{ route('categories') }}">{{ $colTitle }}</a></li>
+                  <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
                 @endforeach
               </ul>
             </div>
@@ -523,13 +523,13 @@
       <ul class="cp-list">
         @foreach($cartItems as [$img, $cat, $name, $variant, $price, $old, $off])
           <li class="cp-item">
-            <a class="cp-img" href="{{ route('product.show') }}">
+            <a class="cp-img" href="#">
               <img src="{{ asset('assets/images/home/' . $img) }}" alt="{{ $name }}" width="88" height="88"
                 loading="lazy" />
             </a>
             <div class="cp-info">
               <span class="cp-cat">{{ $cat }}</span>
-              <h4 class="cp-name"><a href="{{ route('product.show') }}">{{ $name }}</a></h4>
+              <h4 class="cp-name"><a href="#">{{ $name }}</a></h4>
               <span class="cp-variant">{{ $variant }}</span>
               <div class="cp-price">
                 <strong>{{ $price }}</strong><del>{{ $old }}</del><span class="cp-off">{{ $off }}</span>
@@ -618,10 +618,10 @@
           </div>
           <ul class="ham-list ham-list--sub">
             @foreach($homeCols as [$colTitle, $colItems])
-              <li><a href="{{ route('categories') }}">{{ $colTitle }}</a></li>
+              <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
             @endforeach
             <li class="ham-all">
-              <a href="{{ route('categories') }}">Explore All Home &amp; Living <i class="fa-solid fa-arrow-right"
+              <a href="{{ route('products') }}">Explore All Home &amp; Living <i class="fa-solid fa-arrow-right"
                   aria-hidden="true"></i></a>
             </li>
           </ul>
@@ -635,10 +635,10 @@
           </div>
           <ul class="ham-list ham-list--sub">
             @foreach($jewelCols as [$colTitle, $colItems])
-              <li><a href="{{ route('categories') }}">{{ $colTitle }}</a></li>
+              <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
             @endforeach
             <li class="ham-all">
-              <a href="{{ route('categories') }}">Explore All Jewellery <i class="fa-solid fa-arrow-right"
+              <a href="{{ route('products') }}">Explore All Jewellery <i class="fa-solid fa-arrow-right"
                   aria-hidden="true"></i></a>
             </li>
           </ul>
@@ -683,10 +683,10 @@
           </div>
           <ul class="ham-list ham-list--sub">
             @foreach($giftLinks as $gift)
-              <li><a href="{{ route('categories') }}">{{ $gift }}</a></li>
+              <li><a href="{{ route('products') }}">{{ $gift }}</a></li>
             @endforeach
             <li class="ham-all">
-              <a href="{{ route('categories') }}">Explore All Gifts <i class="fa-solid fa-arrow-right"
+              <a href="{{ route('products') }}">Explore All Gifts <i class="fa-solid fa-arrow-right"
                   aria-hidden="true"></i></a>
             </li>
           </ul>

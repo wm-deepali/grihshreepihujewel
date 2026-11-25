@@ -72,6 +72,12 @@ class Category extends Model
         return $query->whereNotNull('parent_id');
     }
 
+    // Marked popular (used by "Explore by Category")
+    public function scopePopular($query)
+    {
+        return $query->where('is_popular', 1);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS (CLEAN UI)
@@ -86,6 +92,20 @@ class Category extends Model
     public function getIsChildAttribute()
     {
         return !is_null($this->parent_id);
+    }
+
+    // Frontend image URL with a fallback (adjust the 'storage/' prefix to wherever you save category images)
+    public function getImageUrlAttribute()
+    {
+        return $this->image
+            ? asset('storage/' . $this->image)
+            : asset('assets/images/home/cat1.png');
+    }
+
+    // Needs ->withCount(['products', 'subCategoryProducts'])
+    public function getProductsTotalAttribute()
+    {
+        return (int) ($this->products_count ?? 0) + (int) ($this->sub_category_products_count ?? 0);
     }
 
 

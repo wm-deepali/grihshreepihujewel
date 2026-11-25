@@ -12,7 +12,7 @@ return new class extends Migration {
 
             $table->string('name');
             $table->string('slug')->unique();
-            $table->string('code')->unique();
+            $table->string('code')->nullable();
 
             $table->string('meta_title')->nullable();
             $table->text('meta_description')->nullable();

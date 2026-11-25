@@ -4,19 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
     use SoftDeletes;
 
-    public const SORT_OPTIONS = [
-        'recommended' => 'Recommended',
-        'newest' => 'New Arrivals',
-        'sold' => 'Best Selling',
-        'low' => 'Price: Low to High',
-        'high' => 'Price: High to Low',
-        'rating' => 'Customer Rating',
-    ];
 
     protected $fillable = [
 
@@ -73,27 +66,28 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'subcategory_id');
     }
 
+    // ✅ new: brand relation (Grih Shree / Pihu Jewel)
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
     /**
      * ✅ Used across all grid/listing views (homepage sections, product
      * listing pages, luxury tabs, etc). Prefers the compressed THUMB
      * (400px) since these are always shown small — falls back to the
      * full image for older rows created before the thumb column existed.
+     *
+     * Uses the already-loaded `images` relation (forCard() eager loads it)
+     * so a grid of 12 cards doesn't fire 1-2 extra queries per card.
      */
     public function getDisplayImageAttribute()
     {
-        $default = $this->images()
-            ->where('is_default', 1)
-            ->first();
+        $img = $this->images->firstWhere('is_default', 1) ?? $this->images->first();
 
-        if ($default) {
-            return asset('storage/' . ($default->thumb ?? $default->image));
-        }
-
-        $image = $this->images()->first();
-
-        return $image
-            ? asset('storage/' . ($image->thumb ?? $image->image))
-            : asset('assets/images/home/tab1.png');
+        return $img
+            ? asset('storage/' . ($img->thumb ?? $img->image))
+            : asset('assets/images/home/pro2.png');
     }
 
     public function attributeValues()
@@ -180,7 +174,7 @@ class Product extends Model
     // card ke liye jo relations aur rating chahiye, ek jagah
     public function scopeForCard($query)
     {
-        return $query->with(['images', 'collections:id,name', 'category:id,name', 'subcategory:id,name'])
+        return $query->with(['images', 'brand:id,name', 'collections:id,name', 'category:id,name', 'subcategory:id,name'])
             ->withAvg('approvedReviews as avg_rating', 'rating');
     }
 
@@ -198,6 +192,91 @@ class Product extends Model
             ? (int) round((($this->mrp - $this->price) / $this->mrp) * 100)
             : 0;
     }
+
+    // partials.product-card ko jo array chahiye (static cards jaisa hi shape)
+    // needs forCard() so images, brand and avg_rating are loaded
+    // $badge = optional override, e.g. ['best', 'fa-crown', 'Best Seller']; default = "New" for products < 30 days old
+    public function toCard(?array $badge = null): array
+    {
+        $pct = $this->discount_percent;
+
+        // first collection of the product becomes the badge text
+        $collection = $this->collections->first();
+
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'img_url' => $this->display_image,
+            'url' => url('product/' . $this->slug),
+            'brand' => $this->brand?->name,
+            'rate' => $this->avg_rating ? number_format($this->avg_rating, 1) : null,
+            'sub' => Str::limit(strip_tags((string) $this->short_description), 70),
+            'price' => '₹' . number_format($this->price),
+            'old' => $pct ? '₹' . number_format($this->mrp) : null,
+            'save' => $pct ? $pct . '%' : null,
+            'badge' => $badge ?? (
+                $collection
+                ? ['collection', 'fa-gem', $collection->name]
+                : (
+                    ($this->created_at && $this->created_at->gt(now()->subDays(30)))
+                    ? ['new', 'fa-sparkles', 'New']
+                    : null
+                )
+            ),
+        ];
+    }
+
+    /**
+     * Listing page filters. Keys of $f (all optional):
+     * brand, category_ids[], price_min, price_max, in_stock, occasion[],
+     * collection[], rating, discount, attrs[attribute_id => value_ids[]]
+     */
+    public function scopeFilter($query, array $f)
+    {
+        return $query
+            ->when(!empty($f['brand']), fn($q) => $q->where('brand_id', $f['brand']))
+
+            // category matches either the main category or the subcategory
+            ->when(!empty($f['category_ids']), fn($q) => $q->where(function ($w) use ($f) {
+                $w->whereIn('category_id', $f['category_ids'])
+                    ->orWhereIn('subcategory_id', $f['category_ids']);
+            }))
+
+            ->when(!empty($f['price_min']), fn($q) => $q->where('price', '>=', $f['price_min']))
+            ->when(!empty($f['price_max']), fn($q) => $q->where('price', '<=', $f['price_max']))
+
+            ->when(!empty($f['in_stock']), fn($q) => $q->where('stock', '>', 0))
+
+            ->when(!empty($f['occasion']), fn($q) => $q->whereHas(
+                'occasions',
+                fn($o) => $o->whereIn($o->getModel()->getQualifiedKeyName(), $f['occasion'])
+            ))
+
+            ->when(!empty($f['collection']), fn($q) => $q->whereHas(
+                'collections',
+                fn($c) => $c->whereIn($c->getModel()->getQualifiedKeyName(), $f['collection'])
+            ))
+
+            // avg of approved reviews >= selected rating
+            ->when(!empty($f['rating']), fn($q) => $q->whereRaw(
+                '(select avg(rating) from product_reviews where product_reviews.product_id = products.id and product_reviews.status = ?) >= ?',
+                ['approved', $f['rating']]
+            ))
+
+            // discount % = (mrp - price) / mrp * 100
+            ->when(!empty($f['discount']), fn($q) => $q->whereRaw(
+                'mrp > 0 and ((mrp - price) / mrp) * 100 >= ?',
+                [$f['discount']]
+            ))
+
+            // OR within one attribute, AND across different attributes
+            ->when(!empty($f['attrs']), function ($q) use ($f) {
+                foreach ($f['attrs'] as $valueIds) {
+                    $q->whereHas('attributeValues', fn($a) => $a->whereIn('attribute_value_id', $valueIds));
+                }
+            });
+    }
+
     public function scopeOrderForListing($query, ?string $sort)
     {
         switch ($sort) {
@@ -219,6 +298,9 @@ class Product extends Model
                 break;
             case 'newest':
                 $query->orderByDesc('created_at');
+                break;
+            case 'discount':
+                $query->orderByRaw('CASE WHEN mrp > 0 THEN (mrp - price) / mrp ELSE 0 END DESC');
                 break;
         }
 

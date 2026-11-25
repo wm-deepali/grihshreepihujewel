@@ -75,20 +75,21 @@ Route::middleware('maintenance.mode')->group(function () {
 
     Route::controller(FrontController::class)->group(function () {
         Route::get('/', 'home')->name('home');
+        Route::get('/products', 'products')->name('products');
+        Route::get('/category/{slug}', 'category')->name('category.show');
+        Route::get('/product/{slug}', 'productShow')->name('product.show');
+
+        Route::view('/order-confirmed', 'front-pages.order-confirmed')->name('order-confirmed');
         Route::view('/about', 'front-pages.about')->name('about');
-        Route::view('/products', 'front-pages.products')->name('products');
         Route::view('/blogs', 'front-pages.blogs')->name('blogs');
         Route::view('/blog/{slug}', 'front-pages.blog-detail')->name('blog.show');
         Route::view('/cart', 'front-pages.cart')->name('cart');
-        Route::view('/categories', 'front-pages.categories')->name('categories');
         Route::view('/checkout', 'front-pages.checkout')->name('checkout');
         Route::view('/contact', 'front-pages.contact')->name('contact');
         Route::view('/dashboard', 'front-pages.dashboard')->name('dashboard');
         Route::view('/faqs', 'front-pages.faqs')->name('faqs');
-        Route::view('/order-confirmed', 'front-pages.order-confirmed')->name('order-confirmed');
         Route::view('/payment', 'front-pages.payment')->name('payment');
         Route::view('/privacy-policy', 'front-pages.privacy-policy')->name('privacy-policy');
-        Route::view('/product', 'front-pages.product-detail')->name('product.show');
 
     });
 
