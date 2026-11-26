@@ -1,35 +1,61 @@
 @extends('layouts.app')
 
-@section('title', 'Checkout | Grih Shree & Pihu Jewel')
+@section('title', 'Checkout | ' . config('app.name'))
 
 @push('styles')
   <link rel="stylesheet" href="{{ asset('assets/sass/checkout/checkout.css') }}" />
 @endpush
 
 @php
-  // replace with the logged-in user's addresses / cart later
-  $addresses = [
-    ['n' => 1, 'icon' => 'fa-house', 'tag' => 'Home', 'default' => true, 'checked' => true,
-      'lines' => ['B-204, Sunrise Apartments, Sector 56, Golf Course Road', 'Gurugram, Haryana - 122011'],
-      'v' => ['name' => 'Ananya Kapoor', 'phone' => '9811122334', 'pin' => '122011', 'city' => 'Gurugram', 'state' => 'Haryana', 'house' => 'B-204', 'street' => 'Sunrise Apartments, Sector 56', 'landmark' => 'Golf Course Road', 'type' => 'home']],
-    ['n' => 2, 'icon' => 'fa-briefcase', 'tag' => 'Work', 'default' => false, 'checked' => false,
-      'lines' => ['Tower C, 7th Floor, Sector 62, Near Metro Station', 'Noida, Uttar Pradesh - 201301'],
-      'v' => ['name' => 'Ananya Kapoor', 'phone' => '9811122334', 'pin' => '201301', 'city' => 'Noida', 'state' => 'Uttar Pradesh', 'house' => 'Tower C, 7th Floor', 'street' => 'Sector 62', 'landmark' => 'Near Metro Station', 'type' => 'work']],
-  ];
+  $items = $cart->items;
+  $count = (int) $items->sum('quantity');
+  $grand = (float) $cart->grand_total;
+  $shipKnown = (bool) $defaultAddress;
+
+  $waDigits = preg_replace('/\D+/', '', (string) ($general->whatsapp ?? ''));
+  if (strlen($waDigits) === 10) {
+    $waDigits = '91' . $waDigits;
+  }
+  $waLink = $waDigits ? 'https://wa.me/' . $waDigits : null;
+
+  $typeMap = ['home' => ['Home', 'fa-house'], 'office' => ['Work', 'fa-briefcase'], 'other' => ['Other', 'fa-location-dot']];
+
+  $addrRows = $addresses->map(function ($a) use ($typeMap) {
+    [$tag, $icon] = $typeMap[$a->address_type] ?? $typeMap['home'];
+    return [
+      'id' => $a->id,
+      'icon' => $icon,
+      'tag' => $tag,
+      'default' => (bool) $a->is_default,
+      'email' => $a->email,
+      'state_id' => $a->state_id,
+      'city_id' => $a->city_id,
+      'lines' => array_values(array_filter([
+        collect([$a->address_line_1, $a->address_line_2])->filter()->implode(', '),
+        collect([$a->city?->name, $a->state?->name])->filter()->implode(', ') . ($a->pincode ? ' - ' . $a->pincode : ''),
+      ])),
+      'v' => [
+        'name' => $a->name,
+        'phone' => $a->phone,
+        'pin' => $a->pincode,
+        'state_id' => $a->state_id,
+        'city_id' => $a->city_id,
+        'house' => $a->address_line_1,
+        'street' => $a->address_line_2,
+        'landmark' => '',
+        'type' => $a->address_type === 'office' ? 'work' : ($a->address_type ?: 'home'),
+      ],
+    ];
+  });
+
+  $checkedId = $defaultAddress->id ?? ($addrRows->first()['id'] ?? null);
+  $prefEmail = $customer->email ?? $defaultAddress->email ?? '';
+  $prefPhone = $customer->mobile ?? $defaultAddress->phone ?? '';
 
   $methods = [
     ['standard', true, 'Fri', '27', 'Nov', 'Standard Delivery', '3–7 working days · Tracked', 'Free', true],
-    ['express', false, 'Mon', '23', 'Nov', 'Priority Delivery', 'Faster dispatch · Tracked', '₹99', false],
   ];
 
-  $miniItems = [
-    ['pro2.png', 1, 'Royal Radiance – Premium Bridal Necklace Set', 'Antique Gold-tone · Crystal White', '₹7,500'],
-    ['pro4.png', 2, 'Pearl Drop Earrings', 'Gold-tone · Free Size', '₹1,498'],
-    ['pro1.png', 1, 'Handloom Cotton Bedsheet Set', 'Ivory · Double', '₹2,499'],
-    ['pro3.png', 1, 'Brass Diya Gift Set', 'Hand-finished Brass · Gift Ready', '₹899'],
-  ];
-
-  $states = ['Andhra Pradesh', 'Delhi', 'Gujarat', 'Haryana', 'Karnataka', 'Kerala', 'Maharashtra', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh', 'West Bengal'];
 @endphp
 
 @section('content')
@@ -58,26 +84,30 @@
       <div class="co-head">
         <span class="eyebrow">Almost There</span>
         <h1>Delivery Details</h1>
-        <a href="{{ url('cart') }}" class="back-link"><i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i> Back to bag</a>
+        <a href="{{ url('cart') }}" class="back-link"><i class="fa-solid fa-arrow-left-long" aria-hidden="true"></i> Back
+          to bag</a>
       </div>
 
-      <form class="co-layout form" action="{{ url('checkout/payment') }}" method="post" novalidate>
-        @csrf
+      <form class="co-layout form" action="#" method="post" novalidate onsubmit="return false">
         <div class="co-main">
           {{-- 1 : DETAILS --}}
           <section class="co-block">
             <div class="co-row">
               <h2 class="co-title"><span class="num">1</span> Your details</h2>
-              <p class="co-aside">Already a member? <a href="{{ url('login') }}?next=/checkout">Sign in</a></p>
+              @unless($customer)
+                <p class="co-aside">Already a member? <a href="javascript:void(0)" data-model=".login-pop">Sign in</a></p>
+              @endunless
             </div>
             <div class="fields">
               <div class="form-group s-6">
-                <input type="email" id="cEmail" name="email" placeholder=" " autocomplete="email" />
+                <input type="email" id="cEmail" name="email" placeholder=" " autocomplete="email"
+                  value="{{ $prefEmail }}" />
                 <label for="cEmail">Email address</label>
               </div>
               <div class="form-group has-prefix s-6">
                 <span class="prefix">+91</span>
-                <input type="tel" id="cPhone" name="phone" placeholder=" " inputmode="numeric" maxlength="10" autocomplete="tel-national" />
+                <input type="tel" id="cPhone" name="phone" placeholder=" " inputmode="numeric" maxlength="10"
+                  autocomplete="tel-national" value="{{ $prefPhone }}" />
                 <label for="cPhone">Mobile number</label>
               </div>
             </div>
@@ -91,14 +121,17 @@
           <section class="co-block">
             <div class="co-row">
               <h2 class="co-title"><span class="num">2</span> Where should we send it?</h2>
-              <p class="co-aside">{{ count($addresses) }} saved addresses</p>
+              @if($addrRows->count())
+                <p class="co-aside">{{ $addrRows->count() }} saved {{ $addrRows->count() === 1 ? 'address' : 'addresses' }}
+                </p>
+              @endif
             </div>
 
             <div class="addr-list" role="radiogroup" aria-label="Choose a delivery address">
-              @foreach($addresses as $a)
-                <div class="addr-card">
-                  <input type="radio" name="address" id="addr{{ $a['n'] }}" class="addr-radio" value="{{ $a['n'] }}" {{ $a['checked'] ? 'checked' : '' }} />
-                  <label for="addr{{ $a['n'] }}" class="addr-body">
+              @foreach($addrRows as $a)
+                <div class="addr-card" data-id="{{ $a['id'] }}" data-email="{{ $a['email'] }}">
+                  <input type="radio" name="address" id="addr{{ $a['id'] }}" class="addr-radio" value="{{ $a['id'] }}" {{ $a['id'] === $checkedId ? 'checked' : '' }} />
+                  <label for="addr{{ $a['id'] }}" class="addr-body">
                     <span class="addr-ico" aria-hidden="true"><i class="fa-solid {{ $a['icon'] }}"></i></span>
                     <span class="addr-info">
                       <span class="addr-top">
@@ -107,35 +140,41 @@
                         @if($a['default'])<span class="tag tag-default">Default</span>@endif
                       </span>
                       @foreach($a['lines'] as $line)<span class="addr-line">{{ $line }}</span>@endforeach
-                      <span class="addr-phone"><i class="fa-solid fa-phone" aria-hidden="true"></i> +91 {{ substr($a['v']['phone'], 0, 5) }} {{ substr($a['v']['phone'], 5) }}</span>
+                      @if($a['v']['phone'])
+                        <span class="addr-phone"><i class="fa-solid fa-phone" aria-hidden="true"></i> +91
+                          {{ substr($a['v']['phone'], 0, 5) }} {{ substr($a['v']['phone'], 5) }}</span>
+                      @endif
                     </span>
                     <span class="radio-dot" aria-hidden="true"></span>
                   </label>
 
-                  <input type="checkbox" id="edit{{ $a['n'] }}" class="edit-toggle" />
-                  <label for="edit{{ $a['n'] }}" class="addr-edit"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit address</label>
+                  <input type="checkbox" id="edit{{ $a['id'] }}" class="edit-toggle" />
+                  <label for="edit{{ $a['id'] }}" class="addr-edit"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit
+                    address</label>
 
                   <div class="addr-form">
                     <h3>Edit address</h3>
-                    @include('partials.address-fields', ['idp' => 'a' . $a['n'], 'px' => 'a' . $a['n'] . '_', 'v' => $a['v']])
+                    @include('partials.address-fields', ['idp' => 'a' . $a['id'], 'px' => 'a' . $a['id'] . '_', 'v' => $a['v']])
                     <label class="check">
-                      <input type="checkbox" name="a{{ $a['n'] }}_default" {{ $a['default'] ? 'checked' : '' }} />
+                      <input type="checkbox" name="a{{ $a['id'] }}_default" {{ $a['default'] ? 'checked' : '' }} />
                       <span>Keep this as my default address</span>
                     </label>
                     <div class="form-actions">
-                      <button type="submit" class="btn btn-primary" formaction="{{ url('checkout/address/save') }}">Save address</button>
-                      <label for="edit{{ $a['n'] }}" class="btn btn-outline-primary">Cancel</label>
+                      <button type="button" class="btn btn-primary js-save-addr" data-id="{{ $a['id'] }}">Save
+                        address</button>
+                      <label for="edit{{ $a['id'] }}" class="btn btn-outline-primary">Cancel</label>
                     </div>
                   </div>
                 </div>
               @endforeach
 
               <div class="addr-card addr-new">
-                <input type="radio" name="address" id="addrNew" class="addr-radio" value="new" />
+                <input type="radio" name="address" id="addrNew" class="addr-radio" value="new" {{ $checkedId ? '' : 'checked' }} />
                 <label for="addrNew" class="addr-body">
                   <span class="addr-ico" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
                   <span class="addr-info">
-                    <span class="addr-top"><strong>Deliver to a new address</strong></span>
+                    <span
+                      class="addr-top"><strong>{{ $addrRows->count() ? 'Deliver to a new address' : 'Add your delivery address' }}</strong></span>
                     <span class="addr-line">Add a different name, phone number or location for this order.</span>
                   </span>
                   <span class="radio-dot" aria-hidden="true"></span>
@@ -143,14 +182,14 @@
 
                 <div class="addr-form">
                   @include('partials.address-fields', ['idp' => 'n', 'px' => 'new_'])
-                  <label class="check">
-                    <input type="checkbox" name="new_default" />
-                    <span>Save this address for next time</span>
-                  </label>
-                  <div class="form-actions">
-                    <button type="submit" class="btn btn-primary" formaction="{{ url('checkout/address/save') }}">Save &amp; deliver here</button>
-                    <label for="addr1" class="btn btn-outline-primary">Cancel</label>
-                  </div>
+                  @if($customer)
+                    <div class="form-actions">
+                      <button type="button" class="btn btn-primary js-save-new">Save &amp; deliver here</button>
+                      @if($checkedId)
+                        <label for="addr{{ $checkedId }}" class="btn btn-outline-primary">Cancel</label>
+                      @endif
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
@@ -168,7 +207,8 @@
                 <label class="method">
                   <input type="radio" name="delivery" value="{{ $value }}" {{ $checked ? 'checked' : '' }} />
                   <span class="method-body">
-                    <span class="method-date" aria-hidden="true"><small>{{ $day }}</small><b>{{ $date }}</b><em>{{ $month }}</em></span>
+                    <span class="method-date"
+                      aria-hidden="true"><small>{{ $day }}</small><b>{{ $date }}</b><em>{{ $month }}</em></span>
                     <span class="method-text">
                       <strong>{{ $title }}</strong>
                       <small>{{ $sub }}</small>
@@ -190,56 +230,168 @@
           </div>
 
           <div class="box price-box">
-            <div class="box-head"><h5>In your bag <span>(4 items)</span></h5></div>
+            <div class="box-head">
+              <h5>In your bag <span>({{ $count }} {{ $count === 1 ? 'item' : 'items' }})</span></h5>
+            </div>
 
-            <ul class="mini-list">
-              @foreach($miniItems as [$img, $qty, $name, $variant, $price])
-                <li>
-                  <span class="mini-img">
-                    <img src="{{ asset('assets/images/home/' . $img) }}" alt="" width="56" height="75" loading="lazy" />
-                    <b>{{ $qty }}</b>
-                  </span>
-                  <span class="mini-text"><strong>{{ $name }}</strong><small>{{ $variant }}</small></span>
-                  <span class="mini-price">{{ $price }}</span>
-                </li>
-              @endforeach
-            </ul>
+            @include('partials.co-lines', ['cart' => $cart, 'w' => 56, 'h' => 75, 'totalLabel' => 'Total Amount', 'shipKnown' => $shipKnown])
 
-            <dl class="rows">
-              <div class="row"><dt>Total MRP</dt><dd>₹16,495</dd></div>
-              <div class="row is-green"><dt>Discount on MRP</dt><dd>−₹4,099</dd></div>
-              <div class="row is-green"><dt>Coupon (PIHUSPECIAL)</dt><dd>−₹500</dd></div>
-              <div class="row"><dt>Gift Packaging</dt><dd class="is-green">Free</dd></div>
-              <div class="row"><dt>Shipping Fee</dt><dd class="is-green"><del>₹99</del> Free</dd></div>
-              <div class="row row-total"><dt>Total Amount<small>Inclusive of all taxes</small></dt><dd>₹11,896</dd></div>
-            </dl>
-
-            <p class="save-chip"><i class="fa-solid fa-piggy-bank" aria-hidden="true"></i> You are saving ₹4,599 on this order</p>
-
-            <a href="{{ url('payment') }}" class="btn btn-primary place-btn">
+            <a href="{{ route('payment') }}" class="btn btn-primary place-btn js-continue">
               Continue to Payment <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
             </a>
-            <p class="terms-note">By continuing, you agree to our <a href="{{ url('terms-conditions') }}">Terms</a> and <a href="{{ url('privacy-policy') }}">Privacy Policy</a>.</p>
+            <p class="terms-note">By continuing, you agree to our <a href="{{ url('terms-conditions') }}">Terms</a> and <a
+                href="{{ url('privacy-policy') }}">Privacy Policy</a>.</p>
           </div>
 
-          <a href="javascript:void(0)" class="co-help">
-            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-            <span>Need help? <b>Chat with our styling team</b></span>
-            <i class="fa-solid fa-arrow-right-long go" aria-hidden="true"></i>
-          </a>
+          @if($waLink)
+            <a href="{{ $waLink }}" class="co-help" target="_blank" rel="noopener">
+              <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+              <span>Need help? <b>Chat with our styling team</b></span>
+              <i class="fa-solid fa-arrow-right-long go" aria-hidden="true"></i>
+            </a>
+          @endif
         </aside>
-
-        <datalist id="stateList">
-          @foreach($states as $state)<option value="{{ $state }}"></option>@endforeach
-        </datalist>
       </form>
 
       <div class="co-bar">
-        <div class="bar-total"><span>Total</span><strong>₹11,896</strong></div>
-        <a href="{{ url('payment') }}" class="btn btn-primary">
+        <div class="bar-total"><span>Total</span><strong>₹{{ number_format($grand) }}</strong></div>
+        <a href="{{ route('payment') }}" class="btn btn-primary js-continue">
           Continue to Payment <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
         </a>
       </div>
     </div>
   </section>
 @endsection
+
+@push('scripts')
+  @include('partials.geo-js')
+  <script>
+    $(function () {
+      var IS_CUSTOMER = @json((bool) $customer);
+      var URLS = {
+        store: "{{ route('address.store') }}",
+        update: "{{ route('address.update', '__ID__') }}",
+        def: "{{ route('checkout.change-default-address') }}",
+        payment: "{{ route('payment') }}"
+      };
+      var token = function () { return $('meta[name="csrf-token"]').attr("content"); };
+      var H = function () { return { "X-CSRF-TOKEN": token(), Accept: "application/json" }; };
+
+      function errText(xhr) {
+        var j = xhr.responseJSON || {};
+        if (j.errors) return Object.values(j.errors)[0][0];
+        return j.message || "Something went wrong. Please try again.";
+      }
+
+      // value of a named field (ignores unchecked radios / checkboxes)
+      function field(px, key) {
+        var $f = $(':input[name="' + px + key + '"]').filter(function () {
+          return (this.type !== "radio" && this.type !== "checkbox") || this.checked;
+        }).first();
+        return $.trim($f.val() || "");
+      }
+
+      // read + validate one address form; resolves the payload the backend expects
+      function collect(px, fallbackEmail) {
+        var d = $.Deferred();
+        var email = $.trim($("#cEmail").val()) || fallbackEmail || "";
+        var phone = field(px, "phone") || $.trim($("#cPhone").val());
+        var type = field(px, "type").toLowerCase();
+        type = type === "work" ? "office" : (type === "other" ? "other" : "home");
+
+        var v = {
+          name: field(px, "name"), email: email, phone: phone,
+          address_line_1: field(px, "house"),
+          address_line_2: [field(px, "street"), field(px, "landmark")].filter(Boolean).join(", "),
+          pincode: field(px, "pin"), address_type: type
+        };
+
+        if (!v.name) return d.reject("Please enter your full name.").promise();
+        if (!/^\S+@\S+\.\S+$/.test(v.email)) return d.reject("Please enter a valid email address.").promise();
+        if (!/^[6-9]\d{9}$/.test(v.phone)) return d.reject("Enter a valid 10 digit mobile number.").promise();
+        if (!v.address_line_1) return d.reject("Please enter your house / flat number.").promise();
+        if (!/^\d{6}$/.test(v.pincode)) return d.reject("Enter a valid 6 digit pincode.").promise();
+
+        v.state_id = field(px, "state_id");
+        v.city_id = field(px, "city_id");
+        if (!v.state_id) return d.reject("Please select a state.").promise();
+        if (!v.city_id) return d.reject("Please select a city.").promise();
+
+        // names kept for the guest draft (sessionStorage)
+        v.state_name = $.trim($(':input[name="' + px + 'state_id"] option:selected').text());
+        v.city_name = $.trim($(':input[name="' + px + 'city_id"] option:selected').text());
+
+        return d.resolve(v).promise();
+      }
+
+      // state -> city dropdowns for every form on the page
+      $(".addr-card").each(function () {
+        var px = $(this).hasClass("addr-new") ? "new_" : "a" + $(this).data("id") + "_";
+        Geo.bind($(':input[name="' + px + 'state_id"]'), $(':input[name="' + px + 'city_id"]'));
+      });
+
+      // picking another saved address makes it the default (GST + shipping follow the default)
+      $(document).on("change", 'input[name="address"]', function () {
+        if (!IS_CUSTOMER || this.value === "new") return;
+        $.ajax({ url: URLS.def, method: "POST", data: { address_id: this.value }, headers: H() })
+          .done(function () { window.location.reload(); })
+          .fail(function (xhr) { alert(errText(xhr)); });
+      });
+
+      // edit saved address
+      $(document).on("click", ".js-save-addr", function () {
+        var $b = $(this), id = $b.data("id"), px = "a" + id + "_";
+        if ($b.data("busy")) return;
+        collect(px, $b.closest(".addr-card").data("email")).done(function (v) {
+          $b.data("busy", true);
+          var isDef = $(':input[name="' + px + 'default"]').is(":checked") ? 1 : 0;
+          $.ajax({
+            url: URLS.update.replace("__ID__", id), method: "POST", headers: H(),
+            data: $.extend({ _method: "PUT", is_default: isDef }, v)
+          })
+            .done(function () { window.location.reload(); })
+            .fail(function (xhr) { alert(errText(xhr)); })
+            .always(function () { $b.data("busy", false); });
+        }).fail(function (m) { alert(m); });
+      });
+
+      function storeNew(v) {
+        return $.ajax({ url: URLS.store, method: "POST", data: v, headers: H() });
+      }
+
+      // "Save & deliver here" (signed-in only)
+      $(document).on("click", ".js-save-new", function () {
+        var $b = $(this);
+        if ($b.data("busy")) return;
+        collect("new_").done(function (v) {
+          $b.data("busy", true);
+          storeNew(v).done(function () { window.location.reload(); })
+            .fail(function (xhr) { alert(errText(xhr)); })
+            .always(function () { $b.data("busy", false); });
+        }).fail(function (m) { alert(m); });
+      });
+
+      // Continue to payment
+      $(document).on("click", ".js-continue", function (e) {
+        e.preventDefault();
+        var $b = $(this);
+        if ($b.data("busy")) return;
+        var sel = $('input[name="address"]:checked').val();
+
+        if (IS_CUSTOMER && sel && sel !== "new") { window.location.href = URLS.payment; return; }
+
+        collect("new_").done(function (v) {
+          $b.data("busy", true);
+          if (IS_CUSTOMER) {
+            storeNew(v).done(function () { window.location.href = URLS.payment; })
+              .fail(function (xhr) { alert(errText(xhr)); $b.data("busy", false); });
+          } else {
+            // guest: keep the address in this browser tab; it is saved when the order is placed
+            try { sessionStorage.setItem("coDraft", JSON.stringify(v)); } catch (err) { }
+            window.location.href = URLS.payment;
+          }
+        }).fail(function (m) { alert(m); });
+      });
+    });
+  </script>
+@endpush

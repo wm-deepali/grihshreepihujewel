@@ -900,57 +900,66 @@
                             </div>
 
                             <div class="content-tabs">
-                                <button type="button" class="content-tab-btn active" data-tab="fabric_material">Fabric
-                                    &amp; Material</button>
+                                <button type="button" class="content-tab-btn active"
+                                    data-tab="description">Description</button>
+                                <button type="button" class="content-tab-btn" data-tab="inclusions">What's
+                                    Included</button>
+                                <button type="button" class="content-tab-btn" data-tab="size_fit">Size &amp;
+                                    Fit</button>
                                 <button type="button" class="content-tab-btn" data-tab="care_instructions">Care
                                     Instructions</button>
                                 <button type="button" class="content-tab-btn" data-tab="shipping_delivery">Shipping
                                     &amp; Delivery</button>
                                 <button type="button" class="content-tab-btn" data-tab="returns_exchange">Returns &amp;
                                     Exchange</button>
-                                <button type="button" class="content-tab-btn" data-tab="offers_how_to_avail">Offers
-                                    &amp; How to Avail</button>
                             </div>
 
                             <div class="section-card-body">
 
-                                <div class="content-tab-panel active" data-panel="fabric_material">
-                                    <textarea name="fabric_material" id="fabric_material"
-                                        class="field-textarea">{{ old('fabric_material') }}</textarea>
-                                    <div class="field-hint">Fabric aur weave ke baare me ek chhota paragraph. Detail
-                                        page ke "Fabric &amp; Material" accordion me dikhega.</div>
+                                <div class="content-tab-panel active" data-panel="description">
+                                    <textarea name="description" id="description"
+                                        class="field-textarea">{{ old('description') }}</textarea>
+                                    <div class="field-hint">Full product story. Shown in the "Description" accordion on
+                                        the detail page.</div>
+                                </div>
+
+                                <div class="content-tab-panel" data-panel="inclusions">
+                                    <textarea name="inclusions" id="inclusions" class="field-textarea" rows="6"
+                                        placeholder="Necklace&#10;Long Earrings&#10;Maang Tikka">{{ old('inclusions') }}</textarea>
+                                    <div class="field-hint">One item per line. Shown as the "What's Included" list.
+                                    </div>
+                                </div>
+
+                                <div class="content-tab-panel" data-panel="size_fit">
+                                    <textarea name="size_fit" id="size_fit"
+                                        class="field-textarea">{{ old('size_fit') }}</textarea>
+                                    <div class="field-hint">Fit notes. The Size Guide button appears automatically if
+                                        the category has a size chart.</div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="care_instructions">
                                     <textarea name="care_instructions" id="care_instructions"
                                         class="field-textarea">{{ old('care_instructions') }}</textarea>
-                                    <div class="field-hint">Bullet list me likho (dry clean only, iron on low heat...).
-                                    </div>
+                                    <div class="field-hint">Bullet list (keep away from water, avoid perfume...).</div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="shipping_delivery">
                                     <textarea name="shipping_delivery" id="shipping_delivery"
                                         class="field-textarea">{{ old('shipping_delivery') }}</textarea>
-                                    <div class="field-hint">Khali chhodo to store ki default shipping policy dikhegi.
+                                    <div class="field-hint">Leave empty to show the store's default shipping policy.
                                     </div>
                                 </div>
 
                                 <div class="content-tab-panel" data-panel="returns_exchange">
                                     <textarea name="returns_exchange" id="returns_exchange"
                                         class="field-textarea">{{ old('returns_exchange') }}</textarea>
-                                    <div class="field-hint">Khali chhodo to store ki default return/exchange policy
-                                        dikhegi.</div>
-                                </div>
-
-                                <div class="content-tab-panel" data-panel="offers_how_to_avail">
-                                    <textarea name="offers_how_to_avail" id="offers_how_to_avail"
-                                        class="field-textarea">{{ old('offers_how_to_avail') }}</textarea>
-                                    <div class="field-hint">Khali chhodo to active coupons se steps apne aap ban
-                                        jayenge.</div>
+                                    <div class="field-hint">Leave empty to show the store's default return/exchange
+                                        policy.</div>
                                 </div>
 
                             </div>
                         </div>
+
                         <!-- Pricing -->
                         <div class="section-card">
                             <div class="section-card-header">
@@ -1088,24 +1097,6 @@
                                 </div>
                             </div>
 
-                            {{-- Colour customization (product-level) --}}
-                            <div style="padding:16px 20px;border-top:1px solid var(--border);">
-                                <input type="hidden" name="colour_customization" value="0">
-                                <label class="check-toggle" style="margin-bottom:12px;">
-                                    <input type="checkbox" name="colour_customization" id="colour_customization"
-                                        value="1" {{ old('colour_customization') ? 'checked' : '' }}>
-                                    <span>Colour customization available</span>
-                                </label>
-
-                                <div class="field-group" id="dye-price-wrapper"
-                                    style="margin:0;{{ old('colour_customization') ? '' : 'display:none' }}">
-                                    <label class="field-label">Dye Price (₹)</label>
-                                    <input type="number" step="0.01" min="0" name="dye_price" id="dye_price"
-                                        class="field-input" value="{{ old('dye_price') }}" placeholder="0.00">
-                                    <div class="field-hint">Extra charge when the customer wants a custom colour.
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Inventory -->
@@ -1228,11 +1219,11 @@
      * All 5 are initialized up front so their values are always present
      * in the POST regardless of which tab was last open. */
     CKEDITOR.config.versionCheck = false;
-    CKEDITOR.replace('fabric_material');
+    CKEDITOR.replace('description');
+    CKEDITOR.replace('size_fit');
     CKEDITOR.replace('care_instructions');
     CKEDITOR.replace('shipping_delivery');
     CKEDITOR.replace('returns_exchange');
-    CKEDITOR.replace('offers_how_to_avail');
 
     /* ── Content tabs ────────────────────────────────────────────── */
     $(document).on('click', '.content-tab-btn', function () {
@@ -1438,12 +1429,6 @@
         $('#addon-table').toggle(hasRows);
         $('#addon-empty-hint').toggle(!hasRows);
     }
-
-    /* ── Colour customization → show/hide dye price ─────────────── */
-    $(document).on('change', '#colour_customization', function () {
-        $('#dye-price-wrapper').toggle(this.checked);
-        if (!this.checked) $('#dye_price').val('');
-    });
 
     /* ── Category → subcategories & attributes ──────────────────── */
     $('#category_id').on('change', function () {

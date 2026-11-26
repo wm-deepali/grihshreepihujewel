@@ -62,6 +62,8 @@
   ];
 
   $isHome = request()->is('/');
+  $authUser = auth('customer')->user(); // null for guests
+  $authInitial = $authUser ? mb_strtoupper(mb_substr(trim((string) $authUser->name), 0, 1)) : '';
 @endphp
 <!doctype html>
 <html lang="en">
@@ -320,33 +322,55 @@
             <span class="count">0</span>
           </a>
 
-          <div class="account-wrapper">
-            <button type="button" class="action-link account-btn" aria-label="Account" title="Account">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round">
-                <circle cx="12" cy="8" r="4.2" />
-                <path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5" />
-              </svg>
-            </button>
-            <div class="account-drop">
-              <div class="acc-user">
-                <span class="acc-avatar">A</span>
-                <div class="acc-name">
-                  <strong>Ananya Kapoor</strong>
-                  <small>ananya@example.com</small>
+          @if($authUser)
+            <div class="account-wrapper">
+              <button type="button" class="action-link account-btn" aria-label="Account" title="Account">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round">
+                  <circle cx="12" cy="8" r="4.2" />
+                  <path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5" />
+                </svg>
+              </button>
+              <div class="account-drop">
+                <div class="acc-user">
+                  <span class="acc-avatar">{{ $authInitial }}</span>
+                  <div class="acc-name">
+                    <strong>{{ $authUser->name }}</strong>
+                    <small>{{ $authUser->email }}</small>
+                  </div>
                 </div>
+                <ul class="acc-list">
+                  <li><a href="{{ route('user.dashboard.index') }}#tab-1"><i class="fa-solid fa-table-columns"></i> My
+                      Account</a></li>
+                  <li><a href="{{ route('user.dashboard.index') }}#tab-2"><i class="fa-solid fa-truck-fast"></i> Track
+                      Order</a></li>
+                  <li><a href="{{ route('user.dashboard.index') }}#tab-3"><i class="fa-solid fa-box-open"></i> My
+                      Orders</a></li>
+                  <li><a href="{{ route('user.dashboard.index') }}#tab-4"><i class="fa-regular fa-heart"></i> My
+                      Wishlist</a></li>
+                  <li><a href="{{ route('user.dashboard.index') }}#tab-5"><i class="fa-regular fa-user"></i> My
+                      Profile</a></li>
+                  <li class="acc-out">
+                    <a href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit()">
+                      <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </a>
+                  </li>
+                </ul>
+                <form id="logoutForm" action="{{ route('user.logout') }}" method="POST" style="display:none">@csrf</form>
               </div>
-              <ul class="acc-list">
-                <li><a href="{{ route('dashboard') }}#tab-1"><i class="fa-solid fa-table-columns"></i> My Account</a></li>
-                <li><a href="{{ route('dashboard') }}#tab-2"><i class="fa-solid fa-truck-fast"></i> Track Order</a></li>
-                <li><a href="{{ route('dashboard') }}#tab-3"><i class="fa-solid fa-box-open"></i> My Orders</a></li>
-                <li><a href="{{ route('dashboard') }}#tab-4"><i class="fa-regular fa-heart"></i> My Wishlist</a></li>
-                <li><a href="{{ route('dashboard') }}#tab-5"><i class="fa-regular fa-user"></i> My Profile</a></li>
-                <li class="acc-out"><a href="javascript:void(0)"><i class="fa-solid fa-right-from-bracket"></i> Sign
-                    Out</a></li>
-              </ul>
             </div>
-          </div>
+          @else
+            <div class="account-wrapper">
+              <a href="javascript:void(0)" class="action-link" data-model=".login-pop" aria-label="Login / Register"
+                title="Login / Register">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round">
+                  <circle cx="12" cy="8" r="4.2" />
+                  <path d="M4 21c0-4.4 3.6-7.5 8-7.5s8 3.1 8 7.5" />
+                </svg>
+              </a>
+            </div>
+          @endif
 
           <a href="javascript:void(0)" data-model=".cart-pop" class="action-link" aria-label="Cart">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -354,7 +378,7 @@
               <path d="M5 8h14l-1 12.5H6L5 8z" />
               <path d="M8.5 8V6.5a3.5 3.5 0 017 0V8" />
             </svg>
-            <span class="count">1</span>
+            <span class="count cart-count">{{ $cartCount }}</span>
           </a>
         </div>
       </div>
@@ -493,82 +517,31 @@
       <a href="{{ route('dashboard') }}#tab-4" class="float-link"><i
           class="fa-regular fa-heart"></i><span>Wishlist</span><b class="f-count">0</b></a>
       <a href="{{ route('cart') }}" class="float-link"><i class="fa-solid fa-bag-shopping"></i><span>Bag</span><b
-          class="f-count">0</b></a>
-      <a href="{{ route('dashboard') }}#tab-1" class="float-link"><i
-          class="fa-regular fa-user"></i><span>Account</span></a>
+          class="f-count cart-count">{{ $cartCount }}</b></a>
+      @if($authUser)
+        <a href="{{ route('user.dashboard.index') }}#tab-1" class="float-link"><i
+            class="fa-regular fa-user"></i><span>Account</span></a>
+      @else
+        <button type="button" class="float-link" data-model=".login-pop" aria-label="Login">
+          <i class="fa-regular fa-user"></i><span>Login</span>
+        </button>
+      @endif
     </nav>
   </footer>
 
   <!-- ================= Models ================= -->
 
-  {{-- CART POPUP --}}
-  <div class="model cart-pop">
+  {{-- CART POPUP (only #miniCartBody is replaced via AJAX) --}}
+  <div class="model cart-pop" data-update-url="{{ route('cart.update-quantity') }}"
+    data-remove-url="{{ route('cart.remove', '__ID__') }}">
     <button class="close" type="button">
       <p>Close</p>
       <svg width="20" height="20" viewBox="0 0 26 26" fill="none">
         <path d="M0.5 0.5L25.5 25.5M0.5 25.5L25.5 0.5" stroke="black" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
-    <div class="model-body">
-      <div class="cp-head">
-        <h3>My Bag <span>3 items</span></h3>
-        <div class="cp-ship">
-          <p>
-            <i class="fa-solid fa-truck-fast" aria-hidden="true"></i> You have unlocked
-            <strong>FREE shipping</strong> on this order.
-          </p>
-          <span class="cp-bar"><i style="width: 100%"></i></span>
-        </div>
-      </div>
-      <ul class="cp-list">
-        @foreach($cartItems as [$img, $cat, $name, $variant, $price, $old, $off])
-          <li class="cp-item">
-            <a class="cp-img" href="#">
-              <img src="{{ asset('assets/images/home/' . $img) }}" alt="{{ $name }}" width="88" height="88"
-                loading="lazy" />
-            </a>
-            <div class="cp-info">
-              <span class="cp-cat">{{ $cat }}</span>
-              <h4 class="cp-name"><a href="#">{{ $name }}</a></h4>
-              <span class="cp-variant">{{ $variant }}</span>
-              <div class="cp-price">
-                <strong>{{ $price }}</strong><del>{{ $old }}</del><span class="cp-off">{{ $off }}</span>
-              </div>
-              <div class="cp-actions">
-                <div class="qty" role="group" aria-label="Quantity for {{ $name }}">
-                  <button type="button" class="qty-minus" aria-label="Decrease quantity">
-                    <i class="fa-solid fa-minus" aria-hidden="true"></i>
-                  </button>
-                  <input type="text" inputmode="numeric" value="1" aria-label="Quantity" />
-                  <button type="button" class="qty-plus" aria-label="Increase quantity">
-                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                  </button>
-                </div>
-                <button type="button" class="cp-remove">
-                  <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Remove
-                </button>
-              </div>
-            </div>
-          </li>
-        @endforeach
-      </ul>
-      <div class="cp-empty" hidden>
-        <span class="cp-empty-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i></span>
-        <h4>Your bag is empty</h4>
-        <p>Explore handloom bedding, home decor and beautiful jewellery.</p>
-        <a href="{{ route('products') }}" class="btn btn-primary">Start Shopping</a>
-      </div>
-      <div class="cp-foot">
-        <div class="cp-total"><span>Subtotal</span><strong>₹5,297</strong></div>
-        <p class="cp-note">
-          <i class="fa-solid fa-ticket" aria-hidden="true"></i>
-          Apply GRIHHOME or PIHUSPECIAL at checkout for extra savings.
-        </p>
-        <div class="cp-btns">
-          <a href="{{ route('cart') }}" class="btn btn-outline-primary">View Bag</a>
-          <a href="{{ route('checkout') }}" class="btn btn-primary">Checkout</a>
-        </div>
-      </div>
+    <div class="model-body" id="miniCartBody">
+      @include('layouts.mini-cart', ['miniCart' => $miniCart])
     </div>
   </div>
 
@@ -926,6 +899,124 @@
     });
   </script>
 
+  <script>
+    (function () {
+      var CSRF = $('meta[name="csrf-token"]').attr("content");
+      var $pop = function () { return $(".cart-pop"); };
+
+      // after any cart change: header count + popup content (popup stays open)
+      $(document).on("cart:updated", function (e, res) {
+        if (!res) return;
+        if (res.cart_count !== undefined) $(".cart-count").text(res.cart_count);
+        if (res.mini_cart_html) $("#miniCartBody").html(res.mini_cart_html);
+        if (res.open !== false) {
+          $('.action-link[data-model=".cart-pop"]').first().trigger("click");
+        }
+      });
+
+      function fail(xhr) {
+        var j = xhr.responseJSON || {};
+        alert(j.message || "Something went wrong. Please try again.");
+      }
+
+      // qty +/-
+      $(document).on("click", ".cp-qty-btn", function () {
+        var $b = $(this);
+        if ($b.data("busy")) return;
+        $b.data("busy", true);
+        $.ajax({
+          url: $pop().data("update-url"),
+          method: "POST",
+          data: { item_id: $b.data("id"), action: $b.data("act") },
+          headers: { "X-CSRF-TOKEN": CSRF, Accept: "application/json" }
+        })
+          .done(function (res) { $(document).trigger("cart:updated", [$.extend({ open: false }, res)]); })
+          .fail(fail)
+          .always(function () { $b.data("busy", false); });
+      });
+
+      // remove
+      $(document).on("click", ".cp-remove", function () {
+        var $b = $(this);
+        if ($b.data("busy")) return;
+        $b.data("busy", true);
+        $.ajax({
+          url: String($pop().data("remove-url")).replace("__ID__", $b.data("id")),
+          method: "DELETE",   // route POST ho to "POST" kar do
+          headers: { "X-CSRF-TOKEN": CSRF, Accept: "application/json" }
+        })
+          .done(function (res) { $(document).trigger("cart:updated", [$.extend({ open: false }, res)]); })
+          .fail(fail)
+          .always(function () { $b.data("busy", false); });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var URL = {
+        login: "{{ route('checkout.ajax-login') }}",
+        reg: "{{ route('checkout.ajax-register') }}",
+        google: "{{ route('user.google.login') }}"
+      };
+
+      function firstError(xhr) {
+        var j = xhr.responseJSON || {};
+        if (j.errors) return Object.values(j.errors)[0][0];
+        return j.message || "Something went wrong. Please try again.";
+      }
+
+      function msg($f, text) {
+        var $m = $f.find(".pop-msg");
+        if (!$m.length) {
+          $m = $('<p class="pop-msg" style="color:#c0392b;font-size:13px;margin:8px 0"></p>').insertBefore($f.find(".pop-submit"));
+        }
+        $m.text(text);
+      }
+
+      $(document).on("submit", ".login-pop .pop-form", function (e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        var $f = $(this), $btn = $f.find(".pop-submit"), isReg = $f.find('[name="full_name"]').length > 0;
+        if ($btn.prop("disabled")) return;
+
+        var v = function (n) { return $.trim($f.find('[name="' + n + '"]').val()); };
+        var pass = $f.find('[name="password"]').val();
+        var data = isReg
+          ? {
+            name: v("full_name"), email: v("email"), mobile: v("mobile"), alternate_mobile: v("alternate_mobile"),
+            password: pass, password_confirmation: $f.find('[name="password_confirmation"]').val()
+          }
+          : { login_id: v("login_id"), password: pass };
+
+        $btn.prop("disabled", true);
+        msg($f, "");
+
+        $.ajax({
+          url: isReg ? URL.reg : URL.login, method: "POST", data: data,
+          headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"), Accept: "application/json" }
+        })
+          .done(function (res) {
+            if (res.csrf_token) {
+              $('meta[name="csrf-token"]').attr("content", res.csrf_token);
+              $.ajaxSetup({ headers: { "X-CSRF-TOKEN": res.csrf_token } });
+            }
+            $(".login-pop .close").first().trigger("click");
+
+            // a page can handle this itself (payment page continues to the gateway); default is a reload
+            var ev = $.Event("auth:success");
+            $(document).trigger(ev, [res]);
+            if (!ev.isDefaultPrevented()) window.location.reload();
+          })
+          .fail(function (xhr) { msg($f, firstError(xhr)); })
+          .always(function () { $btn.prop("disabled", false); });
+      });
+
+      $(document).on("click", ".login-pop .pop-google", function () {
+        window.location.href = URL.google + "?redirect=" + encodeURIComponent(window.location.href);
+      });
+    })();
+  </script>
   @stack('scripts')
 </body>
 

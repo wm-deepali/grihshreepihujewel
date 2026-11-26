@@ -80,7 +80,7 @@ class SeoPageSeeder extends Seeder
 
             // Fallbacks only: product/category/blog/page detail should override per record
             [
-                'page_key' => 'products.show', 'page_name' => 'Product Detail (fallback)', 'page_group' => 'Shop', 'slug' => '/product/{slug}',
+                'page_key' => 'product.show', 'page_name' => 'Product Detail (fallback)', 'page_group' => 'Shop', 'slug' => '/product/{slug}',
                 'meta_title' => "Buy Online | $brand",
                 'meta_description' => "Shop this product online at $brand. Pan-India delivery and easy returns.",
                 'og_type' => 'product', 'in_sitemap' => false,

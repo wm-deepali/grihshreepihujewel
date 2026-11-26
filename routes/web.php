@@ -79,12 +79,9 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/category/{slug}', 'category')->name('category.show');
         Route::get('/product/{slug}', 'productShow')->name('product.show');
 
-        Route::view('/order-confirmed', 'front-pages.order-confirmed')->name('order-confirmed');
         Route::view('/about', 'front-pages.about')->name('about');
         Route::view('/blogs', 'front-pages.blogs')->name('blogs');
         Route::view('/blog/{slug}', 'front-pages.blog-detail')->name('blog.show');
-        Route::view('/cart', 'front-pages.cart')->name('cart');
-        Route::view('/checkout', 'front-pages.checkout')->name('checkout');
         Route::view('/contact', 'front-pages.contact')->name('contact');
         Route::view('/dashboard', 'front-pages.dashboard')->name('dashboard');
         Route::view('/faqs', 'front-pages.faqs')->name('faqs');
@@ -100,7 +97,7 @@ Route::middleware('maintenance.mode')->group(function () {
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::get('/cart', [CartController::class, 'cart'])->name('cart');
     Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update.quantity');
+    Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update-quantity');
     Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.apply.coupon');
     Route::post('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.remove.coupon');
 
@@ -110,6 +107,7 @@ Route::middleware('maintenance.mode')->group(function () {
     Route::post('/checkout/ajax-register', [CustomerAuthController::class, 'ajaxRegister'])->middleware('throttle:10,1')->name('checkout.ajax-register');
     Route::post('/checkout/track-step', [CheckoutController::class, 'trackStep'])->middleware('throttle:30,1')->name('checkout.track-step');
     Route::get('/states/{state}/cities', [CheckoutController::class, 'cities'])->name('state.cities');
+    Route::get('/payment', [CheckoutController::class, 'payment'])->name('payment');
 
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->middleware('throttle:60,1')->name('wishlist.toggle');
 
@@ -175,8 +173,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // product routes
         Route::get('products/subcategories/{category}', [ProductController::class, 'subcategories'])->name('products.subcategories');
         Route::get('products/category-attributes/{category}', [ProductController::class, 'categoryAttributes'])->name('products.category-attributes');
-        Route::post('/products/upload-images-zip', [ProductController::class, 'uploadImagesZip'])->name('products.images.upload');
-        Route::get('/products/import', [ProductController::class, 'import'])->name('products.import');
         Route::resource('products', ProductController::class)->names('products');
 
         Route::resource('customizations', CustomizationController::class);

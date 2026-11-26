@@ -206,6 +206,43 @@ class CheckoutController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function payment()
+    {
+        $customer = auth('customer')->user();
+
+        $cart = $customer
+            ? Cart::where('customer_id', $customer->id)->first()
+            : Cart::where('session_id', session()->getId())->whereNull('customer_id')->first();
+
+        if (!$cart || !$cart->items()->exists()) {
+            return redirect()->route('cart')->with('error', 'Your cart is empty.');
+        }
+
+        $cart->recalculateTotals();
+        $cart->refresh();
+        $cart->load([
+            'items.product.images',
+            'items.product.category',
+            'items.priceVariant',
+            'items.stockVariant',
+            'items.imageVariant.images',
+            'items.addons',
+        ]);
+
+        $defaultAddress = $customer
+            ? $customer->addresses()->with(['state', 'city'])->where('is_default', 1)->first()
+            : null;
+
+        // a signed-in customer needs a saved address; guests carry theirs over from the checkout step
+        if ($customer && !$defaultAddress) {
+            return redirect()->route('checkout');
+        }
+
+        $states = State::orderBy('name')->get();
+        $codEnabled = (bool) optional(Setting::first())->cod_enabled;
+
+        return view('front-pages.payment', compact('cart', 'customer', 'defaultAddress', 'states', 'codEnabled'));
+    }
 
     public function placeOrder(Request $request)
     {
@@ -395,9 +432,6 @@ class CheckoutController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
-
-                    'custom_colour_code' => $item->custom_colour_code,
-                    'dye_charge' => $item->dye_charge ?? 0,
                 ]);
 
                 foreach ($item->addons as $addon) {

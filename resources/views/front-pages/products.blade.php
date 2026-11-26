@@ -71,7 +71,7 @@
             <div class="swiper-wrapper">
               @foreach($categories as $category)
                 <div class="swiper-slide">
-                  <a href="{{ url('categories/' . $category->slug) }}" class="cat_pill">
+                  <a href="{{ url('category/' . $category->slug) }}" class="cat_pill">
                     <figure>
                       <img src="{{ $category->image_url }}" alt="{{ $category->name }}" loading="lazy" />
                     </figure>

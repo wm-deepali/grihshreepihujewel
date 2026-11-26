@@ -23,7 +23,6 @@ class CartSummary
 
             $totalMrp  += max($mrp, $unit) * $qty;
             $sellTotal += $unit * $qty;
-            $dyeTotal  += (float) $item->dye_charge * $qty;
 
             foreach ($item->addons as $addon) {
                 if ($addon->price > 0) {

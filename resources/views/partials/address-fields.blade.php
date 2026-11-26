@@ -13,13 +13,20 @@
     <input type="text" id="{{ $idp }}Pin" name="{{ $px }}pin" value="{{ $v['pin'] ?? '' }}" placeholder=" " inputmode="numeric" maxlength="6" autocomplete="postal-code" />
     <label for="{{ $idp }}Pin">PIN code</label>
   </div>
-  <div class="form-group s-4">
-    <input type="text" id="{{ $idp }}City" name="{{ $px }}city" value="{{ $v['city'] ?? '' }}" placeholder=" " autocomplete="address-level2" />
-    <label for="{{ $idp }}City">City</label>
-  </div>
-  <div class="form-group s-4">
-    <input type="text" id="{{ $idp }}State" name="{{ $px }}state" value="{{ $v['state'] ?? '' }}" placeholder=" " list="stateList" autocomplete="address-level1" />
+  <div class="form-group has-select s-4">
+    <select id="{{ $idp }}State" name="{{ $px }}state_id" autocomplete="address-level1">
+      <option value="">Select state</option>
+      @foreach($states as $s)
+        <option value="{{ $s->id }}" {{ (string) ($v['state_id'] ?? '') === (string) $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
+      @endforeach
+    </select>
     <label for="{{ $idp }}State">State</label>
+  </div>
+  <div class="form-group has-select s-4">
+    <select id="{{ $idp }}City" name="{{ $px }}city_id" data-selected="{{ $v['city_id'] ?? '' }}" autocomplete="address-level2" disabled>
+      <option value="">Select city</option>
+    </select>
+    <label for="{{ $idp }}City">City</label>
   </div>
   <div class="form-group s-5">
     <input type="text" id="{{ $idp }}House" name="{{ $px }}house" value="{{ $v['house'] ?? '' }}" placeholder=" " autocomplete="address-line1" />

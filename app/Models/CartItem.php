@@ -25,14 +25,11 @@ class CartItem extends Model
 
         'price',
         'total',
-        'custom_colour_code',
-        'dye_charge'
 
     ];
 
     protected $casts = [
         'selected_attributes' => 'array',
-        'dye_charge' => 'float',
 
     ];
 
@@ -106,6 +103,6 @@ class CartItem extends Model
 
         return $img
             ? asset('storage/' . ($img->thumb ?? $img->image))
-            : asset('assets/images/home/tab1.png');
+            : asset('assets/images/home/pro2.png');
     }
 }

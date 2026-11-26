@@ -162,13 +162,10 @@
                     </div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <!-- <a href="{{ route('admin.products.import') }}" class="btn-secondary-dash">
-                        <i class="fa fa-upload"></i> Bulk Import
-                    </a> -->
                     <a href="{{ route('admin.products.create') }}" class="btn-primary-dash">
                         <i class="fa fa-plus"></i> Add Product
                     </a>
-                </div>
+            </div>
             </div>
 
             <!-- Main card -->

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Brand, Category, CategoryAttribute, Collection, GiftingOccasion, Product};
+use App\Models\{Brand, Category, CategoryAttribute, Collection, GiftingOccasion, Product, Coupon};
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -296,12 +296,20 @@ class FrontController extends Controller
             ->with([
                 'images',
                 'brand:id,name',
-                'category:id,name,slug',
-                'subcategory:id,name,slug',
+                'category:id,name,slug,size_chart',
+                'subcategory:id,name,slug,size_chart',
+                'occasions',
+                'collections',
+                'addons',
+                'attributeValues.attribute',
+                'attributeValues.value',
+                'variants.values',
+                'variants.images',
             ])
             ->withAvg('approvedReviews as avg_rating', 'rating')
             ->withCount('approvedReviews as reviews_count')
             ->firstOrFail();
+
 
         Product::trackView($product->id);
 
@@ -312,6 +320,72 @@ class FrontController extends Controller
                 $crumbs[] = [$c->name, route('category.show', $c->slug)];
             }
         }
+
+        // ---------- info-tags: occasions + collections ----------
+        $tags = $product->occasions->pluck('title')
+            ->merge($product->collections->pluck('name'))
+            ->filter()->unique()->values();
+
+        // ---------- attributes: category + subcategory config (subcategory row wins) ----------
+        $catIds = array_filter([$product->category_id, $product->subcategory_id]);
+
+        $catAttrs = CategoryAttribute::whereIn('category_id', $catIds)
+            ->where('status', 1)
+            ->with('attribute')
+            ->get()
+            ->sortBy(fn($ca) => $ca->category_id === $product->subcategory_id ? 0 : 1)
+            ->unique('attribute_id')
+            ->sortBy('sort_order')
+            ->values();
+
+        // values this product actually has, grouped by attribute
+        $chosen = $product->attributeValues->groupBy('attribute_id');
+
+        // info-facts: NON-selectable, highest priority (sort_order) first, max 6
+        $allFacts = $catAttrs->where('is_selectable', false)
+            ->map(function ($ca) use ($chosen) {
+                $vals = $chosen->get($ca->attribute_id);
+                if (!$ca->attribute || !$vals)
+                    return null;
+
+                $text = $vals->map(fn($pv) => $pv->value?->value)->filter()->implode(', ');
+                return $text ? ['label' => $ca->attribute->name, 'value' => $text] : null;
+            })
+            ->filter()->values();
+
+        $facts = $allFacts->take(6);   // key facts at the top
+        $specs = $allFacts;            // full list for the Specifications accordion
+        $pairsWith = $specs->firstWhere('label', 'Pairs With')['value'] ?? null;
+
+        // opt-cards: selectable ones
+        $options = $catAttrs->where('is_selectable', true)
+            ->map(function ($ca) use ($chosen) {
+                $vals = $chosen->get($ca->attribute_id);
+                if (!$ca->attribute || !$vals)
+                    return null;
+
+                $values = $vals->map(fn($pv) => [
+                    'id' => $pv->attribute_value_id,
+                    'name' => $pv->value?->value,
+                    'color' => $pv->value?->color_code,
+                ])->filter(fn($v) => $v['name'])->values();
+
+                if ($values->isEmpty())
+                    return null;
+
+                return [
+                    'id' => $ca->attribute_id,
+                    'name' => $ca->attribute->name,
+                    'swatch' => $ca->attribute->type === 'color_swatch',
+                    'is_size' => Str::contains(Str::lower($ca->attribute->name), 'size'),
+                    'values' => $values,
+                ];
+            })
+            ->filter()->values();
+
+        // ---------- size guide: only when the category has a chart ----------
+        $sizeChart = trim((string) ($product->subcategory?->size_chart ?: $product->category?->size_chart));
+        $sizeChart = strip_tags($sizeChart) !== '' ? $sizeChart : null;
 
         // ---------- gallery: default image first, placeholder if there are none ----------
         $gallery = $product->images
@@ -382,7 +456,6 @@ class FrontController extends Controller
         ];
 
         // ---------- who may write a review ----------
-// guest | can (bought, delivered, not yet reviewed) | reviewed | blocked (never bought / not delivered yet)
         $reviewState = 'guest';
         if ($customer = auth('customer')->user()) {
             if ($product->reviewableOrderItemFor($customer->id)) {
@@ -394,9 +467,41 @@ class FrontController extends Controller
             }
         }
 
+        $coupons = Coupon::available()->latest('id')->limit(3)->get();
+
+        // ---------- variant data for the page script (price / stock / sku / images) ----------
+        $pd = [
+            'base' => [
+                'mrp' => (float) $product->mrp,
+                'price' => (float) $product->price,
+                'stock' => (int) $product->stock,
+                'sku' => $product->sku,
+                'minQty' => max(1, (int) $product->min_qty),
+                'dispatch' => $product->delivery_time,
+            ],
+            'variants' => $product->variants->where('status', true)->groupBy('type')
+                ->map(fn($group) => $group->map(fn($v) => [
+                    'id' => $v->id,
+                    'values' => $v->values->pluck('attribute_value_id')->map(fn($i) => (int) $i)->values(),
+                    'sku' => $v->sku,
+                    'mrp' => (float) $v->mrp,
+                    'price' => (float) $v->price,
+                    'stock' => (int) $v->stock,
+                    'available' => (bool) $v->is_available,
+                    'images' => $v->images->map(fn($i) => [
+                        'url' => asset('storage/' . $i->image),
+                        'thumb' => asset('storage/' . ($i->thumb ?? $i->image)),
+                    ])->values(),
+                ])->values()),
+        ];
+
         return view('front-pages.product-detail', compact(
             'product',
             'crumbs',
+            'tags',
+            'facts',
+            'options',
+            'sizeChart',
             'gallery',
             'recentlyViewed',
             'related',
@@ -405,7 +510,11 @@ class FrontController extends Controller
             'reviewPhotos',
             'reviewBars',
             'reviewTabs',
-            'reviewState'
+            'reviewState',
+            'coupons',
+            'specs',
+            'pairsWith',
+            'pd'
         ));
     }
 

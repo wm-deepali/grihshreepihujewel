@@ -2,28 +2,28 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Brand;
-use App\Models\GiftingOccasion;
-use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\CategoryAttribute;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
+use App\Models\Collection;
 use Illuminate\Support\Str;
+use App\Models\ProductAddon;
 use App\Models\ProductImage;
 use App\Models\ProductVideo;
-use App\Models\ProductAddon;
-use App\Models\ProductAttributeValue;
+use Illuminate\Http\Request;
 use App\Models\ProductVariant;
+use Intervention\Image\Format;
+use App\Models\GiftingOccasion;
+use Illuminate\Http\UploadedFile;
+use App\Models\CategoryAttribute;
+use Illuminate\Support\Facades\DB;
 use App\Models\ProductVariantValue;
 use App\Models\ProductVariantImage;
-use App\Models\Collection;
 use Intervention\Image\ImageManager;
+use App\Http\Controllers\Controller;
+use App\Models\ProductAttributeValue;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Format;
 
 class ProductController extends Controller
 {
@@ -223,10 +223,6 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:255',
             'images.*' => 'nullable|image|max:2048',
 
-            // ✅ colour customization (product-level)
-            'colour_customization' => 'nullable|boolean',
-            'dye_price' => 'nullable|numeric|min:0',
-
             // ✅ videos + addon options
             'videos.*' => 'nullable|mimes:mp4,webm,mov,avi|max:20480',
             'addons.*.detail' => 'nullable|string|max:255',
@@ -242,8 +238,6 @@ class ProductController extends Controller
 
         try {
 
-            $colourCustomization = $request->boolean('colour_customization');
-
             $product = Product::create([
                 'category_id' => $request->category_id,
                 'subcategory_id' => $request->subcategory_id,
@@ -254,11 +248,12 @@ class ProductController extends Controller
                     : $this->generateUniqueSlug($request->name),
 
                 'short_description' => $request->short_description,
-                'fabric_material' => $request->fabric_material,
+                'description' => $request->description,
+                'inclusions' => $request->inclusions,
+                'size_fit' => $request->size_fit,
                 'care_instructions' => $request->care_instructions,
                 'shipping_delivery' => $request->shipping_delivery,
                 'returns_exchange' => $request->returns_exchange,
-                'offers_how_to_avail' => $request->offers_how_to_avail,
 
                 // ✅ blank MRP/Discount/Price never get inserted as '' into decimal columns
                 'mrp' => $request->mrp !== null && $request->mrp !== '' ? $request->mrp : 0,
@@ -270,12 +265,6 @@ class ProductController extends Controller
                 'stock' => $request->stock !== null && $request->stock !== '' ? $request->stock : 0,
                 'min_qty' => $request->min_qty !== null && $request->min_qty !== '' ? $request->min_qty : 1,
                 'delivery_time' => $request->delivery_time,
-
-                // ✅ dye price only makes sense when colour customization is on
-                'colour_customization' => $colourCustomization,
-                'dye_price' => $colourCustomization && $request->filled('dye_price')
-                    ? $request->dye_price
-                    : null,
 
                 'meta_title' => $request->meta_title,
                 'meta_description' => $request->meta_description,
@@ -576,10 +565,6 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:255',
             'images.*' => 'nullable|image|max:2048',
 
-            // ✅ colour customization (product-level)
-            'colour_customization' => 'nullable|boolean',
-            'dye_price' => 'nullable|numeric|min:0',
-
             // ✅ videos + addon options
             'videos.*' => 'nullable|mimes:mp4,webm,mov,avi|max:20480',
             'addons.*.detail' => 'nullable|string|max:255',
@@ -594,8 +579,6 @@ class ProductController extends Controller
 
         try {
 
-            $colourCustomization = $request->boolean('colour_customization');
-
             $product->update([
 
                 'category_id' => $request->category_id,
@@ -606,11 +589,12 @@ class ProductController extends Controller
                 'slug' => $this->resolveSlugOnUpdate($product, $request->slug, $request->name),
 
                 'short_description' => $request->short_description,
-                'fabric_material' => $request->fabric_material,
+                'description' => $request->description,
+                'inclusions' => $request->inclusions,
+                'size_fit' => $request->size_fit,
                 'care_instructions' => $request->care_instructions,
                 'shipping_delivery' => $request->shipping_delivery,
                 'returns_exchange' => $request->returns_exchange,
-                'offers_how_to_avail' => $request->offers_how_to_avail,
 
                 // ✅ blank MRP/Discount/Price never get written as '' into decimal columns
                 'mrp' => $request->mrp !== null && $request->mrp !== '' ? $request->mrp : 0,
@@ -622,12 +606,6 @@ class ProductController extends Controller
                 'stock' => $request->stock !== null && $request->stock !== '' ? $request->stock : 0,
                 'min_qty' => $request->min_qty !== null && $request->min_qty !== '' ? $request->min_qty : 1,
                 'delivery_time' => $request->delivery_time,
-
-                // ✅ dye price only makes sense when colour customization is on
-                'colour_customization' => $colourCustomization,
-                'dye_price' => $colourCustomization && $request->filled('dye_price')
-                    ? $request->dye_price
-                    : null,
 
                 'meta_title' => $request->meta_title,
                 'meta_description' => $request->meta_description,

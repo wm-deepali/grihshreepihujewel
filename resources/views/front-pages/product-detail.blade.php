@@ -3,67 +3,25 @@
 @php
   $productName = $product->name;
   $productSku = $product->sku;
+  $inStock = $product->stock > 0;
+  $minQty = max(1, (int) $product->min_qty);
+  $hasText = fn($h) => trim(strip_tags((string) $h)) !== '';
+  $hasReturns = $hasText($product->returns_exchange);
 
-  $finishes = [
-    ['v' => 'antique-gold', 'n' => 'Antique Gold-tone', 'c' => '#b08d3c', 'on' => true],
-    ['v' => 'gold', 'n' => 'Gold-tone', 'c' => '#d9b24c'],
-    ['v' => 'silver', 'n' => 'Silver-tone', 'c' => '#c8ccd2'],
-    ['v' => 'rose-gold', 'n' => 'Rose Gold', 'c' => '#d9a38f'],
-    ['v' => 'oxidised', 'n' => 'Oxidised', 'c' => '#6b6b6b', 'off' => true],
-  ];
+  // contact links from Settings
+  $waDigits = preg_replace('/\D+/', '', (string) ($general->whatsapp ?? ''));
+  if (strlen($waDigits) === 10) {
+    $waDigits = '91' . $waDigits; // wa.me needs the country code
+  }
+  $waLink = $waDigits
+    ? 'https://wa.me/' . $waDigits . '?text=' . rawurlencode('Hi, I need help with ' . $product->name . ' - ' . url()->current())
+    : null;
 
-  $stones = [
-    ['v' => 'crystal-white', 'n' => 'Crystal White', 'c' => '#f4f8ff', 'on' => true],
-    ['v' => 'ruby-pink', 'n' => 'Ruby Pink', 'c' => '#c2185b'],
-    ['v' => 'emerald-green', 'n' => 'Emerald Green', 'c' => '#1f8a5b'],
-    ['v' => 'sapphire-blue', 'n' => 'Sapphire Blue', 'c' => '#2a4a86'],
-    ['v' => 'multi', 'n' => 'Multicolour', 'c' => 'conic-gradient(#c2185b, #1f8a5b, #f4f8ff, #2a4a86, #c2185b)'],
-    ['v' => 'pearl-white', 'n' => 'Pearl White', 'c' => '#f3ecd9', 'off' => true],
-  ];
-
-  $wearers = [
-    ['v' => 'women', 'n' => 'Women', 'on' => true],
-    ['v' => 'teens', 'n' => 'Teens'],
-    ['v' => 'girls', 'n' => 'Girls (4–12 yrs)', 'off' => true],
-  ];
-
-  // backend: render only the group that matches the product's subcategory
-  $sizeGroups = [
-    [
-      'label' => 'Necklace / Earrings / Sets',
-      'sq' => false,
-      'opts' => [
-        ['v' => 'free', 'n' => 'Free Size', 't' => 'Free Size', 'on' => true],
-        ['v' => 'choker-14', 'n' => 'Choker 14"', 't' => 'Choker 14"'],
-        ['v' => 'princess-17', 'n' => 'Princess 17"', 't' => 'Princess 17"'],
-        ['v' => 'matinee-20', 'n' => 'Matinee 20"', 't' => 'Matinee 20"', 'off' => true],
-      ]
-    ],
-    [
-      'label' => 'Ring Size (India)',
-      'sq' => true,
-      'opts' => [
-        ['v' => 'ring-10', 'n' => 'Ring 10', 't' => '10'],
-        ['v' => 'ring-12', 'n' => 'Ring 12', 't' => '12'],
-        ['v' => 'ring-14', 'n' => 'Ring 14', 't' => '14'],
-        ['v' => 'ring-16', 'n' => 'Ring 16', 't' => '16', 'off' => true],
-        ['v' => 'ring-18', 'n' => 'Ring 18', 't' => '18'],
-      ]
-    ],
-    [
-      'label' => 'Bangle Size (inch)',
-      'sq' => true,
-      'opts' => [
-        ['v' => 'bangle-2.2', 'n' => 'Bangle 2.2', 't' => '2.2', 'off' => true],
-        ['v' => 'bangle-2.4', 'n' => 'Bangle 2.4', 't' => '2.4'],
-        ['v' => 'bangle-2.6', 'n' => 'Bangle 2.6', 't' => '2.6'],
-        ['v' => 'bangle-2.8', 'n' => 'Bangle 2.8', 't' => '2.8'],
-      ]
-    ],
-  ];
+  $phoneTel = preg_replace('/[^\d+]/', '', (string) ($general->phone ?? ''));
+  $telLink = $phoneTel ? 'tel:' . $phoneTel : null;
 @endphp
 
-@section('title', 'Product Detail | Grih Shree & Pihu Jewel')
+@section('title', $product->name . ' | ' . config('app.name'))
 
 @push('styles')
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.0/css/glightbox.min.css" />
@@ -125,9 +83,13 @@
           @endif
 
           <ul class="gallery-trust">
-            <li><i class="fa-solid fa-truck-fast"></i><span>Ready to Ship</span></li>
+            <li><i
+                class="fa-solid fa-truck-fast"></i><span>{{ $inStock ? 'Ready to Ship' : 'Currently Unavailable' }}</span>
+            </li>
             <li><i class="fa-solid fa-shield-halved"></i><span>Secure Payments</span></li>
-            <li><i class="fa-solid fa-arrow-right-arrow-left"></i><span>7-Day Returns</span></li>
+            @if($hasReturns)
+              <li><i class="fa-solid fa-arrow-right-arrow-left"></i><span>Returns &amp; Exchange</span></li>
+            @endif
           </ul>
         </div>
 
@@ -154,7 +116,7 @@
               <a href="#reviews" class="rate-count">No reviews yet</a>
             @endif
             @if($product->sku)
-              <span class="info-sku">SKU: {{ $product->sku }}</span>
+              <span class="info-sku">SKU: <span class="sku-val">{{ $product->sku }}</span></span>
             @endif
           </div>
 
@@ -162,17 +124,13 @@
           <div class="info-price">
             <div class="price-line">
               <span class="price-now">₹{{ number_format($product->price) }}</span>
-              @if($pct)
-                <span class="price-old">₹{{ number_format($product->mrp) }}</span>
-                <span class="price-off">{{ $pct }}% OFF</span>
-              @endif
+              <span class="price-old" @if(!$pct) style="display:none" @endif>₹{{ number_format($product->mrp) }}</span>
+              <span class="price-off" @if(!$pct) style="display:none" @endif>{{ $pct }}% OFF</span>
             </div>
             <div class="price-meta">
-              @if($pct)
-                <p class="price-save"><i class="fa-solid fa-tags"></i> You save
-                  <b>₹{{ number_format($product->mrp - $product->price) }}</b> on this piece
-                </p>
-              @endif
+              <p class="price-save" @if(!$pct) style="display:none" @endif><i class="fa-solid fa-tags"></i> You save
+                <b>₹{{ number_format($product->mrp - $product->price) }}</b>
+              </p>
               <p class="price-tax">Inclusive of all taxes</p>
             </div>
           </div>
@@ -181,112 +139,104 @@
             <p class="info-desc">{{ strip_tags($product->short_description) }}</p>
           @endif
 
-          <ul class="info-tags">
-            <li>Bridal</li>
-            <li>Wedding</li>
-            <li>Reception</li>
-            <li>Festive</li>
-          </ul>
+          @if($tags->isNotEmpty())
+            <ul class="info-tags">
+              @foreach($tags as $tag)
+                <li>{{ $tag }}</li>
+              @endforeach
+            </ul>
+          @endif
 
           <!-- ================= KEY FACTS ================= -->
-          <ul class="info-facts">
-            <li><small>Product Type</small><b>Bridal Necklace Set</b></li>
-            <li><small>Colour</small><b>Antique Gold-tone</b></li>
-            <li><small>Stone Work</small><b>Sparkling White Stones</b></li>
-            <li><small>Stone Colour</small><b>Crystal White</b></li>
-            <li><small>Style</small><b>Bridal, Statement</b></li>
-            <li><small>Occasion</small><b>Weddings, Receptions, Festivals</b></li>
-          </ul>
+          @if($facts->isNotEmpty())
+            <ul class="info-facts">
+              @foreach($facts as $f)
+                <li><small>{{ $f['label'] }}</small><b>{{ $f['value'] }}</b></li>
+              @endforeach
+            </ul>
+          @endif
 
-          <!-- ================= OPTIONS ================= -->
-          <div class="opt-duo">
-            <div class="opt-card">
-              <div class="opt-head">
-                <span>Finish</span><b class="opt-value">Antique Gold-tone</b>
-              </div>
-              <div class="opt-swatches">
-                @foreach($finishes as $o)
-                  <label class="opt-swatch" title="{{ $o['n'] }}{{ !empty($o['off']) ? ' (not available)' : '' }}">
-                    <input type="radio" name="finish" value="{{ $o['v'] }}" data-name="{{ $o['n'] }}" {{ !empty($o['on']) ? 'checked' : '' }} {{ !empty($o['off']) ? 'disabled' : '' }} />
-                    <span style="--c: {{ $o['c'] }}"></span>
-                  </label>
-                @endforeach
-              </div>
-            </div>
+          @php
+            $swatchOpts = $options->where('swatch', true);
+            $buttonOpts = $options->where('swatch', false);
+            $guideShown = false;
+          @endphp
 
-            <div class="opt-card">
-              <div class="opt-head">
-                <span>Stone Colour</span><b class="opt-value">Crystal White</b>
-              </div>
-              <div class="opt-swatches">
-                @foreach($stones as $o)
-                  <label class="opt-swatch" title="{{ $o['n'] }}{{ !empty($o['off']) ? ' (not available)' : '' }}">
-                    <input type="radio" name="stone" value="{{ $o['v'] }}" data-name="{{ $o['n'] }}" {{ !empty($o['on']) ? 'checked' : '' }} {{ !empty($o['off']) ? 'disabled' : '' }} />
-                    <span style="--c: {{ $o['c'] }}"></span>
-                  </label>
-                @endforeach
-              </div>
-            </div>
-          </div>
-
-          <div class="opt-card">
-            <div class="opt-head">
-              <span>Suitable For</span><b class="opt-value">Women</b>
-            </div>
-            <div class="opt-sizes">
-              @foreach($wearers as $o)
-                <label class="opt-size">
-                  <input type="radio" name="wearer" value="{{ $o['v'] }}" data-name="{{ $o['n'] }}" {{ !empty($o['on']) ? 'checked' : '' }} {{ !empty($o['off']) ? 'disabled' : '' }} />
-                  <span>{{ $o['n'] }}</span>
-                </label>
+          {{-- colour swatch design --}}
+          @foreach($swatchOpts->chunk(2) as $pair)
+            <div class="opt-duo">
+              @foreach($pair as $opt)
+                <div class="opt-card">
+                  <div class="opt-head">
+                    <span>{{ $opt['name'] }}</span><b class="opt-value">{{ $opt['values']->first()['name'] }}</b>
+                  </div>
+                  <div class="opt-swatches">
+                    @foreach($opt['values'] as $v)
+                      <label class="opt-swatch" title="{{ $v['name'] }}">
+                        <input type="radio" name="attr[{{ $opt['id'] }}]" value="{{ $v['id'] }}" data-name="{{ $v['name'] }}" {{ $loop->first ? 'checked' : '' }} />
+                        <span style="--c: {{ $v['color'] ?: '#cccccc' }}"></span>
+                      </label>
+                    @endforeach
+                  </div>
+                </div>
               @endforeach
             </div>
-          </div>
+          @endforeach
 
-          <div class="opt-card">
-            <div class="opt-head">
-              <span>Size</span><b class="opt-value">Free Size</b>
-              <button type="button" class="size-guide" data-model=".size-pop">
-                <i class="fa-solid fa-ruler"></i> Size Guide
-              </button>
-            </div>
-
-            @foreach($sizeGroups as $group)
-              <div class="opt-group">
-                <span class="opt-sub">{{ $group['label'] }}</span>
-                <div class="opt-sizes">
-                  @foreach($group['opts'] as $o)
-                    <label class="opt-size {{ $group['sq'] ? 'is-sq' : '' }}">
-                      <input type="radio" name="jsize" value="{{ $o['v'] }}" data-name="{{ $o['n'] }}" {{ !empty($o['on']) ? 'checked' : '' }} {{ !empty($o['off']) ? 'disabled' : '' }} />
-                      <span>{{ $o['t'] }}</span>
-                    </label>
-                  @endforeach
-                </div>
+          {{-- button design --}}
+          @foreach($buttonOpts as $opt)
+            @php
+              $showGuide = $sizeChart && $opt['is_size'] && !$guideShown;
+              $guideShown = $guideShown || $showGuide;
+              $square = $opt['values']->every(fn($v) => mb_strlen($v['name']) <= 3);
+            @endphp
+            <div class="opt-card">
+              <div class="opt-head">
+                <span>{{ $opt['name'] }}</span><b class="opt-value">{{ $opt['values']->first()['name'] }}</b>
+                @if($showGuide)
+                  <button type="button" class="size-guide" data-model=".size-pop">
+                    <i class="fa-solid fa-ruler"></i> Size Guide
+                  </button>
+                @endif
               </div>
-            @endforeach
-
-            <p class="opt-note">
-              <i class="fa-solid fa-circle-info"></i> Buying for a girl or teen? Check the size guide before
-              choosing. Sets come with an adjustable back closure.
-            </p>
-          </div>
-
-          <!-- ================= GIFT ================= -->
-          <div class="opt-card opt-gift">
-            <label class="opt-switch">
-              <input type="checkbox" name="gift_ready" value="yes" />
-              <span class="os-text">Gift Ready<small>Gift box with a handwritten-style message card</small></span>
-              <strong>Free</strong>
-              <span class="os-track"></span>
-            </label>
-            <div class="gift-msg">
-              <textarea name="gift_message" rows="2" maxlength="120" placeholder="Write your gift message (optional)"
-                aria-label="Gift message"></textarea>
+              <div class="opt-sizes">
+                @foreach($opt['values'] as $v)
+                  <label class="opt-size {{ $square ? 'is-sq' : '' }}">
+                    <input type="radio" name="attr[{{ $opt['id'] }}]" value="{{ $v['id'] }}" data-name="{{ $v['name'] }}" {{ $loop->first ? 'checked' : '' }} />
+                    <span>{{ $v['name'] }}</span>
+                  </label>
+                @endforeach
+              </div>
             </div>
-          </div>
+          @endforeach
 
-          <p class="info-stock">
-            <i class="fa-solid fa-circle"></i><b>In Stock</b><em>Ready to ship, dispatched within 48 hours</em>
+          {{-- chart exists but the product has no "size" attribute --}}
+          @if($sizeChart && !$guideShown)
+            <button type="button" class="size-guide" data-model=".size-pop">
+              <i class="fa-solid fa-ruler"></i> Size Guide
+            </button>
+          @endif
+
+          <!-- ================= ADDONS ================= -->
+          @foreach($product->addons as $addon)
+            <div class="opt-card opt-gift">
+              <label class="opt-switch">
+                <input type="checkbox" name="addons[]" value="{{ $addon->id }}" data-price="{{ (float) $addon->price }}" />
+                <span class="os-text">{{ $addon->detail }}
+                  @if($addon->description)
+                    <small>{{ $addon->description }}</small>
+                  @endif
+                </span>
+                <strong>{{ $addon->price > 0 ? '+ ₹' . number_format($addon->price) : 'Free' }}</strong>
+                <span class="os-track"></span>
+              </label>
+            </div>
+          @endforeach
+
+          <p class="info-stock {{ $inStock ? '' : 'is-out' }}">
+            <i class="fa-solid fa-circle"></i>
+            <b>{{ $inStock ? 'In Stock' : 'Out of Stock' }}</b>
+            <em>{{ $inStock ? ($product->delivery_time ? 'Ready to ship, dispatched in ' . $product->delivery_time : 'Ready to ship') : 'Currently unavailable' }}</em>
           </p>
 
           <div class="info-actions">
@@ -298,20 +248,21 @@
                 <button type="button" class="qty-plus" aria-label="Increase quantity"><i
                     class="fa-solid fa-plus"></i></button>
               </div>
-              <button type="button" class="wish-link"><i class="fa-regular fa-heart"></i> Add to Wishlist</button>
+              @if($general->wishlist)
+                <button type="button" class="wish-link"><i class="fa-regular fa-heart"></i> Add to Wishlist</button>
+              @endif
             </div>
             <div class="act-btns">
-              <button type="button" data-id="{{ $productSku }}" data-name="{{ $productName }}"
-                data-toast-title="Added to Cart" data-toast-text="{{ $productName }} has been added to your cart."
-                data-toast-type="success" class="btn btn-outline-black">Add to Cart</button>
-              <a href="{{ url('cart') }}" class="btn btn-primary">Buy Now</a>
+              <button type="button" class="btn btn-outline-black js-add-cart" data-product-id="{{ $product->id }}"
+                data-name="{{ $productName }}">Add to Cart</button>
+              <button type="button" class="btn btn-primary js-buy-now" data-product-id="{{ $product->id }}"
+                data-name="{{ $productName }}">Buy Now</button>
             </div>
           </div>
 
           <div class="info-delivery">
             <div class="del-head"><i class="fa-solid fa-location-dot"></i><b>Check Delivery</b></div>
-            <form class="pin-form" action="#" method="post">
-              @csrf
+            <form class="pin-form" action="{{ route('pincode.check') }}" method="get" novalidate>
               <input type="text" name="pincode" inputmode="numeric" maxlength="6" placeholder="Enter your pincode"
                 aria-label="Pincode" />
               <button type="submit">Check</button>
@@ -321,206 +272,241 @@
               <span>Enter your pincode to see delivery time and COD availability.</span>
             </p>
             <ul class="del-points">
-              <li><i class="fa-solid fa-truck-fast"></i> Ready to ship, dispatched within 48 hours</li>
+              @if($product->delivery_time)
+                <li><i class="fa-solid fa-truck-fast"></i> Dispatched in {{ $product->delivery_time }}</li>
+              @endif
               <li><i class="fa-solid fa-map-location-dot"></i> Pan-India delivery, reliable and tracked</li>
-              <li><i class="fa-solid fa-hand-holding-dollar"></i> Cash on Delivery on selected pincodes</li>
-              <li><i class="fa-solid fa-arrow-right-arrow-left"></i> Easy 7-day return and exchange</li>
+              @if($general->cod_enabled)
+                <li><i class="fa-solid fa-hand-holding-dollar"></i> Cash on Delivery on selected pincodes</li>
+              @endif
+              @if($hasReturns)
+                <li><i class="fa-solid fa-arrow-right-arrow-left"></i> Returns and exchange available</li>
+              @endif
               <li><i class="fa-solid fa-shield-halved"></i> Secure payments, safe and trusted checkout</li>
             </ul>
           </div>
 
-          <!-- ================= OFFERS ================= -->
-          <div class="info-offers">
-            <div class="offers-head">
-              <h5>Offers &amp; Coupons</h5>
-            </div>
+          @php $freeAddons = $product->addons->where('price', '<=', 0); @endphp
 
-            <div class="offer-row">
-              <span class="offer-ico"><i class="fa-solid fa-gift"></i></span>
-              <div class="offer-text">
-                <b>Jewellery Special</b>
-                <p>Extra savings on selected jewellery styles.</p>
+          @if($coupons->isNotEmpty() || $freeAddons->isNotEmpty())
+            <div class="info-offers">
+              <div class="offers-head">
+                <h5>Offers &amp; Coupons</h5>
               </div>
-              <button type="button" class="coupon-copy" data-copy="PIHUSPECIAL" aria-label="Copy coupon code">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="11" height="11" rx="2" />
-                  <path d="M5 15V6a2 2 0 012-2h9" />
-                </svg>
-                <span>PIHUSPECIAL</span>
-              </button>
+
+              @foreach($coupons as $c)
+                <div class="offer-row">
+                  <span class="offer-ico"><i class="fa-solid {{ $c->is_percent ? 'fa-percent' : 'fa-tags' }}"></i></span>
+                  <div class="offer-text">
+                    <b>{{ $c->is_percent ? (float) $c->discount_value . '% OFF' : '₹' . number_format($c->discount_value) . ' OFF' }}</b>
+                    <p>{{ $c->offer_text }}</p>
+                  </div>
+                  <button type="button" class="coupon-copy" data-copy="{{ $c->code }}" aria-label="Copy coupon code">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="11" height="11" rx="2" />
+                      <path d="M5 15V6a2 2 0 012-2h9" />
+                    </svg>
+                    <span>{{ $c->code }}</span>
+                  </button>
+                </div>
+              @endforeach
+
+              {{-- free addons (e.g. gift box) --}}
+              @foreach($freeAddons as $a)
+                <div class="offer-row">
+                  <span class="offer-ico"><i class="fa-solid fa-box-open"></i></span>
+                  <div class="offer-text">
+                    <b>Free {{ $a->detail }}</b>
+                    <p>{{ $a->description ?: 'Add it above at no extra cost.' }}</p>
+                  </div>
+                </div>
+              @endforeach
             </div>
-            <div class="offer-row">
-              <span class="offer-ico"><i class="fa-solid fa-percent"></i></span>
-              <div class="offer-text">
-                <b>Festive Offer</b>
-                <p>Save up to 25% on selected jewellery.</p>
-              </div>
-            </div>
-            <div class="offer-row">
-              <span class="offer-ico"><i class="fa-solid fa-box-open"></i></span>
-              <div class="offer-text">
-                <b>Free Gift Box</b>
-                <p>Add Gift Ready above for a free gift box and message card.</p>
-              </div>
-            </div>
-          </div>
+          @endif
 
           <!-- ================= PERKS ================= -->
           <div class="info-perks">
-            <div class="perk">
-              <i class="fa-solid fa-gem"></i>
-              <div><b>Statement Finish</b>
-                <p>Antique gold-tone with sparkling stones.</p>
+            @if($pairsWith)
+              <div class="perk">
+                <i class="fa-solid fa-link"></i>
+                <div><b>Pairs With</b>
+                  <p>{{ $pairsWith }}</p>
+                </div>
               </div>
-            </div>
-            <div class="perk">
-              <i class="fa-solid fa-shirt"></i>
-              <div><b>Pairs With</b>
-                <p>Lehengas, Sarees, Gowns, Traditional Outfits.</p>
-              </div>
-            </div>
+            @endif
             <div class="perk">
               <i class="fa-solid fa-truck-fast"></i>
-              <div><b>Ready to Ship</b>
-                <p>Dispatched within 48 hours.</p>
+              <div><b>{{ $inStock ? 'Ready to Ship' : 'Currently Unavailable' }}</b>
+                @if($product->delivery_time)
+                  <p>Dispatched in {{ $product->delivery_time }}.</p>
+                @endif
               </div>
             </div>
+            @if($hasReturns)
+              <div class="perk">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <div><b>Returns &amp; Exchange</b>
+                  <p>Policy details below.</p>
+                </div>
+              </div>
+            @endif
             <div class="perk">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-              <div><b>7-Day Returns</b>
-                <p>Easy return and exchange.</p>
+              <i class="fa-solid fa-shield-halved"></i>
+              <div><b>Secure Checkout</b>
+                <p>Safe, encrypted payments.</p>
               </div>
             </div>
           </div>
 
-          <div class="info-help">
-            <div class="help-text">
-              <b>Need help choosing?</b>
-              <p>Talk to our styling team about sizes, outfits, occasions and gifting.</p>
+          @if($waLink || $telLink)
+            <div class="info-help">
+              <div class="help-text">
+                <b>Need help choosing?</b>
+                <p>Talk to our team about options, sizes, occasions and gifting.</p>
+              </div>
+              <div class="help-links">
+                @if($waLink)
+                  <a href="{{ $waLink }}" class="help-link" target="_blank" rel="noopener"><i
+                      class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                @endif
+                @if($telLink)
+                  <a href="{{ $telLink }}" class="help-link"><i class="fa-solid fa-phone"></i> Call Us</a>
+                @endif
+              </div>
             </div>
-            <div class="help-links">
-              <a href="javascript:void(0)" class="help-link"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
-              <a href="javascript:void(0)" class="help-link"><i class="fa-solid fa-phone"></i> Call Us</a>
-            </div>
-          </div>
+          @endif
 
           <!-- ============ ACCORDION (common JS, class .active) ============ -->
+          @php
+            $inclusions = $product->inclusion_list;
+            $first = true;
+          @endphp
+
           <div class="accordion-wrapper">
-            <div class="accordion-item active">
-              <button type="button" class="accordion-header">
-                <h4>Product Specifications</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <div class="spec-cols">
-                      <ul class="spec-list">
-                        <li><span>Design</span><b>Multi-layered statement necklace</b></li>
-                        <li><span>Pattern</span><b>Cascading, teardrop and geometric</b></li>
-                      </ul>
-                      <ul class="spec-list">
-                        <li><span>Look</span><b>Royal, bridal statement</b></li>
-                        <li><span>Stone Setting</span><b>Intricate stone detailing</b></li>
+
+            @if($hasText($product->description))
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Description</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body rich">{!! $product->description !!}</div>
+                  </div>
+                </div>
+              </div>
+              @php $first = false; @endphp
+            @endif
+
+            @if($specs->isNotEmpty())
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Product Specifications</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body">
+                      <div class="spec-cols">
+                        @foreach($specs->chunk((int) ceil($specs->count() / 2)) as $col)
+                          <ul class="spec-list">
+                            @foreach($col as $s)
+                              <li><span>{{ $s['label'] }}</span><b>{{ $s['value'] }}</b></li>
+                            @endforeach
+                          </ul>
+                        @endforeach
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              @php $first = false; @endphp
+            @endif
+
+            @if($inclusions)
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>What's Included</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body">
+                      <ul class="box-list">
+                        @foreach($inclusions as $item)
+                          <li><span class="bx-ico"><i class="fa-solid fa-circle-check"></i></span><b>{{ $item }}</b></li>
+                        @endforeach
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+              @php $first = false; @endphp
+            @endif
 
-            <div class="accordion-item">
-              <button type="button" class="accordion-header">
-                <h4>What Comes in the Box</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <ul class="box-list">
-                      <li><span class="bx-ico"><i class="fa-solid fa-gem"></i></span><b>Necklace</b></li>
-                      <li><span class="bx-ico"><i class="fa-solid fa-droplet"></i></span><b>Long Earrings</b></li>
-                      <li><span class="bx-ico"><i class="fa-solid fa-crown"></i></span><b>Maang Tikka</b></li>
-                    </ul>
+            @if($hasText($product->size_fit) || $sizeChart)
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Size &amp; Fit</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body rich">
+                      {!! $product->size_fit !!}
+                      @if($sizeChart)
+                        <button type="button" class="policy-link" data-model=".size-pop">
+                          Open Size Guide <i class="fa-solid fa-arrow-right-long"></i>
+                        </button>
+                      @endif
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+              @php $first = false; @endphp
+            @endif
 
-            <div class="accordion-item">
-              <button type="button" class="accordion-header">
-                <h4>Size &amp; Fit</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <ul class="info-points">
-                      <li>Multi-layered statement necklace designed to sit beautifully on the neckline.</li>
-                      <li>Rings, bangles and kids' pieces come in specific sizes, so check the size guide.</li>
-                    </ul>
-                    <button type="button" class="policy-link" data-model=".size-pop">
-                      Open Size Guide <i class="fa-solid fa-arrow-right-long"></i>
-                    </button>
+            @if($hasText($product->care_instructions))
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Care Instructions</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body rich">{!! $product->care_instructions !!}</div>
                   </div>
                 </div>
               </div>
-            </div>
+              @php $first = false; @endphp
+            @endif
 
-            <div class="accordion-item">
-              <button type="button" class="accordion-header">
-                <h4>Care Instructions</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <ul class="info-points">
-                      <li>Keep away from water.</li>
-                      <li>Avoid perfumes and sprays.</li>
-                      <li>Clean gently with a dry and soft cloth.</li>
-                    </ul>
+            @if($hasText($product->shipping_delivery))
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Shipping &amp; Delivery</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body rich">{!! $product->shipping_delivery !!}</div>
                   </div>
                 </div>
               </div>
-            </div>
+              @php $first = false; @endphp
+            @endif
 
-            <div class="accordion-item">
-              <button type="button" class="accordion-header">
-                <h4>Shipping &amp; Delivery</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <ul class="info-points">
-                      <li>Ready to ship items are dispatched within 48 hours.</li>
-                      <li>Delivery in 3–7 working days depending on location.</li>
-                      <li>A tracking link is shared by email and SMS.</li>
-                    </ul>
+            @if($hasReturns)
+              <div class="accordion-item {{ $first ? 'active' : '' }}">
+                <button type="button" class="accordion-header">
+                  <h4>Returns &amp; Exchange</h4><span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-content">
+                  <div class="acc-inner">
+                    <div class="acc-body rich">{!! $product->returns_exchange !!}</div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="accordion-item">
-              <button type="button" class="accordion-header">
-                <h4>Returns &amp; Exchange</h4>
-                <span class="accordion-icon">+</span>
-              </button>
-              <div class="accordion-content">
-                <div class="acc-inner">
-                  <div class="acc-body">
-                    <p>
-                      Unused items with original tags and packaging can be returned or exchanged within 7 days of
-                      delivery.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              @php $first = false; @endphp
+            @endif
           </div>
+
         </div>
       </div>
     </div>
@@ -531,8 +517,9 @@
         <img src="{{ $gallery[0]['thumb'] }}" alt="{{ $product->name }}" />
         <div class="ds-text">
           <b>{{ $product->name }}</b>
-          <span><strong>₹{{ number_format($product->price) }}</strong>@if($product->discount_percent)<em>{{ $product->discount_percent }}%
-          OFF</em>@endif</span>
+          <span><strong class="ds-price">₹{{ number_format($product->price) }}</strong><em class="ds-off"
+              @if(!$product->discount_percent) style="display:none" @endif>{{ $product->discount_percent }}%
+              OFF</em></span>
         </div>
       </div>
 
@@ -543,10 +530,10 @@
           <input type="text" class="qty-input" value="1" readonly aria-label="Quantity" />
           <button type="button" class="qty-plus" aria-label="Increase quantity"><i class="fa-solid fa-plus"></i></button>
         </div>
-        <button type="button" data-id="{{ $productSku }}" data-name="{{ $productName }}" data-toast-title="Added to Cart"
-          data-toast-text="{{ $productName }} has been added to your cart." data-toast-type="success"
-          class="btn btn-outline-black">Add to Cart</button>
-        <a href="{{ url('cart') }}" class="btn btn-primary">Buy Now</a>
+        <button type="button" class="btn btn-outline-black js-add-cart" data-product-id="{{ $product->id }}"
+          data-name="{{ $productName }}">Add to Cart</button>
+        <button type="button" class="btn btn-primary js-buy-now" data-product-id="{{ $product->id }}"
+          data-name="{{ $productName }}">Buy Now</button>
       </div>
     </div>
   </section>
@@ -558,7 +545,7 @@
         <div class="heading">
           <span>Recently Viewed</span>
           <h3>Still on Your <span>Mind?</span></h3>
-          <p>Revisit the styles that caught your eye and find your perfect match.</p>
+          <p>Pick up where you left off.</p>
         </div>
 
         <div class="swiper-wrap">
@@ -586,7 +573,7 @@
       <div class="heading">
         <span>Customer Reviews</span>
         <h3>What Our <span>Customers Say</span></h3>
-        <p>Honest words from people who love what they bought.</p>
+        <p>Honest words from people who bought this.</p>
       </div>
 
       @if($reviewCount)
@@ -612,17 +599,6 @@
                 </li>
               @endforeach
             </ul>
-
-            <div class="rb-love">
-              <h5>Customers love</h5>
-              <ul>
-                <li><i class="fa-solid fa-gem"></i> Sparkle &amp; Shine</li>
-                <li><i class="fa-solid fa-crown"></i> Premium Look</li>
-                <li><i class="fa-solid fa-feather"></i> Lightweight</li>
-                <li><i class="fa-solid fa-indian-rupee-sign"></i> Value for Money</li>
-                <li><i class="fa-solid fa-gift"></i> Gift Packaging</li>
-              </ul>
-            </div>
           </div>
         </div>
 
@@ -718,7 +694,7 @@
         </div>
       @else
         <div style="text-align:center">
-          <p>No reviews yet. Be the first to share your thoughts on this piece.</p>
+          <p>No reviews yet. Be the first to share your thoughts on this product.</p>
           @include('partials.review-cta', ['btnClass' => 'btn-primary'])
         </div>
       @endif
@@ -732,7 +708,8 @@
         <div class="heading">
           <span>Curated for You</span>
           <h3>You May <span>Also Love</span></h3>
-          <p>Discover more pieces selected to complete your look.</p>
+          <p>More from {{ $product->subcategory?->name ?? $product->category?->name ?? 'our collection' }} you might like.
+          </p>
         </div>
 
         <div class="swiper-wrap">
@@ -763,8 +740,8 @@
 
 @endsection
 
-{{-- Page-only modals. Add @stack('modals') in layouts/app.blade.php just above <div class="overlay"></div> --}}
 @push('modals')
+
   <!-- ===================== REVIEW POP ===================== -->
   @if($reviewState === 'can')
     <div class="model review-pop">
@@ -798,7 +775,7 @@
           </div>
           <div class="form-group">
             <textarea id="rvText" name="review" placeholder=" " minlength="10" maxlength="2000" required></textarea>
-            <label for="rvText">Tell us about the finish, sparkle and fit</label>
+            <label for="rvText">Tell us about your experience</label>
           </div>
           <div class="rf-upload">
             <label class="upload-box" for="rvPhotos">
@@ -820,259 +797,236 @@
       </div>
     </div>
   @endif
+
   <!-- ===================== SIZE GUIDE POP ===================== -->
-  <div class="model size-pop">
-    <button type="button" class="close" aria-label="Close size guide">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M5 5l14 14M19 5L5 19" />
-      </svg>
-    </button>
-    <div class="model-body">
-      <div class="title">
-        <h4>Size Guide</h4>
-        <p>Measurements are approximate. Choose the size closest to your own measurements.</p>
-      </div>
-
-      <div class="sg-body">
-        <!-- ================= JEWELLERY ================= -->
-        <div class="sg-var for-jewel">
-          <ul class="tab-nav">
-            <li class="active" data-tab="1">Necklace Length</li>
-            <li data-tab="2">Bangles</li>
-            <li data-tab="3">Rings</li>
-          </ul>
-
-          <div class="tab-nav-content">
-            <div class="tabs active" data-tab="1">
-              <div class="size-table-wrap">
-                <table class="size-table">
-                  <thead>
-                    <tr>
-                      <th>Style</th>
-                      <th>Length (in)</th>
-                      <th>Sits At</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Choker</td>
-                      <td>14 – 16</td>
-                      <td>Base of the neck</td>
-                    </tr>
-                    <tr>
-                      <td>Princess</td>
-                      <td>17 – 19</td>
-                      <td>Collarbone</td>
-                    </tr>
-                    <tr>
-                      <td>Matinee</td>
-                      <td>20 – 24</td>
-                      <td>Above the bust</td>
-                    </tr>
-                    <tr>
-                      <td>Long Haar</td>
-                      <td>28 – 36</td>
-                      <td>Below the bust</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ul class="size-tips">
-                <li><b>Tip:</b> measure around your neck with a soft tape, then add the length you want the necklace to
-                  drop.</li>
-                <li>Statement bridal sets look best on a deep neckline or an open back.</li>
-              </ul>
-            </div>
-
-            <div class="tabs" data-tab="2">
-              <div class="size-table-wrap">
-                <table class="size-table">
-                  <thead>
-                    <tr>
-                      <th>Size</th>
-                      <th>Inner Dia (in)</th>
-                      <th>Inner Dia (cm)</th>
-                      <th>Wrist</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>2.2</td>
-                      <td>2 1/8</td>
-                      <td>5.4</td>
-                      <td>Small</td>
-                    </tr>
-                    <tr>
-                      <td>2.4</td>
-                      <td>2 1/4</td>
-                      <td>5.7</td>
-                      <td>Small – Medium</td>
-                    </tr>
-                    <tr>
-                      <td>2.6</td>
-                      <td>2 3/8</td>
-                      <td>6.0</td>
-                      <td>Medium</td>
-                    </tr>
-                    <tr>
-                      <td>2.8</td>
-                      <td>2 1/2</td>
-                      <td>6.4</td>
-                      <td>Medium – Large</td>
-                    </tr>
-                    <tr>
-                      <td>2.10</td>
-                      <td>2 5/8</td>
-                      <td>6.7</td>
-                      <td>Large</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ul class="size-tips">
-                <li><b>Tip:</b> close your thumb and little finger together, measure around the widest part of your hand,
-                  then compare with the inner diameter.</li>
-              </ul>
-            </div>
-
-            <div class="tabs" data-tab="3">
-              <ul class="size-tips">
-                <li><b>Adjustable rings</b> fit most finger sizes. Gently open or close the band to fit.</li>
-                <li><b>Fixed size:</b> wrap a thin strip of paper around your finger, mark where it meets, and measure the
-                  length in mm.</li>
-                <li>Measure at the end of the day, when fingers are at their largest.</li>
-              </ul>
-            </div>
-          </div>
+  @if($sizeChart)
+    <div class="model size-pop">
+      <button type="button" class="close" aria-label="Close size guide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M5 5l14 14M19 5L5 19" />
+        </svg>
+      </button>
+      <div class="model-body">
+        <div class="title">
+          <h4>Size Guide</h4>
+          <p>Measurements are approximate. Choose the size closest to your own measurements.</p>
         </div>
-
-        <!-- ================= HOME (hidden) ================= -->
-        <div class="sg-var for-home" style="display: none">
-          <ul class="tab-nav">
-            <li class="active" data-tab="1">Bedsheets</li>
-            <li data-tab="2">Cushion Covers</li>
-          </ul>
-
-          <div class="tab-nav-content">
-            <div class="tabs active" data-tab="1">
-              <div class="size-table-wrap">
-                <table class="size-table">
-                  <thead>
-                    <tr>
-                      <th>Size</th>
-                      <th>Sheet (in)</th>
-                      <th>Pillow Cover (in)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Single</td>
-                      <td>60 × 90</td>
-                      <td>17 × 27</td>
-                    </tr>
-                    <tr>
-                      <td>Double</td>
-                      <td>90 × 100</td>
-                      <td>17 × 27</td>
-                    </tr>
-                    <tr>
-                      <td>King</td>
-                      <td>108 × 108</td>
-                      <td>17 × 27</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ul class="size-tips">
-                <li><b>Tip:</b> measure your mattress length, width and depth, then add the tuck-in allowance.</li>
-                <li>Cotton can shrink slightly after the first wash.</li>
-              </ul>
-            </div>
-
-            <div class="tabs" data-tab="2">
-              <div class="size-table-wrap">
-                <table class="size-table">
-                  <thead>
-                    <tr>
-                      <th>Size</th>
-                      <th>Cover (in)</th>
-                      <th>Best For</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Small</td>
-                      <td>12 × 12</td>
-                      <td>Accent cushions</td>
-                    </tr>
-                    <tr>
-                      <td>Medium</td>
-                      <td>16 × 16</td>
-                      <td>Sofa, bed</td>
-                    </tr>
-                    <tr>
-                      <td>Large</td>
-                      <td>18 × 18</td>
-                      <td>Sofa, floor seating</td>
-                    </tr>
-                    <tr>
-                      <td>X-Large</td>
-                      <td>20 × 20</td>
-                      <td>Statement cushions</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <ul class="size-tips">
-                <li>Choose a cover the same size as the insert for a fuller look.</li>
-              </ul>
-            </div>
-          </div>
+        <div class="sg-body">
+          <div class="size-chart-content">{!! $sizeChart !!}</div>
+          @if($waLink)
+            <a href="{{ $waLink }}" class="sg-help" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Need
+              Help? Chat with Us</a>
+          @endif
         </div>
-
-        <a href="javascript:void(0)" class="sg-help"><i class="fa-brands fa-whatsapp"></i> Need Help? Chat with Us</a>
       </div>
     </div>
-  </div>
+  @endif
 @endpush
 
 @push('scripts')
+  <script>window.PD = @json($pd);</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/glightbox/3.3.0/js/glightbox.min.js"></script>
   <script>
     $(function () {
-      var pad = function (n) {
-        return ("0" + n).slice(-2);
-      };
+      var PD = window.PD || { base: {}, variants: {} };
+      var minQty = PD.base.minQty || 1, maxQty = 10;
+      var cur = { mrp: PD.base.mrp || 0, price: PD.base.price || 0 }; // unit price of the selected variant (without addons)
+      var pad = function (n) { return ("0" + n).slice(-2); };
+      var money = function (n) { return "₹" + Math.round(n).toLocaleString("en-US"); };
 
+      // ---------- gallery ----------
       var main = new Swiper(".detailMain", {
         speed: 600,
         navigation: { nextEl: ".g-next", prevEl: ".g-prev" },
-        pagination: {
-          el: ".gallery-counter",
-          type: "fraction",
-          formatFractionCurrent: pad,
-          formatFractionTotal: pad,
-        },
+        pagination: { el: ".gallery-counter", type: "fraction", formatFractionCurrent: pad, formatFractionTotal: pad },
       });
       main.on("slideChange", function () {
         $(".thumb-list button").removeClass("active").eq(main.activeIndex).addClass("active");
       });
-      $(".thumb-list button").on("click", function () {
-        main.slideTo($(this).index());
-      });
+      $(document).on("click", ".thumb-list button", function () { main.slideTo($(this).index()); });
 
-      // every option card (swatch / size / chip) updates its label
-      $(".opt-card .opt-swatch input, .opt-card .opt-size input").on("change", function () {
+      var glb = GLightbox({ selector: ".glightbox", touchNavigation: true, loop: true });
+      var origSlides = $(".detailMain .swiper-wrapper").html();
+      var origThumbs = $(".thumb-list").html();
+      var curImg = "orig";
+
+      function setGallery(iv) {
+        var key = iv && iv.images.length ? iv.id : "orig";
+        if (key === curImg) return;
+        curImg = key;
+
+        var slides = origSlides, thumbs = origThumbs;
+        if (key !== "orig") {
+          slides = iv.images.map(function (i) {
+            return '<div class="swiper-slide"><a href="' + i.url + '" class="gallery-img glightbox" data-gallery="product"><img src="' + i.url + '" alt="" /></a></div>';
+          }).join("");
+          thumbs = iv.images.map(function (i, n) {
+            return '<button type="button" class="' + (n ? "" : "active") + '"><img src="' + i.thumb + '" alt="" /></button>';
+          }).join("");
+        }
+
+        $(".detailMain .swiper-wrapper").html(slides);
+        if ($(".thumb-list").length) $(".thumb-list").html(thumbs);
+        main.update();
+        main.slideTo(0, 0);
+        if (main.pagination && main.pagination.render) { main.pagination.render(); main.pagination.update(); }
+        glb.reload();
+      }
+
+      // ---------- helpers ----------
+      function selectedIds() {
+        return $('.detail-info input[name^="attr["]:checked').map(function () { return parseInt(this.value, 10); }).get();
+      }
+
+      // sum of checked addons (per unit)
+      function addonTotal() {
+        var t = 0;
+        $('.detail-info input[name="addons[]"]:checked').each(function () {
+          t += parseFloat($(this).data("price")) || 0;
+        });
+        return t;
+      }
+
+      function currentQty() {
+        return parseInt($(".qty-input").first().val(), 10) || minQty;
+      }
+
+      // the most specific variant of a type whose values are all selected
+      function pick(type, sel) {
+        var list = (PD.variants && PD.variants[type]) || [], best = null;
+        list.forEach(function (v) {
+          if (!v.values.length) return;
+          var ok = v.values.every(function (id) { return sel.indexOf(id) !== -1; });
+          if (ok && (!best || v.values.length > best.values.length)) best = v;
+        });
+        return best;
+      }
+
+      // ---------- price = (variant price + addons) x qty ----------
+      function renderPrice() {
+        var qty = currentQty(), add = addonTotal();
+        var unitNow = cur.price + add;
+        var unitOld = cur.mrp + add;
+        var pct = cur.mrp > cur.price ? Math.round((cur.mrp - cur.price) / cur.mrp * 100) : 0;
+
+        $(".price-now, .ds-price").text(money(unitNow * qty));
+        $(".price-old").text(money(unitOld * qty)).toggle(pct > 0);
+        $(".price-off, .ds-off").text(pct + "% OFF").toggle(pct > 0);
+        $(".price-save").toggle(pct > 0).find("b").text(money((cur.mrp - cur.price) * qty));
+      }
+
+      // ---------- options -> price / stock / sku / images ----------
+      function refresh() {
+        var sel = selectedIds();
+        var pv = pick("price", sel), sv = pick("stock", sel), kv = pick("sku", sel), iv = pick("image", sel);
+
+        // price (variant part; addons + qty applied in renderPrice)
+        cur.mrp = pv ? pv.mrp : PD.base.mrp;
+        cur.price = pv ? pv.price : PD.base.price;
+
+        // sku
+        var sku = kv && kv.sku ? kv.sku : PD.base.sku;
+        $(".sku-val").text(sku);
+
+        // stock
+        var stock = sv ? sv.stock : PD.base.stock, avail = sv ? sv.available : true;
+        var state = !avail ? "na" : stock <= 0 ? "out" : stock <= 5 ? "low" : "in";
+        var dispatch = PD.base.dispatch ? "Ready to ship, dispatched in " + PD.base.dispatch : "Ready to ship";
+        var copy = {
+          in: ["In Stock", dispatch],
+          low: ["Only " + stock + " left", "Order soon"],
+          out: ["Out of Stock", "Currently unavailable"],
+          na: ["Not Available", "This combination is not offered"]
+        }[state];
+        var blocked = state === "out" || state === "na";
+
+        $(".info-stock").removeClass("is-out is-low").addClass(blocked ? "is-out" : state === "low" ? "is-low" : "")
+          .find("b").text(copy[0]).end().find("em").text(copy[1]);
+
+        $(".act-btns .btn, .ds-actions > .btn")
+          .toggleClass("is-disabled", blocked).attr("aria-disabled", blocked)
+          .css({ pointerEvents: blocked ? "none" : "", opacity: blocked ? ".5" : "" })
+          .filter("button").prop("disabled", blocked);
+
+        maxQty = Math.max(minQty, Math.min(10, stock > 0 ? stock : minQty));
+        if (currentQty() > maxQty) $(".qty-input").val(maxQty);
+
+        renderPrice();
+        setGallery(iv);
+      }
+
+      $(document).on("change", ".opt-card input", function () {
         var name = $(this).data("name") || $(this).next().text();
         $(this).closest(".opt-card").find(".opt-value").text(name);
+        refresh();
       });
 
+      // ---------- quantity ----------
+      $(".qty-input").val(minQty);
       $(document).on("click", ".qty-plus, .qty-minus", function () {
-        var v = parseInt($(this).siblings(".qty-input").val(), 10) || 1;
-        v = $(this).hasClass("qty-plus") ? Math.min(10, v + 1) : Math.max(1, v - 1);
-        $(".qty-input").val(v);
+        var v = parseInt($(this).siblings(".qty-input").val(), 10) || minQty;
+        v = $(this).hasClass("qty-plus") ? Math.min(maxQty, v + 1) : Math.max(minQty, v - 1);
+        $(".qty-input").val(v);   // keeps main + sticky bar in sync
+        renderPrice();
       });
 
+      // ---------- add to cart ----------
+      var CART_ADD_URL = "{{ route('cart.add') }}";   // route name apne hisaab se badlo
+      var CART_URL = "{{ url('cart') }}";
+      var CSRF = "{{ csrf_token() }}";
+
+      function notify(type, title, text) {
+        if (typeof window.showToast === "function") return window.showToast(title, text, type); // agar common JS me ho
+        var $t = $('<div class="cart-toast"></div>').text(title + (text ? " - " + text : "")).css({
+          position: "fixed", right: "20px", bottom: "20px", zIndex: 99999, padding: "12px 18px",
+          borderRadius: "8px", color: "#fff", background: type === "success" ? "#1f8a5b" : "#c0392b"
+        }).appendTo("body");
+        setTimeout(function () { $t.fadeOut(300, function () { $t.remove(); }); }, 2800);
+      }
+
+      function cartPayload(productId) {
+        var sel = selectedIds();
+        var data = {
+          product_id: productId,
+          quantity: currentQty(),
+          selected_values: sel,
+          addon_ids: $('.detail-info input[name="addons[]"]:checked').map(function () { return parseInt(this.value, 10); }).get()
+        };
+        ["price", "image", "stock", "sku"].forEach(function (type) {
+          var v = pick(type, sel);
+          if (v) data[type + "_variant_id"] = v.id;
+        });
+        return data;
+      }
+
+      function addToCart($btn, goToCart) {
+        if ($btn.prop("disabled") || $btn.data("busy")) return;
+        $btn.data("busy", true).addClass("is-loading");
+
+        $.ajax({
+          url: CART_ADD_URL,
+          method: "POST",
+          data: cartPayload($btn.data("product-id")),
+          headers: { "X-CSRF-TOKEN": CSRF, "Accept": "application/json" }
+        })
+          .done(function (res) {
+            if (!res.status) return notify("error", "Could not add", res.message);
+            $(document).trigger("cart:updated", [res]);   // header count / mini cart is event se update karo
+            if (goToCart) { window.location.href = CART_URL; return; }
+            notify("success", "Added to Cart", $btn.data("name") + " has been added to your cart.");
+          })
+          .fail(function (xhr) {
+            var j = xhr.responseJSON || {}, msg = j.message || "Something went wrong. Please try again.";
+            if (j.errors) msg = Object.values(j.errors)[0][0];
+            notify("error", "Could not add", msg);
+          })
+          .always(function () { $btn.data("busy", false).removeClass("is-loading"); });
+      }
+
+      $(document).on("click", ".js-add-cart", function () { addToCart($(this), false); });
+      $(document).on("click", ".js-buy-now", function () { addToCart($(this), true); });
+
+      // ---------- sticky buy bar ----------
       var bar = document.querySelector(".detail-sticky");
       var target = document.querySelector(".info-actions");
       if (bar && target) {
@@ -1081,9 +1035,39 @@
         }).observe(target);
       }
 
-      GLightbox({ selector: ".glightbox", touchNavigation: true, loop: true });
+      // ---------- pincode check ----------
+      $(".pin-form").on("submit", function (e) {
+        e.preventDefault();
+        var $form = $(this), $btn = $form.find("button"), $res = $(".pin-result"),
+          pin = $.trim($form.find('[name="pincode"]').val());
+
+        function show(ok, text) {
+          $res.find("i").attr("class", "fa-solid " + (ok ? "fa-circle-check" : "fa-circle-xmark"));
+          $res.css("color", ok ? "#1f8a5b" : "#c0392b");
+          $res.find("span").text(text);
+        }
+
+        if (!/^\d{6}$/.test(pin)) return show(false, "Please enter a valid 6-digit pincode.");
+
+        $btn.prop("disabled", true);
+        $.getJSON($form.attr("action"), { pincode: pin })
+          .done(function (d) {
+            if (!d.status) return show(false, d.message);
+            var text = "Delivering to " + [d.district, d.state].filter(Boolean).join(", ") + " (" + d.pincode + ").";
+            if (d.eta_date) text += " Expected by " + d.eta_date + " (" + d.eta + ").";
+            show(true, text);
+          })
+          .fail(function (xhr) {
+            var err = xhr.responseJSON && xhr.responseJSON.errors;
+            show(false, err ? err.pincode[0] : "Something went wrong. Please try again.");
+          })
+          .always(function () { $btn.prop("disabled", false); });
+      });
+
+      refresh(); // apply the default selection on load
     });
   </script>
+
   <script>
     (function () {
       var form = document.querySelector(".review-form");
@@ -1149,6 +1133,7 @@
           .catch(function () { say("Network error. Please try again.", false); })
           .then(function () { btn.disabled = false; });
       });
+
     })();
   </script>
 @endpush

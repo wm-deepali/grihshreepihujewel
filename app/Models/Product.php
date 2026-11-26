@@ -10,7 +10,6 @@ class Product extends Model
 {
     use SoftDeletes;
 
-
     protected $fillable = [
 
         'category_id',
@@ -23,11 +22,12 @@ class Product extends Model
         'sku',
 
         'short_description',
-        'fabric_material',
+        'description',
+        'inclusions',
+        'size_fit',
         'care_instructions',
         'shipping_delivery',
         'returns_exchange',
-        'offers_how_to_avail',
 
         'mrp',
         'discount_type',
@@ -39,9 +39,6 @@ class Product extends Model
 
         'delivery_time',
 
-        'colour_customization',
-        'dye_price',
-
         'meta_title',
         'meta_description',
 
@@ -52,7 +49,6 @@ class Product extends Model
     protected $casts = [
 
         'status' => 'boolean',
-        'colour_customization' => 'boolean',
 
     ];
 
@@ -66,14 +62,14 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'subcategory_id');
     }
 
-    // ✅ new: brand relation (Grih Shree / Pihu Jewel)
+    // brand relation (Grih Shree / Pihu Jewel)
     public function brand()
     {
         return $this->belongsTo(Brand::class);
     }
 
     /**
-     * ✅ Used across all grid/listing views (homepage sections, product
+     * Used across all grid/listing views (homepage sections, product
      * listing pages, luxury tabs, etc). Prefers the compressed THUMB
      * (400px) since these are always shown small — falls back to the
      * full image for older rows created before the thumb column existed.
@@ -105,13 +101,13 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
-    // ✅ new: product videos (Media → Video)
+    // product videos (Media → Video)
     public function videos()
     {
         return $this->hasMany(ProductVideo::class);
     }
 
-    // ✅ new: addon options (Addon Options section)
+    // addon options (Addon Options section)
     public function addons()
     {
         return $this->hasMany(ProductAddon::class);
@@ -191,6 +187,15 @@ class Product extends Model
         return $this->mrp > $this->price
             ? (int) round((($this->mrp - $this->price) / $this->mrp) * 100)
             : 0;
+    }
+
+    // inclusions textarea (one item per line) -> clean array for the detail page
+    public function getInclusionListAttribute(): array
+    {
+        return array_values(array_filter(array_map(
+            'trim',
+            preg_split('/\r\n|\r|\n/', strip_tags((string) $this->inclusions))
+        )));
     }
 
     // partials.product-card ko jo array chahiye (static cards jaisa hi shape)
