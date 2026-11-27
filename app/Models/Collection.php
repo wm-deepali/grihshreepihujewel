@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 
 class Collection extends Model
@@ -20,6 +21,13 @@ class Collection extends Model
     protected $casts = [
         'show_in_navbar' => 'boolean',
     ];
+
+
+    protected static function booted()
+    {
+        static::saved(fn() => Cache::forget('menu.collections'));
+        static::deleted(fn() => Cache::forget('menu.collections'));
+    }
 
     public function products()
     {

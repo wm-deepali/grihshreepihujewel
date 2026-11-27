@@ -399,9 +399,6 @@
                 </div>
 
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <a href="{{ route('admin.categories.import') }}" class="btn-secondary-dash">
-                        <i class="fa fa-upload"></i> Bulk Import
-                    </a>
                     <a href="{{ route('admin.categories.create') }}" class="btn-primary-dash">
                         <i class="fa fa-plus"></i> Add Category
                     </a>
@@ -425,6 +422,13 @@
                                     <option value="subcategory" {{ request('type') == 'subcategory' ? 'selected' : '' }}>Sub Categories</option>
                                 </select>
                             </div>
+
+                            <select name="brand_id" class="field-select" onchange="this.form.submit()">
+    <option value="">All brands</option>
+    @foreach($brands as $b)
+        <option value="{{ $b->id }}" {{ request('brand_id') == $b->id ? 'selected' : '' }}>{{ $b->menu_title ?: $b->name }}</option>
+    @endforeach
+</select>
 
                             {{-- Parent Category --}}
                             <div class="filter-group" id="categoryFilterDiv"
@@ -487,6 +491,11 @@
                                         ID {!! sortIcon('id') !!}
                                     </a>
                                 </th>
+                                <th>
+                                    <a href="{{ sortUrl('brand') }}" class="sort-link">
+                                        Brand {!! sortIcon('brand') !!}
+                                    </a>
+                                </th>
                                 <th>Image</th>
                                 <th>
                                     <a href="{{ sortUrl('name') }}" class="sort-link">
@@ -521,6 +530,8 @@
                                         <span class="id-chip">{{ $cat->id }}</span>
                                     </td>
 
+                                    <td>{{ $category->brand?->name ?? '—' }}</td>
+                                    
                                     <td>
                                         @if($cat->image)
                                             <img src="{{ asset('storage/' . $cat->image) }}"

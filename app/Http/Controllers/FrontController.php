@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Models\ProductReview;
+use App\Models\Setting;
 
 class FrontController extends Controller
 {
@@ -129,6 +130,8 @@ class FrontController extends Controller
             $applied[] = [$filters['discount'] . '% & Above', $drop('discount')];
         if ($filters['in_stock'])
             $applied[] = ['In Stock', $drop('in_stock')];
+        if ($filters['q'])
+            $applied[] = ['"' . $filters['q'] . '"', $drop('q')];
 
         // ---------- best sellers + recently viewed ----------
         $bestSellers = $this->bestSellers();
@@ -243,6 +246,7 @@ class FrontController extends Controller
             'collection' => array_filter((array) $request->input('collection', [])),
             'rating' => (float) $request->input('rating') ?: null,
             'discount' => (int) $request->input('discount') ?: null,
+            'q' => trim((string) $request->input('q')) ?: null,
             'attrs' => collect($request->input('attr', []))
                 ->map(fn($v) => array_filter((array) $v))->filter()->all(),
         ];
@@ -614,4 +618,60 @@ class FrontController extends Controller
             'tax_note' => $this->taxNote($product),
         ]);
     }
+
+    /*
+|--------------------------------------------------------------------------
+| header search dropdown (JSON)
+| empty q  -> newest products ("Suggestions")
+| q given  -> best matches ("Results")
+|--------------------------------------------------------------------------
+*/
+    public function searchSuggest(Request $request)
+    {
+        $term = trim(Str::limit((string) $request->input('q', ''), 60, ''));
+        $symbol = Setting::current()->currency_symbol ?: '₹';
+
+        $payload = [
+            'status' => true,
+            'q' => $term,
+            'total' => 0,
+            'all_url' => route('products', $term !== '' ? ['q' => $term] : []),
+            'items' => [],
+        ];
+
+        if ($term !== '' && mb_strlen($term) < 2) {
+            return response()->json($payload);
+        }
+
+        $query = Product::visible()->with(['images', 'category:id,name', 'subcategory:id,name']);
+
+        if ($term !== '') {
+            $query->search($term);
+        }
+
+        $payload['total'] = (clone $query)->count();
+
+        if ($term !== '') {
+            // name starts with the term > name contains it > matched elsewhere (category, brand...)
+            $query->orderByRaw(
+                'CASE WHEN products.name LIKE ? THEN 0 WHEN products.name LIKE ? THEN 1 ELSE 2 END',
+                [$term . '%', '%' . $term . '%']
+            );
+        }
+
+        $payload['items'] = $query->orderByDesc('products.id')
+            ->limit(8)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'url' => route('product.show', $p->slug),
+                'img' => $p->display_image,
+                'cat' => $p->subcategory?->name ?? $p->category?->name,
+                'price' => $symbol . number_format($p->price),
+            ])->all();
+
+        return response()->json($payload);
+    }
+
 }

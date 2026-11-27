@@ -262,18 +262,39 @@
                                         class="field-input">
                                 </div>
 
-                                <div class="field-group">
-                                    <label class="field-label">Parent Category</label>
-                                    <select name="parent_id" class="field-select">
-                                        <option value="">— None (top-level) —</option>
-                                        @foreach($parents as $parent)
-                                            <option value="{{ $parent->id }}"
-                                                {{ $category->parent_id == $parent->id ? 'selected' : '' }}>
-                                                {{ $parent->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                              @php $hasChildren = $category->children()->exists(); @endphp
+
+<div class="field-group">
+    <label class="field-label">Brand / Group <span class="req">*</span></label>
+    <select name="brand_id" id="brandSelect" class="field-select">
+        <option value="">— Select brand —</option>
+        @foreach($brands as $brand)
+            <option value="{{ $brand->id }}"
+                {{ old('brand_id', $category->brand_id) == $brand->id ? 'selected' : '' }}>
+                {{ $brand->menu_title ?: $brand->name }}
+            </option>
+        @endforeach
+    </select>
+    @error('brand_id')<div class="field-hint" style="color:var(--red)">{{ $message }}</div>@enderror
+    <div class="field-hint" id="brandHint">Changing this moves all sub categories and products of this category to the new brand.</div>
+</div>
+
+<div class="field-group">
+    <label class="field-label">Parent Category</label>
+    <select name="parent_id" id="parentSelect" class="field-select" {{ $hasChildren ? 'disabled' : '' }}>
+        <option value="">— None (top-level) —</option>
+        @foreach($parents as $parent)
+            <option value="{{ $parent->id }}" data-brand="{{ $parent->brand_id }}"
+                {{ old('parent_id', $category->parent_id) == $parent->id ? 'selected' : '' }}>
+                {{ $parent->name }}
+            </option>
+        @endforeach
+    </select>
+    @error('parent_id')<div class="field-hint" style="color:var(--red)">{{ $message }}</div>@enderror
+    @if($hasChildren)
+        <div class="field-hint">This category has sub categories, so it stays top-level.</div>
+    @endif
+</div>
 
                                 <div class="field-group">
     <label class="field-label">Tax Class</label>
@@ -514,4 +535,39 @@ function clearNewImage() {
     const cur = document.getElementById('currentImageWrap');
     if (cur) cur.style.display = 'flex';
 }
+
+// Brand <-> Parent behaviour
+(function () {
+    const brand = document.getElementById('brandSelect');
+    const parent = document.getElementById('parentSelect');
+    const hint = document.getElementById('brandHint');
+    const defaultHint = hint.textContent;
+
+    function filterParents() {
+        Array.from(parent.options).forEach(o => {
+            if (!o.value) return;
+            const ok = !brand.value || o.dataset.brand === brand.value;
+            o.hidden = !ok;
+            o.disabled = !ok;
+        });
+        if (parent.selectedOptions[0] && parent.selectedOptions[0].disabled) parent.value = '';
+    }
+
+    function syncFromParent() {
+        if (parent.value) {
+            brand.value = parent.selectedOptions[0].dataset.brand || '';
+            brand.disabled = true;               // sub category inherits the brand
+            hint.textContent = 'Inherited from the parent category.';
+        } else {
+            brand.disabled = false;
+            hint.textContent = defaultHint;
+        }
+    }
+
+    brand.addEventListener('change', filterParents);
+    parent.addEventListener('change', () => { syncFromParent(); filterParents(); });
+
+    syncFromParent();
+    filterParents();
+})();
 </script>

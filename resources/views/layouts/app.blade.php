@@ -4,62 +4,10 @@
   $chev = '<svg class="chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6" /></svg>';
   $googleSvg = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" /><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" /><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" /><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" /></svg>';
 
-  // ---------- menu data (replace with DB categories later) ----------
-  $homeCols = [
-    ['Handloom & Bedding', ['Bedsheets', 'Reversible Bedsheets', 'Cotton Bedsheets', 'Dohars & Quilts', 'Comforters', 'Pillow Covers', 'Cushion Covers', 'Bedding Sets']],
-    ['Home Decor', ['Torans & Door Hangings', 'Wall Decor', 'Table Decor', 'Showpieces', 'Decorative Lanterns', 'Festive Decor', 'Decorative Accessories']],
-    ['Festive Collection', ['Diwali Collection', 'Christmas Collection', 'Karwachauth Collection', 'Holi Collection', 'Rakhi Collection', 'Navratri Collection', 'Wedding Festivities']],
-    ['Gifts & Hampers', ['Wedding Gifts', 'Festive Hampers', 'Return Gifts', 'Towel Hampers', 'Home Decor Gifts', 'Customised Gift Hampers']],
-    ['Home Essentials', ['Bath Towels', 'Face Towels', 'Towel Sets', 'Kitchen Linen', 'Table Linen']],
-    ['Handcrafted Collection', ['Crochet Products', 'Handmade Decor', 'Resin Art', 'Handcrafted Accessories']],
-  ];
-
-  $jewelCols = [
-    ['Earrings', ['Jhumkas', 'Studs', 'Chandbalis', 'Drops & Danglers', 'Festive Earrings', 'Daily Wear Earrings']],
-    ['Necklaces', ['Matarmala', 'Temple Jewellery', 'Traditional Necklaces', 'Choker Sets', 'Necklace Sets', 'Pendant Sets']],
-    ['Bangles & Bracelets', ['Bangles', 'Kada', 'Bracelets', 'Fashion Bracelets']],
-    ['Rings', ['Statement Rings', 'Adjustable Rings', 'Traditional Rings', 'Fashion Rings']],
-    ['Traditional Accessories', ['Maang Tikka', 'Matha Patti', 'Hair Accessories', 'Anklets']],
-    ['Jewellery Sets', ['Bridal Sets', 'Festive Sets', 'Party Wear Sets', 'Necklace & Earring Sets']],
-  ];
-
-  $collCols = [
-    ['featured', 'Featured', ['New Arrivals', 'Best Sellers', 'Festive Specials', 'Premium Collection', 'Handcrafted Collection']],
-    ['occasion', 'Shop by Occasion', ['Wedding', 'Festive', 'Party Wear', 'Daily Wear', 'Housewarming']],
-    ['gifts', 'Gift Ideas', ['Gifts for Her', 'Gifts for Home', 'Wedding Gifts', 'Return Gifts', 'Festive Hampers']],
-    ['price', 'Price Range', ['Under ₹499', 'Under ₹999', '₹1,000 - ₹1,999', '₹2,000 - ₹4,999', '₹5,000 & Above']],
-  ];
-
-  $giftLinks = ['Wedding Gifts', 'Festive Hampers', 'Return Gifts', 'Towel Hampers', 'Customised Gift Hampers'];
-
-  $halves = [
-    ['half-home', 'Home & Living', $homeCols],
-    ['half-jewel', 'Jewellery & Accessories', $jewelCols],
-  ];
-
-  $brandMenus = [
-    ['label' => 'Home & Living', 'title' => 'Home & Living', 'cols' => $homeCols, 'img' => 'pro1.png', 'feature' => 'Beautiful Living'],
-    ['label' => 'Jewellery', 'title' => 'Jewellery & Accessories', 'cols' => $jewelCols, 'img' => 'pro2.png', 'feature' => 'Timeless Adornment'],
-  ];
-
-  $suggestions = [
-    ['handloom cotton bedsheet set bedsheets bedding grih shree', 'pro1.png', 'Handloom Cotton Bedsheet Set', 'Handloom & Bedding', '₹2,499'],
-    ['kundan choker necklace necklaces choker jewellery pihu jewel', 'pro2.png', 'Kundan Choker Necklace', 'Necklaces', '₹1,899'],
-    ['brass diya gift set diya decor festive gifts grih shree', 'pro3.png', 'Brass Diya Gift Set', 'Festive Decor', '₹899'],
-    ['pearl drop earrings earrings drops danglers jewellery pihu jewel', 'pro4.png', 'Pearl Drop Earrings', 'Earrings', '₹749'],
-    ['jaipuri cotton quilt quilts dohars bedding grih shree', 'pro1.png', 'Jaipuri Cotton Quilt', 'Dohars & Quilts', '₹3,199'],
-    ['meenakari bangle set bangles bracelets jewellery pihu jewel', 'pro4.png', 'Meenakari Bangle Set', 'Bangles & Bracelets', '₹1,299'],
-    ['hand-painted ceramic planter planter home decor handcrafted grih shree', 'pro3.png', 'Hand-Painted Ceramic Planter', 'Handcrafted Collection', '₹1,099'],
-    ['temple jewellery ring set rings temple jewellery pihu jewel', 'pro2.png', 'Temple Jewellery Ring Set', 'Rings', '₹999'],
-    ['polki choker necklace set necklace sets choker jewellery pihu jewel', 'pro2.png', 'Polki Choker Necklace Set', 'Necklace Sets', '₹2,299'],
-    ['gold plated jhumka earrings jhumkas earrings jewellery pihu jewel', 'pro4.png', 'Gold Plated Jhumka Earrings', 'Jhumkas', '₹849'],
-  ];
-
-  $cartItems = [
-    ['pro1.png', 'Grih Shree', 'Handloom Cotton Bedsheet Set', 'Pure cotton · Double bed · 2 pillow covers', '₹2,499', '₹3,299', '24% off'],
-    ['pro2.png', 'Pihu Jewel', 'Kundan Choker Necklace', 'Handcrafted kundan · Pearl drops', '₹1,899', '₹2,599', '27% off'],
-    ['pro3.png', 'Grih Shree', 'Brass Diya Gift Set', 'Set of 4 · Hand-finished · Gift ready', '₹899', '₹1,199', '25% off'],
-  ];
+  $siteName = $general->site_name_text;
+  $socials = $general->socialLinks();
+  $wishlistOn = $general->wishlist ?? true;
+  $copyright = str_replace('{year}', date('Y'), $general->footer_copyright ?: 'Copyright © {year} ' . $siteName . '. All Rights Reserved.');
 
   $isHome = request()->is('/');
   $authUser = auth('customer')->user(); // null for guests
@@ -72,7 +20,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>@yield('title', 'Grih Shree & Pihu Jewel')</title>
+  <title>@yield('title', $siteName)</title>
+  @if($general->favicon_url)
+    <link rel="icon" href="{{ $general->favicon_url }}" />
+  @endif
   @stack('meta')
 
   <!-- ================= Google Fonts ================= -->
@@ -132,13 +83,14 @@
             <li><a href="{{ url('shipping-policy') }}">Shipping</a></li>
             <li><a href="{{ route('faqs') }}">FAQs</a></li>
           </ul>
-          <ul class="top-social">
-            <li><a href="javascript:void(0)" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li>
-            <li><a href="javascript:void(0)" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a></li>
-            <li><a href="javascript:void(0)" aria-label="Pinterest"><i class="fa-brands fa-pinterest-p"></i></a></li>
-            <li><a href="javascript:void(0)" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a></li>
-            <li><a href="javascript:void(0)" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li>
-          </ul>
+          @if(count($socials))
+            <ul class="top-social">
+              @foreach($socials as $s)
+                <li><a href="{{ $s['url'] }}" target="_blank" rel="noopener" aria-label="{{ $s['label'] }}"><i
+                      class="{{ $s['icon'] }}"></i></a></li>
+              @endforeach
+            </ul>
+          @endif
         </div>
       </div>
     </div>
@@ -153,8 +105,7 @@
             </svg>
           </button>
           <a href="{{ route('home') }}" class="logo">
-            <img src="{{ asset('assets/images/logo.png') }}" alt="Grih Shree + Pihu Jewel"
-              title="Grih Shree + Pihu Jewel" />
+            <img src="{{ $general->header_logo_url }}" alt="{{ $siteName }}" title="{{ $siteName }}" />
           </a>
         </div>
 
@@ -163,55 +114,57 @@
             <li class="{{ $isHome ? 'active' : '' }}"><a href="{{ route('home') }}">Home</a></li>
 
             {{-- ============ SHOP ALL ============ --}}
-            <li class="hasMega">
-              <a href="{{ route('products') }}">Shop All {!! $chev !!}</a>
-              <div class="mega-menu mega-all">
-                <div class="container-fluid">
-                  <div class="mega-halves">
-                    @foreach($halves as [$halfClass, $halfTitle, $cols])
-                      <div class="mega-half {{ $halfClass }}">
-                        <div class="half-head">
-                          <h4>{{ $halfTitle }}</h4>
-                          <a href="{{ route('products') }}" class="head-link">View All Collection {!! $arrow !!}</a>
+            @if(count($menuGroups))
+              <li class="hasMega">
+                <a href="{{ route('products') }}">Shop All {!! $chev !!}</a>
+                <div class="mega-menu mega-all">
+                  <div class="container-fluid">
+                    <div class="mega-halves">
+                      @foreach($menuGroups as $g)
+                        <div class="mega-half {{ $loop->first ? 'half-home' : 'half-jewel' }}">
+                          <div class="half-head">
+                            <h4>{{ $g['title'] }}</h4>
+                            <a href="{{ $g['url'] }}" class="head-link">View All Collection {!! $arrow !!}</a>
+                          </div>
+                          <div class="half-grid">
+                            @foreach($g['cols'] as $col)
+                              <div class="mega-col">
+                                <a href="{{ $col['url'] }}" class="col-title">{{ $col['name'] }}</a>
+                                <ul>
+                                  @foreach($col['items'] as $item)
+                                    <li><a href="{{ $item['url'] }}">{{ $item['name'] }}</a></li>
+                                  @endforeach
+                                </ul>
+                              </div>
+                            @endforeach
+                          </div>
                         </div>
-                        <div class="half-grid">
-                          @foreach($cols as [$colTitle, $colItems])
-                            <div class="mega-col">
-                              <a href="{{ route('products') }}" class="col-title">{{ $colTitle }}</a>
-                              <ul>
-                                @foreach($colItems as $item)
-                                  <li><a href="{{ route('products') }}">{{ $item }}</a></li>
-                                @endforeach
-                              </ul>
-                            </div>
-                          @endforeach
-                        </div>
-                      </div>
-                    @endforeach
+                      @endforeach
+                    </div>
                   </div>
                 </div>
-              </div>
-            </li>
+              </li>
+            @endif
 
-            {{-- ============ HOME & LIVING / JEWELLERY ============ --}}
-            @foreach($brandMenus as $menu)
+            {{-- ============ BRAND GROUPS (Home & Living / Jewellery ...) ============ --}}
+            @foreach($menuGroups as $g)
               <li class="hasMega">
-                <a href="{{ route('products') }}">{{ $menu['label'] }} {!! $chev !!}</a>
+                <a href="{{ $g['url'] }}">{{ $g['label'] }} {!! $chev !!}</a>
                 <div class="mega-menu mega-brand">
                   <div class="container-fluid">
                     <div class="mega-inner">
                       <div class="mega-main">
                         <div class="half-head">
-                          <h4>{{ $menu['title'] }}</h4>
-                          <a href="{{ route('products') }}" class="head-link">View All Collection {!! $arrow !!}</a>
+                          <h4>{{ $g['title'] }}</h4>
+                          <a href="{{ $g['url'] }}" class="head-link">View All Collection {!! $arrow !!}</a>
                         </div>
                         <div class="mega-grid">
-                          @foreach($menu['cols'] as [$colTitle, $colItems])
+                          @foreach($g['cols'] as $col)
                             <div class="mega-col">
-                              <a href="{{ route('products') }}" class="col-title">{{ $colTitle }}</a>
+                              <a href="{{ $col['url'] }}" class="col-title">{{ $col['name'] }}</a>
                               <ul>
-                                @foreach($colItems as $item)
-                                  <li><a href="{{ route('products') }}">{{ $item }}</a></li>
+                                @foreach($col['items'] as $item)
+                                  <li><a href="{{ $item['url'] }}">{{ $item['name'] }}</a></li>
                                 @endforeach
                               </ul>
                             </div>
@@ -219,11 +172,10 @@
                         </div>
                       </div>
                       <div class="mega-feature">
-                        <img src="{{ asset('assets/images/home/' . $menu['img']) }}" alt="{{ $menu['feature'] }}"
-                          loading="lazy" />
+                        <img src="{{ $g['img'] }}" alt="{{ $g['feature'] ?: $g['title'] }}" loading="lazy" />
                         <span class="feature-text">
-                          <span class="feature-label">{{ $menu['feature'] }}</span>
-                          <a href="{{ route('products') }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
+                          @if($g['feature'])<span class="feature-label">{{ $g['feature'] }}</span>@endif
+                          <a href="{{ $g['url'] }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
                         </span>
                       </div>
                     </div>
@@ -233,51 +185,54 @@
             @endforeach
 
             {{-- ============ SHOP BY COLLECTIONS ============ --}}
-            <li class="hasMega">
-              <a href="{{ route('products') }}">Shop by Collections {!! $chev !!}</a>
-              <div class="mega-menu mega-brand">
-                <div class="container-fluid">
-                  <div class="mega-inner">
-                    <div class="mega-main">
-                      <div class="half-head">
-                        <h4>Shop by Collections</h4>
-                        <a href="{{ route('products') }}" class="head-link">View All Collection {!! $arrow !!}</a>
+            @if(count($menuCollectionCols))
+              <li class="hasMega">
+                <a href="{{ route('products') }}">Shop by Collections {!! $chev !!}</a>
+                <div class="mega-menu mega-brand">
+                  <div class="container-fluid">
+                    <div class="mega-inner">
+                      <div class="mega-main">
+                        <div class="half-head">
+                          <h4>Shop by Collections</h4>
+                          <a href="{{ route('products') }}" class="head-link">View All Collection {!! $arrow !!}</a>
+                        </div>
+                        <div class="mega-grid cols-4">
+                          @foreach($menuCollectionCols as $col)
+                            <div class="mega-col">
+                              <span class="col-title">{{ $col['title'] }}</span>
+                              <ul>
+                                @foreach($col['items'] as $item)
+                                  <li><a href="{{ $item['url'] }}">{{ $item['name'] }}</a></li>
+                                @endforeach
+                              </ul>
+                            </div>
+                          @endforeach
+                        </div>
                       </div>
-                      <div class="mega-grid cols-4">
-                        @foreach($collCols as [$slug, $colTitle, $colItems])
-                          <div class="mega-col">
-                            <span class="col-title">{{ $colTitle }}</span>
-                            <ul>
-                              @foreach($colItems as $item)
-                                <li><a href="{{ route('products') }}">{{ $item }}</a></li>
-                              @endforeach
-                            </ul>
-                          </div>
-                        @endforeach
+                      <div class="mega-feature">
+                        <img src="{{ asset('assets/images/home/pro3.png') }}" alt="Festive Specials" loading="lazy" />
+                        <span class="feature-text">
+                          <span class="feature-label">Festive Specials</span>
+                          <a href="{{ route('products') }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
+                        </span>
                       </div>
-                    </div>
-                    <div class="mega-feature">
-                      <img src="{{ asset('assets/images/home/pro3.png') }}" alt="Festive Specials" loading="lazy" />
-                      <span class="feature-text">
-                        <span class="feature-label">Festive Specials</span>
-                        <a href="{{ route('products') }}" class="feature-btn">View All Collection {!! $arrow !!}</a>
-                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
-            </li>
+              </li>
+            @endif
 
-            {{-- ============ GIFTS ============ --}}
-            <li class="hasDrop">
-              <a href="{{ route('products') }}">Gifts {!! $chev !!}</a>
-              <ul class="drop-menu">
-                @foreach($giftLinks as $gift)
-                  <li><a href="{{ route('products') }}">{{ $gift }}</a></li>
-                @endforeach
-              </ul>
-            </li>
-
+            {{-- ============ GIFTS (occasions) ============ --}}
+            @if(count($menuOccasions))
+              <li class="hasDrop">
+                <a href="{{ route('products') }}">Gifts {!! $chev !!}</a>
+                <ul class="drop-menu">
+                  @foreach($menuOccasions as $o)
+                    <li><a href="{{ $o['url'] }}">{{ $o['name'] }}</a></li>
+                  @endforeach
+                </ul>
+              </li>
+            @endif
             <li><a href="{{ route('about') }}">About Us</a></li>
           </ul>
         </div>
@@ -296,18 +251,8 @@
                 placeholder="Search for bedsheets, home decor, earrings, necklaces..." autocomplete="off" />
               <div class="search-results">
                 <span class="res-label">Suggestions</span>
-                <ul class="res-list">
-                  @foreach($suggestions as [$keys, $img, $name, $cat, $price])
-                    <li data-name="{{ $keys }}">
-                      <a href="#">
-                        <img src="{{ asset('assets/images/home/' . $img) }}" alt="{{ $name }}" />
-                        <span class="res-info"><strong>{{ $name }}</strong><small>{{ $cat }}</small></span>
-                        <span class="res-price">{{ $price }}</span>
-                      </a>
-                    </li>
-                  @endforeach
-                </ul>
-                <p class="res-empty">No products found. Try another keyword.</p>
+                <ul class="res-list"></ul>
+                <p class="res-empty" style="display:none">No products found. Try another keyword.</p>
                 <a href="{{ route('products') }}" class="res-all">View All Results <i
                     class="fa-solid fa-arrow-right"></i></a>
               </div>
@@ -426,42 +371,31 @@
           <div class="foot-cols">
             <div class="colA">
               <a href="{{ route('home') }}" class="logo">
-                <img src="{{ asset('assets/images/logo.jpeg') }}" alt="Grih Shree &amp; Pihu Jewel" />
+                <img src="{{ $general->footer_logo_url }}" alt="{{ $siteName }}" />
               </a>
               <p class="brand-desc">
-                Grih Shree &amp; Pihu Jewel brings together thoughtfully curated home essentials, handcrafted
-                treasures and beautiful jewellery. Discover two distinctive collections, all in one place.
+                {{ $general->footer_description ?: $siteName . ' brings together thoughtfully curated home essentials, handcrafted treasures and beautiful jewellery. Discover two distinctive collections, all in one place.' }}
               </p>
-              <ul class="social">
-                <li><a href="javascript:void(0)" aria-label="Grih Shree Studio on Instagram"
-                    title="Grih Shree Studio"><i class="fa-brands fa-instagram"></i></a></li>
-                <li><a href="javascript:void(0)" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li>
-                <li><a href="javascript:void(0)" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-                </li>
-                <li><a href="javascript:void(0)" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li>
-                <li><a href="javascript:void(0)" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a></li>
-                <li><a href="javascript:void(0)" aria-label="Pinterest"><i class="fa-brands fa-pinterest-p"></i></a>
-                </li>
-              </ul>
+              @if(count($socials))
+                <ul class="social">
+                  @foreach($socials as $s)
+                    <li><a href="{{ $s['url'] }}" target="_blank" rel="noopener" aria-label="{{ $s['label'] }}"><i
+                          class="{{ $s['icon'] }}"></i></a></li>
+                  @endforeach
+                </ul>
+              @endif
             </div>
 
-            <div class="colB">
-              <h5>Shop Grih Shree</h5>
-              <ul>
-                @foreach($homeCols as [$colTitle, $colItems])
-                  <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
-                @endforeach
-              </ul>
-            </div>
-
-            <div class="colC">
-              <h5>Shop Pihu Jewel</h5>
-              <ul>
-                @foreach($jewelCols as [$colTitle, $colItems])
-                  <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
-                @endforeach
-              </ul>
-            </div>
+            @foreach(array_slice($menuGroups, 0, 2) as $g)
+              <div class="{{ $loop->first ? 'colB' : 'colC' }}">
+                <h5>Shop {{ $g['name'] }}</h5>
+                <ul>
+                  @foreach($g['cols'] as $col)
+                    <li><a href="{{ $col['url'] }}">{{ $col['name'] }}</a></li>
+                  @endforeach
+                </ul>
+              </div>
+            @endforeach
 
             <div class="colD">
               <h5>Customer Care</h5>
@@ -494,7 +428,7 @@
 
       <div class="footer-bottom">
         <div class="container">
-          <p class="copyright">Copyright &copy; {{ date('Y') }} Grih Shree &amp; Pihu Jewel. All Rights Reserved.</p>
+          <p class="copyright">{{ $copyright }}</p>
           <p class="credit">
             Design &amp; Developed by
             <a href="javascript:void(0)" target="_blank" rel="noopener">Web Mingo</a>.
@@ -516,7 +450,8 @@
         <i class="fa-solid fa-bars"></i><span>Menu</span>
       </button>
       <a href="{{ route('dashboard') }}#tab-4" class="float-link"><i
-          class="fa-regular fa-heart"></i><span>Wishlist</span><b class="f-count wishlist-count">{{ $wishCount ?? 0 }}</b></a>
+          class="fa-regular fa-heart"></i><span>Wishlist</span><b
+          class="f-count wishlist-count">{{ $wishCount ?? 0 }}</b></a>
       <a href="{{ route('cart') }}" class="float-link"><i class="fa-solid fa-bag-shopping"></i><span>Bag</span><b
           class="f-count cart-count">{{ $cartCount }}</b></a>
       @if($authUser)
@@ -554,8 +489,7 @@
           <i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Back</span>
         </button>
         <a href="{{ route('home') }}" class="ham-logo">
-          <img src="{{ asset('assets/images/logo.png') }}" alt="Grih Shree + Pihu Jewel"
-            title="Grih Shree + Pihu Jewel" />
+          <img src="{{ $general->header_logo_url }}" alt="{{ $siteName }}" title="{{ $siteName }}" />
         </a>
         <button class="close close-btn" type="button" aria-label="Close menu">
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -568,14 +502,30 @@
           <ul class="ham-list">
             <li class="{{ $isHome ? 'active' : '' }}"><a href="{{ route('home') }}">Home</a></li>
             <li><a href="{{ route('products') }}">Shop All</a></li>
-            @foreach([['home-living', 'Home & Living'], ['jewellery', 'Jewellery'], ['collection', 'Shop by Collections'], ['gifts', 'Gifts']] as [$target, $label])
+            @foreach($menuGroups as $g)
               <li>
-                <button type="button" class="ham-link" data-ham-open="{{ $target }}">
-                  <span class="ham-link-text">{{ $label }}</span>
+                <button type="button" class="ham-link" data-ham-open="brand-{{ $g['slug'] }}">
+                  <span class="ham-link-text">{{ $g['label'] }}</span>
                   <span class="ham-arrow"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
                 </button>
               </li>
             @endforeach
+            @if(count($menuCollectionCols))
+              <li>
+                <button type="button" class="ham-link" data-ham-open="collection">
+                  <span class="ham-link-text">Shop by Collections</span>
+                  <span class="ham-arrow"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                </button>
+              </li>
+            @endif
+            @if(count($menuOccasions))
+              <li>
+                <button type="button" class="ham-link" data-ham-open="gifts">
+                  <span class="ham-link-text">Gifts</span>
+                  <span class="ham-arrow"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                </button>
+              </li>
+            @endif
           </ul>
           <ul class="ham-list ham-list--minor">
             <li><a href="{{ route('about') }}">About Us</a></li>
@@ -584,101 +534,87 @@
           </ul>
         </div>
 
-        {{-- HOME & LIVING --}}
-        <div class="ham-view" data-ham-view="home-living" data-ham-title="Home &amp; Living" aria-hidden="true">
-          <div class="ham-head">
-            <h3 class="ham-title">Home &amp; Living</h3>
-            <p class="ham-sub">Grih Shree, thoughtful pieces for beautiful spaces.</p>
-          </div>
-          <ul class="ham-list ham-list--sub">
-            @foreach($homeCols as [$colTitle, $colItems])
-              <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
-            @endforeach
-            <li class="ham-all">
-              <a href="{{ route('products') }}">Explore All Home &amp; Living <i class="fa-solid fa-arrow-right"
-                  aria-hidden="true"></i></a>
-            </li>
-          </ul>
-        </div>
-
-        {{-- JEWELLERY --}}
-        <div class="ham-view" data-ham-view="jewellery" data-ham-title="Jewellery" aria-hidden="true">
-          <div class="ham-head">
-            <h3 class="ham-title">Jewellery</h3>
-            <p class="ham-sub">Pihu Jewel, timeless adornment for every occasion.</p>
-          </div>
-          <ul class="ham-list ham-list--sub">
-            @foreach($jewelCols as [$colTitle, $colItems])
-              <li><a href="{{ route('products') }}">{{ $colTitle }}</a></li>
-            @endforeach
-            <li class="ham-all">
-              <a href="{{ route('products') }}">Explore All Jewellery <i class="fa-solid fa-arrow-right"
-                  aria-hidden="true"></i></a>
-            </li>
-          </ul>
-        </div>
-
-        {{-- SHOP BY COLLECTIONS --}}
-        <div class="ham-view" data-ham-view="collection" data-ham-title="Shop by Collections" aria-hidden="true">
-          <div class="ham-head">
-            <h3 class="ham-title">Shop by Collections</h3>
-          </div>
-          <ul class="ham-list">
-            @foreach($collCols as [$slug, $colTitle, $colItems])
-              <li>
-                <button type="button" class="ham-link" data-ham-open="collection-{{ $slug }}">
-                  <span class="ham-link-text">{{ $slug === 'featured' ? 'Featured' : $colTitle }}</span>
-                  <span class="ham-arrow"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
-                </button>
-              </li>
-            @endforeach
-          </ul>
-        </div>
-
-        @foreach($collCols as [$slug, $colTitle, $colItems])
-          <div class="ham-view" data-ham-view="collection-{{ $slug }}" data-ham-title="Shop by Collections"
+        {{-- BRAND GROUPS --}}
+        @foreach($menuGroups as $g)
+          <div class="ham-view" data-ham-view="brand-{{ $g['slug'] }}" data-ham-title="{{ $g['label'] }}"
             aria-hidden="true">
             <div class="ham-head">
-              <h3 class="ham-title">{{ $colTitle }}</h3>
+              <h3 class="ham-title">{{ $g['label'] }}</h3>
+              @if($g['feature'])
+              <p class="ham-sub">{{ $g['feature'] }}</p>@endif
             </div>
             <ul class="ham-list ham-list--sub">
-              @foreach($colItems as $item)
-                <li><a href="{{ route('products') }}">{{ $item }}</a></li>
+              @foreach($g['cols'] as $col)
+                <li><a href="{{ $col['url'] }}">{{ $col['name'] }}</a></li>
               @endforeach
+              <li class="ham-all">
+                <a href="{{ $g['url'] }}">Explore All {{ $g['label'] }} <i class="fa-solid fa-arrow-right"
+                    aria-hidden="true"></i></a>
+              </li>
             </ul>
           </div>
         @endforeach
 
-        {{-- GIFTS --}}
-        <div class="ham-view" data-ham-view="gifts" data-ham-title="Gifts" aria-hidden="true">
-          <div class="ham-head">
-            <h3 class="ham-title">Gifts</h3>
-            <p class="ham-sub">Thoughtful gifts for meaningful moments.</p>
+        {{-- SHOP BY COLLECTIONS --}}
+        @if(count($menuCollectionCols))
+          <div class="ham-view" data-ham-view="collection" data-ham-title="Shop by Collections" aria-hidden="true">
+            <div class="ham-head">
+              <h3 class="ham-title">Shop by Collections</h3>
+            </div>
+            <ul class="ham-list">
+              @foreach($menuCollectionCols as $col)
+                <li>
+                  <button type="button" class="ham-link" data-ham-open="collection-{{ $col['slug'] }}">
+                    <span class="ham-link-text">{{ $col['title'] }}</span>
+                    <span class="ham-arrow"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                  </button>
+                </li>
+              @endforeach
+            </ul>
           </div>
-          <ul class="ham-list ham-list--sub">
-            @foreach($giftLinks as $gift)
-              <li><a href="{{ route('products') }}">{{ $gift }}</a></li>
-            @endforeach
-            <li class="ham-all">
-              <a href="{{ route('products') }}">Explore All Gifts <i class="fa-solid fa-arrow-right"
-                  aria-hidden="true"></i></a>
-            </li>
-          </ul>
-        </div>
+
+          @foreach($menuCollectionCols as $col)
+            <div class="ham-view" data-ham-view="collection-{{ $col['slug'] }}" data-ham-title="Shop by Collections"
+              aria-hidden="true">
+              <div class="ham-head">
+                <h3 class="ham-title">{{ $col['title'] }}</h3>
+              </div>
+              <ul class="ham-list ham-list--sub">
+                @foreach($col['items'] as $item)
+                  <li><a href="{{ $item['url'] }}">{{ $item['name'] }}</a></li>
+                @endforeach
+              </ul>
+            </div>
+          @endforeach
+        @endif
+
+        {{-- GIFTS --}}
+        @if(count($menuOccasions))
+          <div class="ham-view" data-ham-view="gifts" data-ham-title="Gifts" aria-hidden="true">
+            <div class="ham-head">
+              <h3 class="ham-title">Gifts</h3>
+              <p class="ham-sub">Thoughtful gifts for meaningful moments.</p>
+            </div>
+            <ul class="ham-list ham-list--sub">
+              @foreach($menuOccasions as $o)
+                <li><a href="{{ $o['url'] }}">{{ $o['name'] }}</a></li>
+              @endforeach
+              <li class="ham-all">
+                <a href="{{ route('products') }}">Explore All Gifts <i class="fa-solid fa-arrow-right"
+                    aria-hidden="true"></i></a>
+              </li>
+            </ul>
+          </div>
+        @endif
+
       </div>
 
       <div class="ham-bottom">
         <div class="ham-social">
-          <a href="javascript:void(0)" target="_blank" title="Facebook" aria-label="Facebook"><i
-              class="fa-brands fa-facebook-f"></i></a>
-          <a href="https://www.instagram.com/grihshreestudio/" target="_blank" rel="noopener" title="Instagram"
-            aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-          <a href="javascript:void(0)" target="_blank" title="Pinterest" aria-label="Pinterest"><i
-              class="fa-brands fa-pinterest-p"></i></a>
-          <a href="javascript:void(0)" target="_blank" title="YouTube" aria-label="YouTube"><i
-              class="fa-brands fa-youtube"></i></a>
-          <a href="https://wa.me/919876543210" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp"><i
-              class="fa-brands fa-whatsapp"></i></a>
+          @foreach($socials as $s)
+            <a href="{{ $s['url'] }}" target="_blank" rel="noopener" title="{{ $s['label'] }}"
+              aria-label="{{ $s['label'] }}"><i class="{{ $s['icon'] }}"></i></a>
+          @endforeach
         </div>
         <a href="{{ route('products') }}" class="btn btn-primary header-cta">
           <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Shop New Arrivals
@@ -697,7 +633,7 @@
     </button>
     <div class="model-body">
       <a href="{{ route('home') }}" class="pop-logo" aria-label="Grih Shree + Pihu Jewel Home">
-        <img src="{{ asset('assets/images/logo.png') }}" alt="Grih Shree + Pihu Jewel" />
+        <img src="{{ $general->header_logo_url }}" alt="{{ $siteName }}" title="{{ $siteName }}" />
       </a>
       <div class="pop-title">
         <h3>Welcome Back</h3>
@@ -1019,9 +955,69 @@
       cartAdd: "{{ route('cart.add') }}",
       wishToggle: "{{ route('wishlist.toggle') }}",
       quickView: "{{ route('product.quick-view', '__ID__') }}",
+      searchSuggest: "{{ route('search.suggest') }}",
+      products: "{{ route('products') }}",
+      currency: @json($general->currency_symbol ?: '₹'),
       cartUrl: "{{ url('cart') }}",
       loggedIn: @json((bool) auth('customer')->check())
     };
+  </script>
+  <script>
+    $(function () {
+      var $wrap = $(".search-box-wrapper"),
+        $input = $wrap.find(".searchInput"),
+        $list = $wrap.find(".res-list"),
+        $label = $wrap.find(".res-label"),
+        $empty = $wrap.find(".res-empty"),
+        $all = $wrap.find(".res-all");
+      var timer = null, seq = 0, cache = {};
+
+      var esc = function (s) { return $("<div>").text(s == null ? "" : s).html(); };
+
+      function render(d) {
+        var q = d.q || "", items = d.items || [];
+
+        $label.text(q ? "Results" : "Suggestions");
+        $all.attr("href", d.all_url || window.SHOP.products);
+
+        // data-name keeps older client-side filters from hiding server results
+        $list.html(items.map(function (p) {
+          return '<li data-name="' + esc((q + " " + p.name).toLowerCase()) + '"><a href="' + esc(p.url) + '">' +
+            '<img src="' + esc(p.img) + '" alt="' + esc(p.name) + '" />' +
+            '<span class="res-info"><strong>' + esc(p.name) + '</strong><small>' + esc(p.cat || "") + '</small></span>' +
+            '<span class="res-price">' + esc(p.price) + '</span></a></li>';
+        }).join(""));
+
+        $empty.toggle(q.length > 1 && !items.length);
+      }
+
+      function load(q) {
+        q = $.trim(q);
+        if (q.length === 1) return;                 // wait for the second letter
+        var my = ++seq;
+
+        if (cache[q]) { render(cache[q]); return; }
+
+        $.getJSON(window.SHOP.searchSuggest, { q: q })
+          .done(function (d) { cache[q] = d; if (my === seq) render(d); });
+      }
+
+      $input.on("input", function () {
+        var v = this.value;
+        clearTimeout(timer);
+        timer = setTimeout(function () { load(v); }, 250);
+      });
+
+      $input.one("focus", function () { load(""); }); // suggestions when the box is first opened
+
+      // Enter = full results page
+      $input.on("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        var q = $.trim(this.value);
+        window.location.href = window.SHOP.products + (q ? "?q=" + encodeURIComponent(q) : "");
+      });
+    });
   </script>
   <script>
     $(function () {
@@ -1150,7 +1146,7 @@
       var HEAD = function () { return { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"), Accept: "application/json" }; };
       var QV = null, token = 0, maxQty = 10;
 
-      var money = function (n) { return "₹" + Math.round(n).toLocaleString("en-US"); };
+      var money = function (n) { return (window.SHOP.currency || "₹") + Math.round(n).toLocaleString("en-US"); };
       var esc = function (s) { return $("<div>").text(s == null ? "" : s).html(); };
       var qty = function () { return parseInt($pop.find(".pvp-qty-input").val(), 10) || QV.minQty; };
 

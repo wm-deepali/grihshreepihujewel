@@ -9,54 +9,57 @@ class SettingSeeder extends Seeder
 {
     public function run(): void
     {
-        // Site me ek hi settings row hoti hai (Setting::first()), isliye id = 1 par updateOrCreate
-        Setting::updateOrCreate(
-            ['id' => 1],
-            [
-                // Branding
-                'site_name'            => 'Archana Saree Emporium',
-                'tagline'              => 'Premium Sarees · Designer Lehengas · Bridal Wear',
-                'header_logo'          => null,
-                'footer_logo'          => null,
-                'favicon'              => null,
-                'admin_login_logo'     => null,
-                'admin_dashboard_logo' => null,
+        // Single settings row. Re-running the seeder updates it instead of adding a second row.
+        $setting = Setting::first() ?? new Setting();
 
-                // Contact (placeholder: apni real details daalo)
-                'admin_email'          => 'admin@example.com',
-                'support_email'        => 'support@example.com',
-                'phone'                => '+91 98765 43210',
-                'whatsapp'             => '9876543210',
-                'business_address'     => "Chandni Chowk\nDelhi - 110006, India",
-                'google_map_url'       => null,
+        $setting->fill([
+            // Branding (logo fields left null so the fallbacks in Setting::fileUrl() are used)
+            'site_name'            => 'Grih Shree & Pihu Jewel',
+            'tagline'              => 'A Beautiful World of Home & Jewellery',
+            'header_logo'          => null,
+            'footer_logo'          => null,
+            'favicon'              => null,
+            'admin_login_logo'     => null,
+            'admin_dashboard_logo' => null,
 
-                // Footer
-                'footer_description'   => 'Timeless Indian elegance, thoughtfully curated for every celebration.',
-                'footer_copyright'     => '© ' . date('Y') . ' Archana Saree Emporium. All Rights Reserved.',
+            // Contact
+            'admin_email'          => 'admin@example.com',
+            'support_email'        => 'support@example.com',
+            'phone'                => '+91 98765 43210',
+            'whatsapp'             => '9876543210',
+            'business_address'     => 'Your business address here',
+            'business_hours'       => 'Mon - Sat, 10:00 AM - 7:00 PM',
+            'google_map_url'       => null,
 
-                // Social (khali = layout me hide ho jayega)
-                'facebook'             => null,
-                'instagram'            => null,
-                'twitter'              => null,
-                'linkedin'             => null,
-                'youtube'              => null,
-                'pinterest'            => null,
+            // Footer
+            'footer_description'   => 'Grih Shree & Pihu Jewel brings together thoughtfully curated home essentials, handcrafted treasures and beautiful jewellery. Discover two distinctive collections, all in one place.',
+            'footer_copyright'     => 'Copyright © {year} Grih Shree & Pihu Jewel. All Rights Reserved.',
 
-                // Store
-                'currency'             => 'INR',
-                'currency_symbol'      => '₹',
-                'timezone'             => 'Asia/Kolkata',
+            // Social (null = hidden on the site)
+            'facebook'             => null,
+            'instagram'            => 'https://www.instagram.com/grihshreestudio/',
+            'twitter'              => null,
+            'linkedin'             => null,
+            'youtube'              => null,
+            'pinterest'            => null,
 
-                // System
-                'maintenance_mode'      => false,
-                'admin_session_timeout' => 30,
+            // Store
+            'currency'             => 'INR',
+            'currency_symbol'      => '₹',
+            'timezone'             => 'Asia/Kolkata',
 
-                // Features
-                'product_reviews'      => true,
-                'wishlist'             => true,
-                'stock_alerts'         => true,
-                'cod_enabled'          => true,
-            ]
-        );
+            // System
+            'maintenance_mode'      => false,
+            'admin_session_timeout' => 120, // minutes
+
+            // Features
+            'product_reviews'      => true,
+            'wishlist'             => true,
+            'stock_alerts'         => true,
+            'cod_enabled'          => true,
+        ]);
+
+        // save() fires the model event that clears the 'site.settings' cache
+        $setting->save();
     }
 }

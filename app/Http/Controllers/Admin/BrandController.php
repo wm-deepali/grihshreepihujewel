@@ -3,278 +3,153 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
-use Illuminate\Http\Request;
 use App\Models\Brand;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use App\Imports\BrandImport;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use ZipArchive;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Format;
+use Intervention\Image\ImageManager;
 
 class BrandController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $brands = Brand::with('categories')
-            ->latest()
-            ->paginate(10);
+        $brands = Brand::withCount(['categories', 'allCategories', 'products'])
+            ->when($request->filled('search'), fn($q) => $q->where('name', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->ordered()
+            ->paginate(10)
+            ->appends($request->all());
+
         return view('admin.brands.index', compact('brands'));
     }
 
     public function create()
     {
-        $categories = Category::active()
-            ->orWhere('parent_id', 0)
-            ->orderBy('id')
-            ->get();
+        return view('admin.brands.create');
+    }
 
-        return view(
-            'admin.brands.create',
-            compact('categories')
-        );
+    private function rules(?Brand $brand = null): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('brands', 'slug')->ignore($brand?->id)],
+            'menu_label' => 'nullable|string|max:100',
+            'menu_title' => 'nullable|string|max:150',
+            'feature_title' => 'nullable|string|max:150',
+            'sort_order' => 'nullable|integer|min:0',
+            'status' => 'nullable|boolean',
+            'logo' => 'nullable|image|max:2048',
+            'feature_image' => 'nullable|image|max:2048',
+        ];
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'categories' => 'required|array'
+        $request->validate($this->rules());
+
+        $slug = Str::slug($request->slug ?: $request->name);
+
+        if (Brand::where('slug', $slug)->exists()) {
+            return back()->withInput()->withErrors(['slug' => 'This slug is already used by another brand.']);
+        }
+
+        Brand::create([
+            'name' => $request->name,
+            'slug' => $slug,
+            'menu_label' => $request->menu_label,
+            'menu_title' => $request->menu_title,
+            'feature_title' => $request->feature_title,
+            'sort_order' => $request->sort_order ?? 0,
+            'status' => $request->status ?? 1,
+            'logo' => $request->hasFile('logo')
+                ? $this->compressAndStore($request->file('logo'), 'brands', 400, 85) : null,
+            'feature_image' => $request->hasFile('feature_image')
+                ? $this->compressAndStore($request->file('feature_image'), 'brands', 900, 80) : null,
         ]);
 
-        $logo = null;
+        return redirect()->route('admin.brands.index')->with('success', 'Brand added successfully.');
+    }
+
+    public function edit(Brand $brand)
+    {
+        return view('admin.brands.edit', compact('brand'));
+    }
+
+    public function update(Request $request, Brand $brand)
+    {
+        $request->validate($this->rules($brand));
+
+        $slug = Str::slug($request->slug ?: $request->name);
+
+        if (Brand::where('slug', $slug)->where('id', '!=', $brand->id)->exists()) {
+            return back()->withInput()->withErrors(['slug' => 'This slug is already used by another brand.']);
+        }
+
+        $data = [
+            'name' => $request->name,
+            'slug' => $slug,
+            'menu_label' => $request->menu_label,
+            'menu_title' => $request->menu_title,
+            'feature_title' => $request->feature_title,
+            'sort_order' => $request->sort_order ?? 0,
+            'status' => $request->status ?? 1,
+        ];
 
         if ($request->hasFile('logo')) {
-            $logo = $request->file('logo')->store('brands', 'public');
+            $this->deleteFile($brand->logo);
+            $data['logo'] = $this->compressAndStore($request->file('logo'), 'brands', 400, 85);
         }
 
-        $brand = Brand::create([
-            'name' => $request->name,
-            'logo' => $logo,
-            'status' => $request->status ?? 1
-        ]);
-
-        // Save brand categories
-        $brand->categories()->sync($request->categories);
-
-        return redirect()
-            ->route('admin.brands.index')
-            ->with('success', 'Brand Created');
-    }
-
-    public function edit($id)
-    {
-        $brand = Brand::findOrFail($id);
-        $categories = Category::active()->orWhere('parent_id', 0)
-            ->orderBy('id')->get();
-
-        $selectedCategories = $brand->categories
-            ->pluck('id')
-            ->toArray();
-
-        return view(
-            'admin.brands.edit',
-            compact(
-                'brand',
-                'categories',
-                'selectedCategories'
-            )
-        );
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required',
-            'categories' => 'required|array'
-        ]);
-
-        $brand = Brand::findOrFail($id);
-
-        $logo = $brand->logo;
-
-        if ($request->hasFile('logo')) {
-
-            // delete old image
-            if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
-                Storage::disk('public')->delete($brand->logo);
-            }
-
-            // store new image
-            $logo = $request->file('logo')->store('brands', 'public');
+        if ($request->hasFile('feature_image')) {
+            $this->deleteFile($brand->feature_image);
+            $data['feature_image'] = $this->compressAndStore($request->file('feature_image'), 'brands', 900, 80);
         }
 
-        $brand->update([
-            'name' => $request->name,
-            'logo' => $logo,
-            'status' => $request->status ?? 1
-        ]);
+        $brand->update($data);
 
-        // Update category mapping
-        $brand->categories()->sync($request->categories);
-
-        return redirect()
-            ->route('admin.brands.index')
-            ->with('success', 'Brand Updated');
+        return redirect()->route('admin.brands.index')->with('success', 'Brand updated successfully.');
     }
 
-    public function destroy($id)
+    public function destroy(Brand $brand)
     {
-        $brand = Brand::findOrFail($id);
-
-        // delete image from storage
-        if ($brand->logo && Storage::disk('public')->exists($brand->logo)) {
-            Storage::disk('public')->delete($brand->logo);
+        if ($brand->allCategories()->exists() || $brand->products()->exists()) {
+            return back()->with('error', 'This brand still has categories or products. Move them to another brand first.');
         }
+
+        $this->deleteFile($brand->logo);
+        $this->deleteFile($brand->feature_image);
 
         $brand->delete();
 
-        return response()->json(['message' => 'Deleted']);
+        return redirect()->route('admin.brands.index')->with('success', 'Brand deleted successfully.');
     }
 
-    public function import()
+    private function deleteFile(?string $path): void
     {
-        return view('admin.brands.import');
-    }
-
-    public function importStore(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimetypes:text/plain,text/csv,application/vnd.ms-excel'
-        ]);
-
-        try {
-            Excel::import(
-                new BrandImport,
-                $request->file('file')
-            );
-
-
-            return redirect()
-                ->route('admin.brands.index')
-                ->with('success', 'Brands imported successfully.');
-
-        } catch (\Exception $e) {
-
-            return back()->with(
-                'error',
-                $e->getMessage()
-            );
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
         }
     }
 
-    public function uploadImagesZip(Request $request)
+    // same WebP compression used in CategoryController
+    private function compressAndStore(UploadedFile $file, string $folder, int $maxWidth = 900, int $quality = 80): string
     {
-        $request->validate([
-            'zip_file' => 'required|mimes:zip'
-        ]);
+        $manager = ImageManager::usingDriver(Driver::class);
+        $image = $manager->decode($file);
 
-        $zip = new ZipArchive();
-
-        if ($zip->open($request->file('zip_file')->getRealPath()) === true) {
-
-            $extractPath = storage_path(
-                'app/public/brands'
-            );
-
-            if (!file_exists($extractPath)) {
-                mkdir($extractPath, 0777, true);
-            }
-
-            $zip->extractTo($extractPath);
-
-            $zip->close();
-
-            return back()->with(
-                'success',
-                'Brand logos uploaded successfully.'
-            );
+        if ($image->width() > $maxWidth) {
+            $image->scale(width: $maxWidth);
         }
 
-        return back()->with(
-            'error',
-            'Unable to extract ZIP.'
-        );
+        $encoded = $image->encodeUsingFormat(Format::WEBP, quality: $quality);
+
+        $path = trim($folder, '/') . '/' . Str::uuid() . '.webp';
+        Storage::disk('public')->put($path, (string) $encoded);
+
+        return $path;
     }
-
-    public function downloadSample()
-    {
-        $headers = [
-            'name',
-            'logo_name',
-            'categories',
-            'status'
-        ];
-
-        $sampleRow = [
-            'Parker',
-            'parker.jpg',
-            'Corporate Gifts, Diaries',
-            '1'
-        ];
-
-        $response = new StreamedResponse(function () use ($headers, $sampleRow) {
-
-            $handle = fopen('php://output', 'w');
-
-            fputcsv($handle, $headers);
-            fputcsv($handle, $sampleRow);
-
-            fclose($handle);
-        });
-
-        $response->headers->set(
-            'Content-Type',
-            'text/csv'
-        );
-
-        $response->headers->set(
-            'Content-Disposition',
-            'attachment; filename=brands_import_sample.csv'
-        );
-
-        return $response;
-    }
-
-    public function downloadCategoryReference()
-    {
-        $categories = Category::orWhere('parent_id', 0)
-            ->orderBy('id')->get([
-                    'id',
-                    'name'
-                ]);
-
-        $response = new StreamedResponse(function () use ($categories) {
-
-            $handle = fopen('php://output', 'w');
-
-            fputcsv($handle, [
-                'id',
-                'category_name'
-            ]);
-
-            foreach ($categories as $category) {
-
-                fputcsv($handle, [
-                    $category->id,
-                    $category->name
-                ]);
-            }
-
-            fclose($handle);
-        });
-
-        $response->headers->set(
-            'Content-Type',
-            'text/csv'
-        );
-
-        $response->headers->set(
-            'Content-Disposition',
-            'attachment; filename=brand_category_reference.csv'
-        );
-
-        return $response;
-    }
-
 }

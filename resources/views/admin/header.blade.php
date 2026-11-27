@@ -44,6 +44,7 @@
 
         {{-- MASTER --}}
         <li class="{{ request()->routeIs(
+    'admin.brands.*',
     'admin.categories.*',
     'admin.attributes.*',
     'admin.attribute-values.*',
@@ -54,6 +55,7 @@
 
             <a href="#"><i class="fa-solid fa-layer-group"></i> Master</a>
             <ul>
+                <li><a href="{{ route('admin.brands.index') }}">Brands (Menu Groups)</a></li>
                 <li><a href="{{ route('admin.categories.index') }}">Categories & Sub Categories</a></li>
                 <li><a href="{{ route('admin.attributes.index') }}">Attributes</a></li>
                 <li><a href="{{ route('admin.attribute-values.index') }}">Attribute Values</a></li>
@@ -198,7 +200,8 @@
                 <li><a href="{{ route('admin.settings.email-templates.index') }}">Email Template Settings</a></li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'gst']) }}">GST & Invoice</a></li>
                 <li><a href="{{ route('admin.settings.tax-classes.index') }}">Tax Classes</a></li>
-                <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'couriers']) }}">Courier Management</a></li>
+                <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'couriers']) }}">Courier Management</a>
+                </li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'tracking']) }}">Tracking & Pixels</a></li>
                 <li><a href="{{ route('admin.notifications.index') }}">Notification Centre</a></li>
                 <li><a href="{{ route('admin.security.system-logs') }}">System Logs</a></li>

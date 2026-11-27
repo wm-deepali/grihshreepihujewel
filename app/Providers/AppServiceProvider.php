@@ -6,9 +6,11 @@ use App\Models\Cart;
 use App\Models\SeoPage;
 use App\Models\Setting;
 use App\Models\Wishlist;
+use App\View\Composers\MenuComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
 
                 $shared = [
                     'seo' => $name ? SeoPage::forKey($name) : null,
-                    'general' => Setting::first() ?? new Setting(),
+                    'general' => Setting::current(),
                     'miniCart' => $cart ?? new Cart(),
                     'cartCount' => $cart ? (int) $cart->items->sum('quantity') : 0,
                     'wishedIds' => $wishedIds,
@@ -60,5 +62,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with($shared);
         });
+
+        View::composer('layouts.*', MenuComposer::class);
     }
 }

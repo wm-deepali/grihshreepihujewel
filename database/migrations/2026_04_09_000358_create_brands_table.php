@@ -14,6 +14,11 @@ return new class extends Migration {
             $table->id();
 
             $table->string('name');
+            $table->string('menu_label')->nullable();
+            $table->string('menu_title')->nullable();
+            $table->string('feature_title')->nullable();
+            $table->string('feature_image')->nullable();
+            $table->unsignedInteger('sort_order')->default(0);
             $table->string('slug')->unique();
             $table->string('logo')->nullable();
 

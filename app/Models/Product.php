@@ -236,6 +236,7 @@ class Product extends Model
     public function scopeFilter($query, array $f)
     {
         return $query
+            ->when(!empty($f['q']), fn($q) => $q->search($f['q']))
             ->when(!empty($f['brand']), fn($q) => $q->where('brand_id', $f['brand']))
 
             // category matches either the main category or the subcategory
@@ -348,6 +349,32 @@ class Product extends Model
     public function taxClass()
     {
         return $this->belongsTo(TaxClass::class);
+    }
+
+    /**
+     * Every word must match the name, SKU, short description, category,
+     * sub category or brand name ("kundan choker" matches "Kundan Choker Necklace").
+     */
+    public function scopeSearch($query, ?string $term)
+    {
+        $words = collect(preg_split('/\s+/', trim((string) $term), -1, PREG_SPLIT_NO_EMPTY))
+            ->map(fn($w) => str_replace(['%', '_'], ['\%', '\_'], $w))
+            ->take(6);
+
+        foreach ($words as $w) {
+            $like = '%' . $w . '%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('products.name', 'like', $like)
+                    ->orWhere('products.sku', 'like', $like)
+                    ->orWhere('products.short_description', 'like', $like)
+                    ->orWhereHas('category', fn($c) => $c->where('name', 'like', $like))
+                    ->orWhereHas('subcategory', fn($c) => $c->where('name', 'like', $like))
+                    ->orWhereHas('brand', fn($b) => $b->where('name', 'like', $like));
+            });
+        }
+
+        return $query;
     }
 
 }

@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 
 /**
  * Demo data for the /products listing AND the product detail page.
@@ -34,20 +35,42 @@ class ProductListingSeeder extends Seeder
     public function run(): void
     {
         $required = [
-            'brands', 'categories', 'gifting_occasions', 'collections', 'attributes',
-            'attribute_values', 'category_attributes', 'products',
-            'product_attribute_values', 'occasion_product', 'collection_product',
+            'brands',
+            'categories',
+            'gifting_occasions',
+            'collections',
+            'attributes',
+            'attribute_values',
+            'category_attributes',
+            'products',
+            'product_attribute_values',
+            'occasion_product',
+            'collection_product',
         ];
-        $missing = collect($required)->reject(fn ($t) => Schema::hasTable($t));
+        $missing = collect($required)->reject(fn($t) => Schema::hasTable($t));
         if ($missing->isNotEmpty()) {
             $this->command->error('Missing tables: ' . $missing->implode(', ') . ' — fix the table names in this seeder.');
             return;
         }
 
         // ------------------------------------------------------------------ brands
+// Brand = menu group. menu_label = top nav text, menu_title = mega menu heading.
+        $brandDefs = [
+            // slug => [name, menu_label, menu_title, feature_title, sort_order]
+            'grih-shree' => ['Grih Shree', 'Home & Living', 'Home & Living', 'Beautiful Living', 1],
+            'pihu-jewel' => ['Pihu Jewel', 'Jewellery', 'Jewellery & Accessories', 'Timeless Adornment', 2],
+        ];
+
         $brand = [];
-        foreach (['grih-shree' => 'Grih Shree', 'pihu-jewel' => 'Pihu Jewel'] as $slug => $name) {
-            $brand[$slug] = $this->put('brands', ['slug' => $slug], ['name' => $name, 'status' => 1]);
+        foreach ($brandDefs as $slug => [$name, $label, $title, $feature, $order]) {
+            $brand[$slug] = $this->put('brands', ['slug' => $slug], [
+                'name' => $name,
+                'menu_label' => $label,
+                'menu_title' => $title,
+                'feature_title' => $feature,
+                'sort_order' => $order,
+                'status' => 1,
+            ]);
         }
 
         // -------------------------------------------------------------- categories
@@ -57,37 +80,52 @@ class ProductListingSeeder extends Seeder
         // Earrings + Home Decor have NO chart on purpose: the Size Guide button must stay hidden there.
         // Cushion Covers has its own chart: a subcategory chart wins over its parent's.
         $bedChart = $this->table(['Size', 'Sheet (in)', 'Pillow Cover (in)'], [
-            ['Single', '60 × 90', '17 × 27'], ['Double', '90 × 100', '17 × 27'], ['King', '108 × 108', '17 × 27'],
+            ['Single', '60 × 90', '17 × 27'],
+            ['Double', '90 × 100', '17 × 27'],
+            ['King', '108 × 108', '17 × 27'],
         ]);
         $cushionChart = $this->table(['Size', 'Cover (in)', 'Best For'], [
-            ['Small', '12 × 12', 'Accent cushions'], ['Medium', '16 × 16', 'Sofa, bed'], ['Large', '18 × 18', 'Sofa, floor seating'],
+            ['Small', '12 × 12', 'Accent cushions'],
+            ['Medium', '16 × 16', 'Sofa, bed'],
+            ['Large', '18 × 18', 'Sofa, floor seating'],
         ]);
         $necklaceChart = $this->table(['Style', 'Length (in)', 'Sits At'], [
-            ['Choker', '14 – 16', 'Base of the neck'], ['Princess', '17 – 19', 'Collarbone'], ['Matinee', '20 – 24', 'Above the bust'],
+            ['Choker', '14 – 16', 'Base of the neck'],
+            ['Princess', '17 – 19', 'Collarbone'],
+            ['Matinee', '20 – 24', 'Above the bust'],
         ]);
         $bangleChart = $this->table(['Size', 'Inner Dia (in)', 'Inner Dia (cm)', 'Wrist'], [
-            ['2.2', '2 1/8', '5.4', 'Small'], ['2.4', '2 1/4', '5.7', 'Small – Medium'],
-            ['2.6', '2 3/8', '6.0', 'Medium'], ['2.8', '2 1/2', '6.4', 'Medium – Large'],
+            ['2.2', '2 1/8', '5.4', 'Small'],
+            ['2.4', '2 1/4', '5.7', 'Small – Medium'],
+            ['2.6', '2 3/8', '6.0', 'Medium'],
+            ['2.8', '2 1/2', '6.4', 'Medium – Large'],
         ]);
 
-        // parent => [parent chart, [child => child chart]]
+        // parent => [brand slug, parent chart, [child => child chart]]
         $tree = [
-            'Handloom & Bedding'  => [$bedChart, ['Bedsheets' => null, 'Dohars & Quilts' => null, 'Cushion Covers' => $cushionChart]],
-            'Home Decor'          => [null, ['Torans' => null, 'Wall Decor' => null, 'Table Decor' => null]],
-            'Earrings'            => [null, ['Jhumkas' => null, 'Studs' => null, 'Chandbalis' => null]],
-            'Necklaces'           => [$necklaceChart, ['Choker Sets' => null, 'Temple Jewellery' => null]],
-            'Bangles & Bracelets' => [$bangleChart, ['Bangles' => null, 'Kada' => null]],
+            'Handloom & Bedding' => ['grih-shree', $bedChart, ['Bedsheets' => null, 'Dohars & Quilts' => null, 'Cushion Covers' => $cushionChart]],
+            'Home Decor' => ['grih-shree', null, ['Torans' => null, 'Wall Decor' => null, 'Table Decor' => null]],
+            'Earrings' => ['pihu-jewel', null, ['Jhumkas' => null, 'Studs' => null, 'Chandbalis' => null]],
+            'Necklaces' => ['pihu-jewel', $necklaceChart, ['Choker Sets' => null, 'Temple Jewellery' => null]],
+            'Bangles & Bracelets' => ['pihu-jewel', $bangleChart, ['Bangles' => null, 'Kada' => null]],
         ];
 
         $parentId = [];   // parent name => id
-        $child    = [];   // child slug => ['id' => .., 'parent' => .., 'parentName' => ..]
+        $child = [];   // child slug => ['id' => .., 'parent' => .., 'parentName' => .., 'brandSlug' => ..]
         $sort = 1;
-        foreach ($tree as $parentName => [$parentChart, $children]) {
+        foreach ($tree as $parentName => [$brandSlug, $parentChart, $children]) {
             $pSlug = Str::slug($parentName);
             $pid = $this->put('categories', ['slug' => $pSlug], [
-                'name' => $parentName, 'parent_id' => null, 'sort_order' => $sort++,
-                'is_popular' => 1, 'status' => 1, 'is_featured' => 0, 'show_in_navbar' => 1,
-                'added_by' => $adminId, 'size_chart' => $parentChart,
+                'name' => $parentName,
+                'parent_id' => null,
+                'brand_id' => $brand[$brandSlug],
+                'sort_order' => $sort++,
+                'is_popular' => 1,
+                'status' => 1,
+                'is_featured' => 0,
+                'show_in_navbar' => 1,
+                'added_by' => $adminId,
+                'size_chart' => $parentChart,
             ]);
             $parentId[$parentName] = $pid;
 
@@ -95,11 +133,18 @@ class ProductListingSeeder extends Seeder
             foreach ($children as $childName => $childChart) {
                 $cSlug = Str::slug($childName);
                 $cid = $this->put('categories', ['slug' => $cSlug], [
-                    'name' => $childName, 'parent_id' => $pid, 'sort_order' => ++$i,
-                    'is_popular' => 0, 'status' => 1, 'is_featured' => 0, 'show_in_navbar' => 0,
-                    'added_by' => $adminId, 'size_chart' => $childChart,
+                    'name' => $childName,
+                    'parent_id' => $pid,
+                    'brand_id' => $brand[$brandSlug],
+                    'sort_order' => ++$i,
+                    'is_popular' => 0,
+                    'status' => 1,
+                    'is_featured' => 0,
+                    'show_in_navbar' => 1,   // the storefront menu only lists navbar-enabled sub categories
+                    'added_by' => $adminId,
+                    'size_chart' => $childChart,
                 ]);
-                $child[$cSlug] = ['id' => $cid, 'parent' => $pid, 'parentName' => $parentName];
+                $child[$cSlug] = ['id' => $cid, 'parent' => $pid, 'parentName' => $parentName, 'brandSlug' => $brandSlug];
             }
         }
 
@@ -108,7 +153,9 @@ class ProductListingSeeder extends Seeder
         foreach (['Wedding', 'Diwali', 'Festive', 'Housewarming', 'Anniversary', 'Birthday', 'Party'] as $i => $name) {
             $slug = Str::slug($name);
             $occ[$slug] = $this->put('gifting_occasions', ['slug' => $slug], [
-                'title' => $name, 'status' => 1, 'sort_order' => $i + 1,
+                'title' => $name,
+                'status' => 1,
+                'sort_order' => $i + 1,
             ]);
         }
 
@@ -117,7 +164,10 @@ class ProductListingSeeder extends Seeder
         foreach (['New Arrivals', 'Best Sellers', 'Festive Specials', 'Premium Collection', 'Gift Ideas'] as $i => $name) {
             $slug = Str::slug($name);
             $col[$slug] = $this->put('collections', ['slug' => $slug], [
-                'name' => $name, 'status' => 1, 'sort_order' => $i + 1,
+                'name' => $name,
+                'status' => 1,
+                'show_in_navbar' => 1,
+                'sort_order' => $i + 1,
             ]);
         }
 
@@ -125,41 +175,60 @@ class ProductListingSeeder extends Seeder
         // type: color_swatch (round colour dots) or button (text chips).
         // Whether an attribute is SELECTABLE is decided per category below (category_attributes.is_selectable).
         $attrDefs = [
-            'Colour' => ['color_swatch', [
-                'Red' => '#b3202f', 'Maroon' => '#5e1a33', 'Ivory' => '#f3ecd9', 'Green' => '#1f6b4f',
-                'Blue' => '#2a4a86', 'Pink' => '#f1c4cc', 'Black' => '#222222',
-            ]],
-            'Metal Finish' => ['color_swatch', [
-                'Antique Gold' => '#b08d3c', 'Gold-tone' => '#d9b24c', 'Silver-tone' => '#c8ccd2',
-                'Rose Gold' => '#d9a38f', 'Oxidised' => '#6b6b6b',
-            ]],
-            'Size'          => ['button', ['Single Bed', 'Double Bed', 'King Size', 'Free Size']],
+            'Colour' => [
+                'color_swatch',
+                [
+                    'Red' => '#b3202f',
+                    'Maroon' => '#5e1a33',
+                    'Ivory' => '#f3ecd9',
+                    'Green' => '#1f6b4f',
+                    'Blue' => '#2a4a86',
+                    'Pink' => '#f1c4cc',
+                    'Black' => '#222222',
+                ]
+            ],
+            'Metal Finish' => [
+                'color_swatch',
+                [
+                    'Antique Gold' => '#b08d3c',
+                    'Gold-tone' => '#d9b24c',
+                    'Silver-tone' => '#c8ccd2',
+                    'Rose Gold' => '#d9a38f',
+                    'Oxidised' => '#6b6b6b',
+                ]
+            ],
+            'Size' => ['button', ['Single Bed', 'Double Bed', 'King Size', 'Free Size']],
             'Necklace Size' => ['button', ['Free Size', 'Choker 14"', 'Princess 17"', 'Matinee 20"']],
-            'Bangle Size'   => ['button', ['2.2', '2.4', '2.6', '2.8']],
+            'Bangle Size' => ['button', ['2.2', '2.4', '2.6', '2.8']],
 
             // non-selectable (facts + specifications)
-            'Material'   => ['button', ['Cotton', 'Brass', 'Ceramic', 'Resin', 'Alloy']],
+            'Material' => ['button', ['Cotton', 'Brass', 'Ceramic', 'Resin', 'Alloy']],
             'Stone Work' => ['button', ['Kundan', 'Polki', 'Pearl', 'Meenakari', 'Crystal']],
-            'Style'      => ['button', ['Traditional', 'Contemporary', 'Bridal', 'Statement', 'Casual']],
-            'Pattern'    => ['button', ['Floral', 'Geometric', 'Block Print', 'Paisley', 'Solid', 'Temple']],
-            'Closure'    => ['button', ['Adjustable Back', 'Hook', 'Push Back', 'Screw Back', 'Snap On']],
+            'Style' => ['button', ['Traditional', 'Contemporary', 'Bridal', 'Statement', 'Casual']],
+            'Pattern' => ['button', ['Floral', 'Geometric', 'Block Print', 'Paisley', 'Solid', 'Temple']],
+            'Closure' => ['button', ['Adjustable Back', 'Hook', 'Push Back', 'Screw Back', 'Snap On']],
             'Pairs With' => ['button', ['Lehenga', 'Saree', 'Gown', 'Western Wear', 'Ethnic Wear']],
-            'Washcare'   => ['button', ['Machine Wash', 'Hand Wash', 'Dry Clean', 'Wipe Clean']],
-            'Made In'    => ['button', ['India']],
+            'Washcare' => ['button', ['Machine Wash', 'Hand Wash', 'Dry Clean', 'Wipe Clean']],
+            'Made In' => ['button', ['India']],
         ];
 
         $attrId = [];   // attribute name => id
-        $valId  = [];   // attribute name => [value name => id]
+        $valId = [];   // attribute name => [value name => id]
         foreach ($attrDefs as $name => [$type, $values]) {
             $attrId[$name] = $this->put('attributes', ['slug' => Str::slug($name)], [
-                'name' => $name, 'type' => $type, 'has_values' => 1, 'status' => 1, 'show_in_navbar' => 0,
+                'name' => $name,
+                'type' => $type,
+                'has_values' => 1,
+                'status' => 1,
+                'show_in_navbar' => 0,
             ]);
 
             $order = 1;
             foreach ($values as $k => $v) {
                 $valueName = is_int($k) ? $v : $k;
-                $color     = is_int($k) ? null : $v;
-                $valId[$name][$valueName] = $this->put('attribute_values',
+                $color = is_int($k) ? null : $v;
+                $valId[$name][$valueName] = $this->put(
+                    'attribute_values',
                     ['attribute_id' => $attrId[$name], 'value' => $valueName],
                     ['color_code' => $color, 'color' => $color, 'hex_code' => $color, 'status' => 1, 'sort_order' => $order++]
                 );
@@ -175,51 +244,69 @@ class ProductListingSeeder extends Seeder
                 $this->ca('Colour', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Size', sel: true, price: true, stock: true, sku: true, filter: true),
                 $this->ca('Material', filter: true),
-                $this->ca('Pattern'), $this->ca('Style'), $this->ca('Washcare'), $this->ca('Made In'),
+                $this->ca('Pattern'),
+                $this->ca('Style'),
+                $this->ca('Washcare'),
+                $this->ca('Made In'),
             ],
             'Home Decor' => [
                 $this->ca('Colour', sel: true, image: true, stock: true, filter: true),
                 $this->ca('Material', filter: true),
-                $this->ca('Pattern'), $this->ca('Style'), $this->ca('Washcare'), $this->ca('Made In'),
+                $this->ca('Pattern'),
+                $this->ca('Style'),
+                $this->ca('Washcare'),
+                $this->ca('Made In'),
             ],
             'Earrings' => [
                 $this->ca('Metal Finish', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Colour', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Stone Work', filter: true),
-                $this->ca('Material'), $this->ca('Style'), $this->ca('Pattern'), $this->ca('Closure'),
-                $this->ca('Pairs With'), $this->ca('Made In'),
+                $this->ca('Material'),
+                $this->ca('Style'),
+                $this->ca('Pattern'),
+                $this->ca('Closure'),
+                $this->ca('Pairs With'),
+                $this->ca('Made In'),
             ],
             'Necklaces' => [
                 $this->ca('Metal Finish', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Colour', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Necklace Size', sel: true, price: true, stock: true, sku: true),
                 $this->ca('Stone Work', filter: true),
-                $this->ca('Material'), $this->ca('Style'), $this->ca('Pattern'), $this->ca('Closure'), $this->ca('Pairs With'),
+                $this->ca('Material'),
+                $this->ca('Style'),
+                $this->ca('Pattern'),
+                $this->ca('Closure'),
+                $this->ca('Pairs With'),
             ],
             'Bangles & Bracelets' => [
                 $this->ca('Metal Finish', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Colour', sel: true, image: true, stock: true, sku: true, filter: true),
                 $this->ca('Bangle Size', sel: true, price: true, stock: true, sku: true),
                 $this->ca('Stone Work', filter: true),
-                $this->ca('Material'), $this->ca('Style'), $this->ca('Pattern'), $this->ca('Pairs With'),
+                $this->ca('Material'),
+                $this->ca('Style'),
+                $this->ca('Pattern'),
+                $this->ca('Pairs With'),
             ],
         ];
 
         foreach ($catAttrs as $parentName => $list) {
             foreach ($list as $i => $d) {
-                $this->put('category_attributes',
+                $this->put(
+                    'category_attributes',
                     ['category_id' => $parentId[$parentName], 'attribute_id' => $attrId[$d['attr']]],
                     [
-                        'is_selectable'   => (int) $d['sel'],
+                        'is_selectable' => (int) $d['sel'],
                         'used_for_variant' => (int) $d['var'],
                         'price_dependent' => (int) $d['price'],
                         'image_dependent' => (int) $d['image'],
                         'stock_dependent' => (int) $d['stock'],
-                        'sku_dependent'   => (int) $d['sku'],
-                        'show_in_filter'  => (int) $d['filter'],
+                        'sku_dependent' => (int) $d['sku'],
+                        'show_in_filter' => (int) $d['filter'],
                         'show_on_listing' => 1,
-                        'sort_order'      => $i + 1,
-                        'status'          => 1,
+                        'sort_order' => $i + 1,
+                        'status' => 1,
                     ]
                 );
             }
@@ -228,23 +315,39 @@ class ProductListingSeeder extends Seeder
         // Values every product of a category gets when the product row doesn't list that attribute itself.
         $defaults = [
             'Handloom & Bedding' => [
-                'Pattern' => ['Block Print'], 'Style' => ['Traditional'], 'Washcare' => ['Machine Wash'], 'Made In' => ['India'],
+                'Pattern' => ['Block Print'],
+                'Style' => ['Traditional'],
+                'Washcare' => ['Machine Wash'],
+                'Made In' => ['India'],
             ],
             'Home Decor' => [
-                'Pattern' => ['Geometric'], 'Style' => ['Contemporary'], 'Washcare' => ['Wipe Clean'], 'Made In' => ['India'],
+                'Pattern' => ['Geometric'],
+                'Style' => ['Contemporary'],
+                'Washcare' => ['Wipe Clean'],
+                'Made In' => ['India'],
             ],
             'Earrings' => [
-                'Material' => ['Alloy'], 'Style' => ['Traditional'], 'Pattern' => ['Floral'], 'Closure' => ['Push Back'],
-                'Pairs With' => ['Lehenga', 'Saree'], 'Made In' => ['India'],
+                'Material' => ['Alloy'],
+                'Style' => ['Traditional'],
+                'Pattern' => ['Floral'],
+                'Closure' => ['Push Back'],
+                'Pairs With' => ['Lehenga', 'Saree'],
+                'Made In' => ['India'],
             ],
             'Necklaces' => [
-                'Necklace Size' => ['Free Size', 'Choker 14"', 'Princess 17"'], 'Material' => ['Alloy'],
-                'Style' => ['Bridal', 'Statement'], 'Pattern' => ['Floral'], 'Closure' => ['Adjustable Back'],
+                'Necklace Size' => ['Free Size', 'Choker 14"', 'Princess 17"'],
+                'Material' => ['Alloy'],
+                'Style' => ['Bridal', 'Statement'],
+                'Pattern' => ['Floral'],
+                'Closure' => ['Adjustable Back'],
                 'Pairs With' => ['Lehenga', 'Saree', 'Gown'],
             ],
             'Bangles & Bracelets' => [
-                'Bangle Size' => ['2.2', '2.4', '2.6', '2.8'], 'Material' => ['Alloy'],
-                'Style' => ['Traditional'], 'Pattern' => ['Floral'], 'Pairs With' => ['Saree', 'Ethnic Wear'],
+                'Bangle Size' => ['2.2', '2.4', '2.6', '2.8'],
+                'Material' => ['Alloy'],
+                'Style' => ['Traditional'],
+                'Pattern' => ['Floral'],
+                'Pairs With' => ['Saree', 'Ethnic Wear'],
             ],
         ];
 
@@ -253,31 +356,31 @@ class ProductListingSeeder extends Seeder
             'Handloom & Bedding' => [
                 'desc' => '<p>%s is woven from soft, breathable cotton that gets better with every wash.</p><p>A calm, timeless piece that suits modern and traditional bedrooms alike.</p>',
                 'incl' => "Product as shown\nMatching pillow covers (where applicable)\nCotton carry bag",
-                'fit'  => '<p>Measurements are approximate and may vary by 1–2 cm. Cotton can shrink slightly after the first wash.</p>',
+                'fit' => '<p>Measurements are approximate and may vary by 1–2 cm. Cotton can shrink slightly after the first wash.</p>',
                 'care' => '<ul><li>Wash separately in cold water.</li><li>Do not bleach.</li><li>Iron on medium heat.</li></ul>',
             ],
             'Home Decor' => [
                 'desc' => '<p>%s is handcrafted by skilled artisans and finished by hand, so every piece is slightly unique.</p>',
                 'incl' => "Product as shown\nGift-ready packaging",
-                'fit'  => '<p>Dimensions are approximate. Slight variations are part of the handmade charm.</p>',
+                'fit' => '<p>Dimensions are approximate. Slight variations are part of the handmade charm.</p>',
                 'care' => '<ul><li>Dust gently with a dry soft cloth.</li><li>Keep away from moisture and direct sunlight.</li></ul>',
             ],
             'Earrings' => [
                 'desc' => '<p>%s is a lightweight statement piece with a polished finish that sits comfortably all day.</p>',
                 'incl' => "Pair of earrings\nJewellery pouch",
-                'fit'  => '<p>Lightweight and comfortable for long wear. Check the drop length against the photos before ordering.</p>',
+                'fit' => '<p>Lightweight and comfortable for long wear. Check the drop length against the photos before ordering.</p>',
                 'care' => '<ul><li>Keep away from water.</li><li>Avoid perfumes and sprays.</li><li>Clean gently with a dry and soft cloth.</li></ul>',
             ],
             'Necklaces' => [
                 'desc' => '<p>%s brings a regal look to weddings, receptions and festive evenings.</p><p>Finished with sparkling stones and a skin-friendly plating.</p>',
                 'incl' => "Necklace\nLong Earrings\nMaang Tikka",
-                'fit'  => '<p>Sets come with an adjustable back closure. Pick the length that sits where you like it from the size guide.</p>',
+                'fit' => '<p>Sets come with an adjustable back closure. Pick the length that sits where you like it from the size guide.</p>',
                 'care' => '<ul><li>Keep away from water.</li><li>Avoid perfumes and sprays.</li><li>Store in the box provided.</li></ul>',
             ],
             'Bangles & Bracelets' => [
                 'desc' => '<p>%s is made to stack, share and gift. Smooth edges and a lasting finish.</p>',
                 'incl' => "Set of bangles\nJewellery box",
-                'fit'  => '<p>Measure the widest part of your hand and compare with the inner diameter in the size guide.</p>',
+                'fit' => '<p>Measure the widest part of your hand and compare with the inner diameter in the size guide.</p>',
                 'care' => '<ul><li>Keep away from water.</li><li>Wipe with a soft dry cloth after wearing.</li></ul>',
             ],
         ];
@@ -332,11 +435,12 @@ class ProductListingSeeder extends Seeder
         $reviewPlan = [];   // product id => target rating
 
         foreach ($products as $n => [$name, $brandSlug, $catSlug, $mrp, $price, $stock, $daysAgo, $occs, $cols, $attrs, $rating]) {
-            $slug       = Str::slug($name);
-            $pct        = $mrp > $price ? (int) round((($mrp - $price) / $mrp) * 100) : 0;
+            $brandSlug = $child[$catSlug]['brandSlug'];
+            $slug = Str::slug($name);
+            $pct = $mrp > $price ? (int) round((($mrp - $price) / $mrp) * 100) : 0;
             $parentName = $child[$catSlug]['parentName'];
-            $sku        = 'SEED-' . strtoupper(substr(md5($slug), 0, 6));
-            $text       = $content[$parentName];
+            $sku = 'SEED-' . strtoupper(substr(md5($slug), 0, 6));
+            $text = $content[$parentName];
 
             // category defaults fill whatever the product row didn't list
             $attrs = $attrs + ($defaults[$parentName] ?? []);
@@ -345,27 +449,27 @@ class ProductListingSeeder extends Seeder
             $custom = $slug === 'royal-radiance-bridal-necklace-set';
 
             $pid = $this->put('products', ['slug' => $slug], [
-                'category_id'       => $child[$catSlug]['parent'],
-                'subcategory_id'    => $child[$catSlug]['id'],
-                'brand_id'          => $brand[$brandSlug],
-                'name'              => $name,
-                'sku'               => $sku,
+                'category_id' => $child[$catSlug]['parent'],
+                'subcategory_id' => $child[$catSlug]['id'],
+                'brand_id' => $brand[$brandSlug],
+                'name' => $name,
+                'sku' => $sku,
                 'short_description' => 'Beautifully made ' . Str::lower($name) . '.',
-                'description'       => sprintf($text['desc'], e($name)),
-                'inclusions'        => $text['incl'],
-                'size_fit'          => $text['fit'],
+                'description' => sprintf($text['desc'], e($name)),
+                'inclusions' => $text['incl'],
+                'size_fit' => $text['fit'],
                 'care_instructions' => $text['care'],
                 'shipping_delivery' => $custom ? '<ul><li>Insured, signature-on-delivery shipping.</li><li>Dispatched in 24 hours.</li></ul>' : null,
-                'returns_exchange'  => $custom ? '<p>Returns accepted within 3 days of delivery with the original box, tags and certificate.</p>' : null,
-                'mrp'               => $mrp,
-                'discount_type'     => 'percentage',   // change if your enum differs (e.g. 'percent', 'flat')
-                'discount'          => $pct,
-                'price'             => $price,
-                'stock'             => $stock,
-                'min_qty'           => 1,
-                'delivery_time'     => '3-5 days',
-                'status'            => 1,
-                'created_at'        => now()->subDays($daysAgo),
+                'returns_exchange' => $custom ? '<p>Returns accepted within 3 days of delivery with the original box, tags and certificate.</p>' : null,
+                'mrp' => $mrp,
+                'discount_type' => 'percentage',   // change if your enum differs (e.g. 'percent', 'flat')
+                'discount' => $pct,
+                'price' => $price,
+                'stock' => $stock,
+                'min_qty' => 1,
+                'delivery_time' => '3-5 days',
+                'status' => 1,
+                'created_at' => now()->subDays($daysAgo),
             ]);
 
             // occasions
@@ -385,8 +489,8 @@ class ProductListingSeeder extends Seeder
             foreach ($attrs as $attrName => $valueNames) {
                 foreach ($valueNames as $valueName) {
                     $this->insert('product_attribute_values', [
-                        'product_id'         => $pid,
-                        'attribute_id'       => $attrId[$attrName],
+                        'product_id' => $pid,
+                        'attribute_id' => $attrId[$attrName],
                         'attribute_value_id' => $valId[$attrName][$valueName],
                     ]);
                 }
@@ -394,7 +498,10 @@ class ProductListingSeeder extends Seeder
 
             // variants (price / image / stock / sku)
             $this->seedVariants($pid, $catAttrs[$parentName], $attrs, $valId, [
-                'sku' => $sku, 'mrp' => $mrp, 'price' => $price, 'pct' => $pct,
+                'sku' => $sku,
+                'mrp' => $mrp,
+                'price' => $price,
+                'pct' => $pct,
             ]);
 
             // addons (sold-out products get none, to test a page without the addon cards)
@@ -403,7 +510,10 @@ class ProductListingSeeder extends Seeder
                 if ($stock > 0) {
                     foreach ($addonSets[$brandSlug] as [$detail, $description, $addonPrice]) {
                         $this->insert('product_addons', [
-                            'product_id' => $pid, 'detail' => $detail, 'description' => $description, 'price' => $addonPrice,
+                            'product_id' => $pid,
+                            'detail' => $detail,
+                            'description' => $description,
+                            'price' => $addonPrice,
                         ]);
                     }
                 }
@@ -415,10 +525,12 @@ class ProductListingSeeder extends Seeder
 
         $this->seedCoupons();
         $this->seedPincodes();
-        $this->seedReviews($reviewPlan);
+
+        // storefront header/footer menu is cached
+        Cache::forget('menu.brands');
 
         $this->command->info(
-            "Seeded: 2 brands, " . count($child) . " subcategories, " . count($occ) . " occasions, " . count($col) .
+            "Seeded: " . count($brand) . " brands (menu groups), " . count($parentId) . " categories, " . count($child) . " subcategories, " . count($occ) . " occasions, " . count($col) .
             " collections, " . count($attrId) . " attributes, {$made} products, {$this->variantCount} variants."
         );
     }
@@ -456,7 +568,7 @@ class ProductListingSeeder extends Seeder
                 if (!$names) {
                     continue;
                 }
-                $groups[] = array_map(fn ($v) => ['id' => $valId[$d['attr']][$v], 'name' => $v], $names);
+                $groups[] = array_map(fn($v) => ['id' => $valId[$d['attr']][$v], 'name' => $v], $names);
             }
             if (!$groups) {
                 continue;
@@ -466,18 +578,18 @@ class ProductListingSeeder extends Seeder
 
             foreach ($combos as $i => $combo) {
                 $names = array_column($combo, 'name');
-                $key   = implode('-', array_column($combo, 'id'));
-                $hash  = abs(crc32($pid . '-' . $key));
+                $key = implode('-', array_column($combo, 'id'));
+                $hash = abs(crc32($pid . '-' . $key));
 
                 $row = ['product_id' => $pid, 'type' => $type, 'status' => 1, 'is_available' => 1];
 
                 if ($type === 'price') {
                     $mult = 1 + 0.12 * $i;   // first combination = the product's base price
                     $row += [
-                        'mrp'           => (int) round($p['mrp'] * $mult),
+                        'mrp' => (int) round($p['mrp'] * $mult),
                         'discount_type' => 'percentage',
-                        'discount'      => $p['pct'],
-                        'price'         => (int) round($p['price'] * $mult),
+                        'discount' => $p['pct'],
+                        'price' => (int) round($p['price'] * $mult),
                     ];
                 }
 
@@ -491,7 +603,7 @@ class ProductListingSeeder extends Seeder
 
                 if ($type === 'sku') {
                     $suffix = collect($names)
-                        ->map(fn ($n) => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $n), 0, 3)))
+                        ->map(fn($n) => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $n), 0, 3)))
                         ->implode('-');
                     $row['sku'] = $p['sku'] . '-' . $suffix;
                 }
@@ -502,7 +614,8 @@ class ProductListingSeeder extends Seeder
 
                 foreach ($combo as $item) {
                     $this->insert('product_variant_values', [
-                        'variant_id' => $variantId, 'attribute_value_id' => $item['id'],
+                        'variant_id' => $variantId,
+                        'attribute_value_id' => $item['id'],
                     ]);
                 }
 
@@ -541,31 +654,31 @@ class ProductListingSeeder extends Seeder
         }
 
         $start = now()->subDays(5)->toDateString();
-        $end   = now()->addDays(60)->toDateString();
+        $end = now()->addDays(60)->toDateString();
 
         $coupons = [
             // code, type, value, min order, max discount, min qty, start, end, usage limit, used
             ['PIHUSPECIAL', 'percentage', 10, 2999, 500, 1, $start, $end, null, 0],
-            ['FESTIVE25',   'percentage', 25, 4999, 1000, 1, $start, $end, 500, 12],
-            ['FLAT200',     'fixed',      200, 1499, null, 1, $start, $end, null, 0],
-            ['EXPIRED10',   'percentage', 10, 0, 300, 1, now()->subDays(40)->toDateString(), now()->subDay()->toDateString(), null, 0],
-            ['USEDUP15',    'percentage', 15, 0, 400, 1, $start, $end, 10, 10],
+            ['FESTIVE25', 'percentage', 25, 4999, 1000, 1, $start, $end, 500, 12],
+            ['FLAT200', 'fixed', 200, 1499, null, 1, $start, $end, null, 0],
+            ['EXPIRED10', 'percentage', 10, 0, 300, 1, now()->subDays(40)->toDateString(), now()->subDay()->toDateString(), null, 0],
+            ['USEDUP15', 'percentage', 15, 0, 400, 1, $start, $end, 10, 10],
         ];
 
         try {
             foreach ($coupons as [$code, $type, $value, $minAmount, $maxDiscount, $minQty, $from, $to, $limit, $used]) {
                 $this->put('coupons', ['code' => $code], [
-                    'discount_type'          => $type,
-                    'discount_value'         => $value,
-                    'minimum_order_amount'   => $minAmount,
-                    'maximum_discount'       => $maxDiscount,
+                    'discount_type' => $type,
+                    'discount_value' => $value,
+                    'minimum_order_amount' => $minAmount,
+                    'maximum_discount' => $maxDiscount,
                     'minimum_order_quantity' => $minQty,
-                    'start_date'             => $from,
-                    'end_date'               => $to,
-                    'usage_limit'            => $limit,
-                    'used_count'             => $used,
-                    'customer_type'          => 'all',
-                    'status'                 => 1,
+                    'start_date' => $from,
+                    'end_date' => $to,
+                    'usage_limit' => $limit,
+                    'used_count' => $used,
+                    'customer_type' => 'all',
+                    'status' => 1,
                 ]);
             }
         } catch (\Throwable $e) {
@@ -594,15 +707,15 @@ class ProductListingSeeder extends Seeder
         try {
             foreach ($rows as [$pin, $state, $city, $days, $serviceable]) {
                 $stateId = Schema::hasTable('states') ? $this->put('states', ['name' => $state], ['status' => 1]) : null;
-                $cityId  = Schema::hasTable('cities') ? $this->put('cities', ['name' => $city, 'state_id' => $stateId], ['status' => 1]) : null;
+                $cityId = Schema::hasTable('cities') ? $this->put('cities', ['name' => $city, 'state_id' => $stateId], ['status' => 1]) : null;
 
                 $this->put('pincodes', ['pincode' => $pin], [
-                    'state_id'       => $stateId,
-                    'city_id'        => $cityId,
-                    'district'       => $city,
+                    'state_id' => $stateId,
+                    'city_id' => $cityId,
+                    'district' => $city,
                     'is_serviceable' => $serviceable,
-                    'delivery_days'  => $days,
-                    'status'         => 1,
+                    'delivery_days' => $days,
+                    'status' => 1,
                 ]);
             }
         } catch (\Throwable $e) {
@@ -623,12 +736,15 @@ class ProductListingSeeder extends Seeder
             $customers = [];
             foreach ([['Aarohi Sharma', 'aarohi@example.com'], ['Meera Kapoor', 'meera@example.com'], ['Isha Verma', 'isha@example.com']] as $i => [$name, $email]) {
                 $customers[] = $this->put('customers', ['email' => $email], [
-                    'name' => $name, 'phone' => '987650000' . $i, 'password' => Hash::make('password'), 'status' => 1,
+                    'name' => $name,
+                    'phone' => '987650000' . $i,
+                    'password' => Hash::make('password'),
+                    'status' => 1,
                 ]);
             }
 
             $titles = ['Looks stunning', 'Worth the price', 'Beautiful finish', 'Great gift', 'Lovely quality'];
-            $texts  = [
+            $texts = [
                 'Exactly like the pictures. Packaging was neat and delivery was quick.',
                 'The finish is really good and it feels premium. Got many compliments.',
                 'Lightweight and comfortable. Would happily order again.',
@@ -640,14 +756,14 @@ class ProductListingSeeder extends Seeder
                 foreach ($customers as $i => $customerId) {
                     $stars = max(1, min(5, $i === 2 ? $rating - 1 : $rating));
                     $this->insert('product_reviews', [
-                        'customer_id'       => $customerId,
-                        'product_id'        => $pid,
-                        'rating'            => $stars,
-                        'title'             => $titles[($pid + $i) % count($titles)],
-                        'review'            => $texts[$i],
-                        'status'            => 'approved',
+                        'customer_id' => $customerId,
+                        'product_id' => $pid,
+                        'rating' => $stars,
+                        'title' => $titles[($pid + $i) % count($titles)],
+                        'review' => $texts[$i],
+                        'status' => 'approved',
                         'verified_purchase' => $i === 0 ? 1 : 0,
-                        'created_at'        => now()->subDays(5 + $i * 9),
+                        'created_at' => now()->subDays(5 + $i * 9),
                     ]);
                 }
             }
@@ -669,8 +785,13 @@ class ProductListingSeeder extends Seeder
         bool $filter = false
     ): array {
         return [
-            'attr' => $attr, 'sel' => $sel, 'price' => $price, 'image' => $image,
-            'stock' => $stock, 'sku' => $sku, 'filter' => $filter,
+            'attr' => $attr,
+            'sel' => $sel,
+            'price' => $price,
+            'image' => $image,
+            'stock' => $stock,
+            'sku' => $sku,
+            'filter' => $filter,
             'var' => $sel && ($price || $image || $stock || $sku),
         ];
     }
@@ -679,11 +800,11 @@ class ProductListingSeeder extends Seeder
     private function table(array $head, array $rows): string
     {
         $html = '<table class="size-table"><thead><tr>'
-            . implode('', array_map(fn ($c) => "<th>{$c}</th>", $head))
+            . implode('', array_map(fn($c) => "<th>{$c}</th>", $head))
             . '</tr></thead><tbody>';
 
         foreach ($rows as $r) {
-            $html .= '<tr>' . implode('', array_map(fn ($c) => "<td>{$c}</td>", $r)) . '</tr>';
+            $html .= '<tr>' . implode('', array_map(fn($c) => "<td>{$c}</td>", $r)) . '</tr>';
         }
 
         return $html . '</tbody></table>';

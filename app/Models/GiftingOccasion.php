@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 
 class GiftingOccasion extends Model
@@ -18,6 +19,13 @@ class GiftingOccasion extends Model
         'icon',
         'status'
     ];
+
+
+    protected static function booted()
+    {
+        static::saved(fn() => Cache::forget('menu.occasions'));
+        static::deleted(fn() => Cache::forget('menu.occasions'));
+    }
 
     // 🔥 Products linked
     public function products()

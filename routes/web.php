@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\{
     NdrController,
     SeoController,
     BlogController,
+    BrandController,
     OrderController,
     CouponController,
     LogoutController,
@@ -80,6 +81,7 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/category/{slug}', 'category')->name('category.show');
         Route::get('product/{product}/quick-view', 'quickView')->name('product.quick-view');
         Route::get('/product/{slug}', 'productShow')->name('product.show');
+        Route::get('/search/suggest', 'searchSuggest')->middleware('throttle:60,1')->name('search.suggest');
 
         Route::view('/about', 'front-pages.about')->name('about');
         Route::view('/blogs', 'front-pages.blogs')->name('blogs');
@@ -157,12 +159,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('/profile-setting', ProfileSettingController::class);
         Route::post('/resetpassword', [ProfileSettingController::class, 'resetPassword'])->name('reset.password');
 
-        // category routes
-        Route::get('categories/import', [CategoryController::class, 'import'])->name('categories.import');
-        Route::post('categories/import', [CategoryController::class, 'importStore'])->name('categories.import.store');
-        Route::get('categories/import/sample', [CategoryController::class, 'downloadSample'])->name('categories.import.sample');
-        Route::post('categories/upload-images', [CategoryController::class, 'uploadImagesZip'])->name('categories.images.upload');
-        Route::get('categories/import/parent-reference', [CategoryController::class, 'downloadParentCategoryReference'])->name('categories.parent.reference');
+        Route::resource('brands', BrandController::class)->except(['show']);
+
         Route::resource('categories', CategoryController::class);
 
         // occasion routes
