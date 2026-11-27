@@ -314,12 +314,13 @@
             </div>
           </div>
 
-          <a href="javascript:void(0)" class="action-link" data-model=".login-pop" aria-label="Wishlist">
+          <a href="{{ $authUser ? route('user.dashboard.index') . '#tab-4' : 'javascript:void(0)' }}"
+            class="action-link" @unless($authUser) data-model=".login-pop" @endunless aria-label="Wishlist">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 20.5s-8-4.9-8-11A4.6 4.6 0 0112 6.8a4.6 4.6 0 018 2.7c0 6.1-8 11-8 11z" />
             </svg>
-            <span class="count">0</span>
+            <span class="count wishlist-count">{{ $wishCount ?? 0 }}</span>
           </a>
 
           @if($authUser)
@@ -515,7 +516,7 @@
         <i class="fa-solid fa-bars"></i><span>Menu</span>
       </button>
       <a href="{{ route('dashboard') }}#tab-4" class="float-link"><i
-          class="fa-regular fa-heart"></i><span>Wishlist</span><b class="f-count">0</b></a>
+          class="fa-regular fa-heart"></i><span>Wishlist</span><b class="f-count wishlist-count">{{ $wishCount ?? 0 }}</b></a>
       <a href="{{ route('cart') }}" class="float-link"><i class="fa-solid fa-bag-shopping"></i><span>Bag</span><b
           class="f-count cart-count">{{ $cartCount }}</b></a>
       @if($authUser)
@@ -770,57 +771,53 @@
     </div>
   </div>
 
-  {{-- QUICK VIEW POPUP --}}
+  {{-- QUICK VIEW POPUP (filled by JS) --}}
   <div class="model product-view-pop">
     <div class="model-body">
       <button class="close close-btn" type="button" aria-label="Close quick view">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
       </button>
-      <div class="pvp-grid">
+
+      <p class="pvp-state" style="text-align:center;padding:60px 20px">Loading...</p>
+
+      <div class="pvp-grid" style="display:none">
         <div class="pvp-visual">
-          <img src="{{ asset('assets/images/home/pro4.png') }}" alt="Meenakari Bangle Set" />
-          <span class="pvp-badge">Trending</span>
+          <img class="pvp-img" src="" alt="" />
+          <span class="pvp-badge" style="display:none">New</span>
+          <div class="pvp-thumbs" style="display:none;gap:8px;margin-top:10px"></div>
         </div>
         <div class="pvp-content">
           <div class="pvp-meta">
-            <span class="pvp-cat">Pihu Jewel</span>
-            <span class="pvp-rate"><i class="fa-solid fa-star"></i> 4.8</span>
+            <span class="pvp-cat"></span>
+            <span class="pvp-rate" style="display:none"><i class="fa-solid fa-star"></i> <b></b></span>
           </div>
-          <h4 class="pvp-title">Meenakari Bangle Set</h4>
+          <h4 class="pvp-title"></h4>
           <div class="pvp-price">
-            <span class="price-now">₹1,299</span>
-            <del class="price-old">₹1,799</del>
-            <span class="price-off">28% OFF</span>
+            <span class="price-now"></span>
+            <del class="price-old"></del>
+            <span class="price-off"></span>
           </div>
-          <p class="pvp-desc">
-            A set of 6 bangles with colourful meenakari work, made for weddings, festive evenings and everyday
-            celebrations.
-          </p>
-          <div class="pvp-size">
-            <span class="pvp-label">Select Size</span>
-            <div class="pvp-size-list">
-              @foreach(['2.2', '2.4', '2.6', '2.8'] as $size)
-                <input type="radio" name="pvpSize" id="pvpS{{ str_replace('.', '', $size) }}" {{ $loop->first ? 'checked' : '' }} />
-                <label for="pvpS{{ str_replace('.', '', $size) }}">{{ $size }}</label>
-              @endforeach
-            </div>
-          </div>
+          <p class="pvp-desc"></p>
+
+          <div class="pvp-options"></div>
+
+          <p class="pvp-stock" style="font-size:13px;margin:6px 0 12px"></p>
+
           <div class="pvp-actions">
             <div class="pvp-qty qty">
-              <button type="button" class="qty-minus" aria-label="Decrease quantity"><i
+              <button type="button" class="pvp-qty-minus" aria-label="Decrease quantity"><i
                   class="fa-solid fa-minus"></i></button>
-              <input type="text" class="qty-input" value="1" readonly />
-              <button type="button" class="qty-plus" aria-label="Increase quantity"><i
+              <input type="text" class="pvp-qty-input" value="1" readonly />
+              <button type="button" class="pvp-qty-plus" aria-label="Increase quantity"><i
                   class="fa-solid fa-plus"></i></button>
             </div>
-            <button type="button" data-id="SKU-P3" data-name="Meenakari Bangle Set" data-toast-title="Added to Cart"
-              data-toast-text="Meenakari Bangle Set has been added to your cart." data-toast-type="success"
-              class="btn btn-outline-black pvp-cart">
-              Add to Cart
-            </button>
+            <button type="button" class="btn btn-outline-black pvp-cart">Add to Cart</button>
           </div>
-          <a href="{{ route('cart') }}" class="btn btn-primary pvp-buy">Buy Now <i
-              class="fa-solid fa-arrow-right-long"></i></a>
+          <button type="button" class="btn btn-primary pvp-buy">Buy Now <i
+              class="fa-solid fa-arrow-right-long"></i></button>
+          <a href="#" class="pvp-full"
+            style="display:block;text-align:center;margin-top:12px;font-size:13px;text-decoration:underline">View Full
+            Details</a>
         </div>
       </div>
     </div>
@@ -1016,6 +1013,311 @@
         window.location.href = URL.google + "?redirect=" + encodeURIComponent(window.location.href);
       });
     })();
+  </script>
+  <script>
+    window.SHOP = {
+      cartAdd: "{{ route('cart.add') }}",
+      wishToggle: "{{ route('wishlist.toggle') }}",
+      quickView: "{{ route('product.quick-view', '__ID__') }}",
+      cartUrl: "{{ url('cart') }}",
+      loggedIn: @json((bool) auth('customer')->check())
+    };
+  </script>
+  <script>
+    $(function () {
+      var CSRF = $('meta[name="csrf-token"]').attr('content');
+      var HEAD = { "X-CSRF-TOKEN": CSRF, Accept: "application/json" };
+
+      function notify(type, title, text) {
+        if (typeof window.showToast === "function") return window.showToast(title, text, type);
+        var $t = $('<div></div>').text(title + (text ? " - " + text : "")).css({
+          position: "fixed", right: "20px", bottom: "20px", zIndex: 99999, padding: "12px 18px",
+          borderRadius: "8px", color: "#fff", background: type === "success" ? "#1f8a5b" : "#c0392b"
+        }).appendTo("body");
+        setTimeout(function () { $t.fadeOut(300, function () { $t.remove(); }); }, 2800);
+      }
+
+      function openLogin() { $('[data-model=".login-pop"]').first().trigger("click"); }
+
+      // ---------- card: add to cart ----------
+      $(document).on("click", ".js-card-cart", function (e) {
+        e.preventDefault();
+        var $b = $(this);
+
+        // products with size/colour etc. need a choice, so send to the detail page
+        if ($b.prop("disabled") || $b.data("busy")) return;
+        $b.data("busy", true).addClass("is-loading");
+
+        $.ajax({
+          url: window.SHOP.cartAdd, method: "POST", headers: HEAD,
+          data: { product_id: $b.data("product-id"), quantity: Number($b.data("min-qty")) || 1 }
+        })
+          .done(function (res) {
+            if (!res.status) return notify("error", "Could not add", res.message);
+            $(document).trigger("cart:updated", [res]);
+            notify("success", "Added to Cart", $b.data("name") + " has been added to your cart.");
+          })
+          .fail(function (xhr) {
+            var j = xhr.responseJSON || {}, msg = j.message || "Something went wrong. Please try again.";
+            if (j.errors) msg = Object.values(j.errors)[0][0];
+            notify("error", "Could not add", msg);
+          })
+          .always(function () { $b.data("busy", false).removeClass("is-loading"); });
+      });
+
+      // ---------- card: wishlist ----------
+      function paintWish(pid, on) {
+        // updates every card of this product on the page (and the detail-page heart)
+        $('.js-card-wish[data-product-id="' + pid + '"], .js-wish[data-product-id="' + pid + '"]')
+          .toggleClass("is-active", on).attr("aria-pressed", on)
+          .find("i").attr("class", (on ? "fa-solid" : "fa-regular") + " fa-heart");
+      }
+
+      $(document).on("click", ".js-card-wish", function (e) {
+        e.preventDefault();
+        var $b = $(this), pid = $b.data("product-id");
+
+        if (!window.SHOP.loggedIn) { openLogin(); return; }
+        if ($b.data("busy")) return;
+        $b.data("busy", true);
+
+        $.ajax({ url: window.SHOP.wishToggle, method: "POST", headers: HEAD, data: { product_id: pid } })
+          .done(function (res) {
+            res = res || {};
+            if (res.status === false || res.success === false)
+              return notify("error", "Wishlist", res.message || "Could not update wishlist.");
+            var on = res.added !== undefined ? !!res.added
+              : res.wishlisted !== undefined ? !!res.wishlisted
+                : res.in_wishlist !== undefined ? !!res.in_wishlist
+                  : !$b.hasClass("is-active");
+            paintWish(pid, on);
+            if (res.count !== undefined) $(".wishlist-count").text(res.count);
+            notify("success", on ? "Added to Wishlist" : "Removed from Wishlist", $b.closest(".prod_cart").find(".prod-name").text().trim());
+          })
+          .fail(function (xhr) {
+            if (xhr.status === 401 || xhr.status === 419) return openLogin();
+            notify("error", "Wishlist", (xhr.responseJSON || {}).message || "Something went wrong. Please try again.");
+          })
+          .always(function () { $b.data("busy", false); });
+      });
+    });
+  </script>
+  <style>
+    .pvp-size-list label.pvp-swatch {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--c, #ccc);
+      border: 1px solid #ddd
+    }
+
+    .pvp-size-list input:checked+label.pvp-swatch {
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000
+    }
+
+    .pvp-thumbs button {
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      border: 1px solid #ddd;
+      background: none;
+      cursor: pointer
+    }
+
+    .pvp-thumbs button.active {
+      border-color: #000
+    }
+
+    .pvp-thumbs img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .pvp-stock.is-out {
+      color: #c0392b
+    }
+
+    .pvp-stock.is-low {
+      color: #d68910
+    }
+  </style>
+  <script>
+    $(function () {
+      var $pop = $(".product-view-pop");
+      var HEAD = function () { return { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"), Accept: "application/json" }; };
+      var QV = null, token = 0, maxQty = 10;
+
+      var money = function (n) { return "₹" + Math.round(n).toLocaleString("en-US"); };
+      var esc = function (s) { return $("<div>").text(s == null ? "" : s).html(); };
+      var qty = function () { return parseInt($pop.find(".pvp-qty-input").val(), 10) || QV.minQty; };
+
+      function toast(type, title, text) {
+        if (typeof window.showToast === "function") return window.showToast(title, text, type);
+        var $t = $("<div></div>").text(title + (text ? " - " + text : "")).css({
+          position: "fixed", right: "20px", bottom: "20px", zIndex: 99999, padding: "12px 18px",
+          borderRadius: "8px", color: "#fff", background: type === "success" ? "#1f8a5b" : "#c0392b"
+        }).appendTo("body");
+        setTimeout(function () { $t.fadeOut(300, function () { $t.remove(); }); }, 2800);
+      }
+
+      // ---------- open + load ----------
+      $(document).on("click", ".js-quick", function () {
+        var id = $(this).data("product-id"), my = ++token;
+        QV = null;
+        $pop.find(".pvp-grid").hide();
+        $pop.find(".pvp-state").text("Loading...").show();
+
+        $.getJSON(window.SHOP.quickView.replace("__ID__", id))
+          .done(function (d) { if (my === token) render(d); })
+          .fail(function () { if (my === token) $pop.find(".pvp-state").text("Could not load this product. Please try again."); });
+      });
+
+      function render(d) {
+        var base = (d.pd && d.pd.base) || {};
+        QV = { d: d, pd: d.pd || { base: {}, variants: {} }, minQty: base.minQty || 1, cur: { mrp: base.mrp || 0, price: base.price || 0 }, img: "orig" };
+
+        $pop.find(".pvp-cat").text(d.brand || "");
+        $pop.find(".pvp-title").text(d.name);
+        $pop.find(".pvp-desc").text(d.desc || "").toggle(!!d.desc);
+        $pop.find(".pvp-full").attr("href", d.url);
+        if (d.badge) $pop.find(".pvp-badge").text(d.badge[2]).show();
+        else if (d.is_new) $pop.find(".pvp-badge").text("New").show();
+        else $pop.find(".pvp-badge").hide();
+        if (d.rate) $pop.find(".pvp-rate").show().find("b").text(d.rate); else $pop.find(".pvp-rate").hide();
+
+        setImages(d.gallery || []);
+
+        // options
+        var html = (d.options || []).map(function (o) {
+          var vals = o.values.map(function (v, i) {
+            var id = "qv" + o.id + "_" + v.id, chk = i === 0 ? " checked" : "";
+            var input = '<input type="radio" name="qv' + o.id + '" id="' + id + '" value="' + v.id + '" data-name="' + esc(v.name) + '"' + chk + ' />';
+            return o.swatch
+              ? input + '<label for="' + id + '" class="pvp-swatch" title="' + esc(v.name) + '" style="--c:' + esc(v.color || "#cccccc") + '"></label>'
+              : input + '<label for="' + id + '">' + esc(v.name) + '</label>';
+          }).join("");
+          return '<div class="pvp-size"><span class="pvp-label">' + esc(o.name) + ': <b class="pvp-opt-val">' + esc(o.values[0].name) + '</b></span><div class="pvp-size-list">' + vals + '</div></div>';
+        }).join("");
+        $pop.find(".pvp-options").html(html);
+
+        $pop.find(".pvp-qty-input").val(QV.minQty);
+        $pop.find(".pvp-state").hide();
+        $pop.find(".pvp-grid").show();
+        refresh();
+      }
+
+      // ---------- images ----------
+      function setImages(list) {
+        if (!list.length) return;
+        $pop.find(".pvp-img").attr({ src: list[0].url, alt: QV.d.name });
+        var $t = $pop.find(".pvp-thumbs");
+        if (list.length > 1) {
+          $t.html(list.map(function (g, n) {
+            return '<button type="button" class="' + (n ? "" : "active") + '" data-src="' + esc(g.url) + '"><img src="' + esc(g.thumb || g.url) + '" alt="" /></button>';
+          }).join("")).css("display", "flex");
+        } else { $t.hide().empty(); }
+      }
+      $(document).on("click", ".pvp-thumbs button", function () {
+        $(this).addClass("active").siblings().removeClass("active");
+        $pop.find(".pvp-img").attr("src", $(this).data("src"));
+      });
+
+      // ---------- variants (same logic as the detail page) ----------
+      function selectedIds() {
+        return $pop.find(".pvp-options input:checked").map(function () { return parseInt(this.value, 10); }).get();
+      }
+      function pick(type, sel) {
+        var list = (QV.pd.variants && QV.pd.variants[type]) || [], best = null;
+        list.forEach(function (v) {
+          if (!v.values.length) return;
+          var ok = v.values.every(function (id) { return sel.indexOf(id) !== -1; });
+          if (ok && (!best || v.values.length > best.values.length)) best = v;
+        });
+        return best;
+      }
+
+      function renderPrice() {
+        var q = qty(), c = QV.cur;
+        var pct = c.mrp > c.price ? Math.round((c.mrp - c.price) / c.mrp * 100) : 0;
+        $pop.find(".price-now").text(money(c.price * q));
+        $pop.find(".price-old").text(money(c.mrp * q)).toggle(pct > 0);
+        $pop.find(".price-off").text(pct + "% OFF").toggle(pct > 0);
+      }
+
+      function refresh() {
+        if (!QV) return;
+        var sel = selectedIds(), base = QV.pd.base || {};
+        var pv = pick("price", sel), sv = pick("stock", sel), iv = pick("image", sel);
+
+        QV.cur.mrp = pv ? pv.mrp : base.mrp;
+        QV.cur.price = pv ? pv.price : base.price;
+
+        var stock = sv ? sv.stock : base.stock, avail = sv ? sv.available : true;
+        var state = !avail ? "na" : stock <= 0 ? "out" : stock <= 5 ? "low" : "in";
+        var text = { in: "In Stock", low: "Only " + stock + " left", out: "Out of Stock", na: "This combination is not offered" }[state];
+        var blocked = state === "out" || state === "na";
+
+        $pop.find(".pvp-stock").text(text).removeClass("is-out is-low").addClass(blocked ? "is-out" : state === "low" ? "is-low" : "");
+        $pop.find(".pvp-cart, .pvp-buy").prop("disabled", blocked).css("opacity", blocked ? ".5" : "");
+
+        maxQty = Math.max(QV.minQty, Math.min(10, stock > 0 ? stock : QV.minQty));
+        if (qty() > maxQty) $pop.find(".pvp-qty-input").val(maxQty);
+
+        // variant images (fall back to the product gallery)
+        var key = iv && iv.images && iv.images.length ? iv.id : "orig";
+        if (key !== QV.img) {
+          QV.img = key;
+          setImages(key === "orig" ? QV.d.gallery : iv.images.map(function (i) { return { url: i.url, thumb: i.thumb }; }));
+        }
+        renderPrice();
+      }
+
+      $pop.on("change", ".pvp-options input", function () {
+        $(this).closest(".pvp-size").find(".pvp-opt-val").text($(this).data("name"));
+        refresh();
+      });
+
+      // ---------- qty ----------
+      $pop.on("click", ".pvp-qty-plus, .pvp-qty-minus", function () {
+        if (!QV) return;
+        var v = qty();
+        v = $(this).hasClass("pvp-qty-plus") ? Math.min(maxQty, v + 1) : Math.max(QV.minQty, v - 1);
+        $pop.find(".pvp-qty-input").val(v);
+        renderPrice();
+      });
+
+      // ---------- add to cart / buy now ----------
+      function addToCart($btn, goToCart) {
+        if (!QV || $btn.prop("disabled") || $btn.data("busy")) return;
+        var sel = selectedIds();
+        var data = { product_id: QV.d.id, quantity: qty(), selected_values: sel, addon_ids: [] };
+        ["price", "image", "stock", "sku"].forEach(function (t) {
+          var v = pick(t, sel);
+          if (v) data[t + "_variant_id"] = v.id;
+        });
+
+        $btn.data("busy", true).addClass("is-loading");
+        $.ajax({ url: window.SHOP.cartAdd, method: "POST", headers: HEAD(), data: data })
+          .done(function (res) {
+            if (!res.status) return toast("error", "Could not add", res.message);
+            if (goToCart) { window.location.href = window.SHOP.cartUrl; return; }
+            $pop.find(".close").first().trigger("click");          // close quick view, then the mini cart opens
+            $(document).trigger("cart:updated", [res]);
+            toast("success", "Added to Cart", QV.d.name + " has been added to your cart.");
+          })
+          .fail(function (xhr) {
+            var j = xhr.responseJSON || {}, msg = j.message || "Something went wrong. Please try again.";
+            if (j.errors) msg = Object.values(j.errors)[0][0];
+            toast("error", "Could not add", msg);
+          })
+          .always(function () { $btn.data("busy", false).removeClass("is-loading"); });
+      }
+      $pop.on("click", ".pvp-cart", function () { addToCart($(this), false); });
+      $pop.on("click", ".pvp-buy", function () { addToCart($(this), true); });
+    });
   </script>
   @stack('scripts')
 </body>

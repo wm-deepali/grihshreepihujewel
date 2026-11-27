@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\{
     RefundController,
     ProductController,
     PaymentController,
+    TaxClassController,
     RedirectController,
     HomeReelController,
     HomePageController,
@@ -77,6 +78,7 @@ Route::middleware('maintenance.mode')->group(function () {
         Route::get('/', 'home')->name('home');
         Route::get('/products', 'products')->name('products');
         Route::get('/category/{slug}', 'category')->name('category.show');
+        Route::get('product/{product}/quick-view', 'quickView')->name('product.quick-view');
         Route::get('/product/{slug}', 'productShow')->name('product.show');
 
         Route::view('/about', 'front-pages.about')->name('about');
@@ -359,6 +361,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/settings/courier/{courier}', [AdminSettingController::class, 'courierDelete'])->name('couriers.delete');
         Route::post('admin-setting/google-setting', [AdminSettingController::class, 'googleSettingStore'])->name('admin-setting.google-setting');
         Route::post('/admin-setting/shipping', [AdminSettingController::class, 'shippingSettingStore'])->name('admin-setting.shipping.store');
+
+        Route::prefix('settings/tax-classes')->name('settings.tax-classes.')->group(function () {
+            Route::get('/', [TaxClassController::class, 'index'])->name('index');
+            Route::post('/', [TaxClassController::class, 'store'])->name('store');
+            Route::delete('/{taxClass}', [TaxClassController::class, 'destroy'])->name('destroy');
+        });
 
         Route::get('/security/system-logs', [SystemLogController::class, 'index'])->name('security.system-logs');
 

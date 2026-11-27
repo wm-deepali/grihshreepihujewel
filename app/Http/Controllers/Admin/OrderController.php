@@ -137,14 +137,20 @@ class OrderController extends Controller
                 'Items',
                 'Subtotal',
                 'Discount',
-                'Shipping',   // new
-                'Tax',
+                'Taxable Value',
+                'GST Type',
+                'CGST',
+                'SGST',
+                'IGST',
+                'Total GST',
+                'Shipping',
                 'Grand Total',
                 'Payment',
                 'Status',
                 'Date',
             ]);
             foreach ($orders as $o) {
+                $gst = (float) $o->tax_amount > 0 && $o->gst_type;
                 fputcsv($fh, [
                     $o->order_number,
                     $o->customer_name,
@@ -153,8 +159,13 @@ class OrderController extends Controller
                     $o->items->count(),
                     $o->subtotal,
                     $o->discount,
-                    $o->shipping_charge ?? 0,   // new
+                    round($o->subtotal - $o->discount, 2),
+                    $gst ? strtoupper(str_replace('_', '+', $o->gst_type)) : '',
+                    $gst ? $o->cgst_amount : 0,
+                    $gst ? $o->sgst_amount : 0,
+                    $gst ? $o->igst_amount : 0,
                     $o->tax_amount,
+                    $o->shipping_charge ?? 0,
                     $o->grand_total,
                     $o->payment_status,
                     $o->status,
@@ -487,8 +498,9 @@ class OrderController extends Controller
                             : '';
 
                         // Addons — list each one and fold into the line total
-                        $addonsTotal = $item->addons->sum('price');
-                        $lineTotal = ($item->price * $item->quantity) + $addonsTotal;
+                        $addonUnit = (float) $item->addons->sum('price');
+                        $addonsTotal = $addonUnit * $item->quantity;
+                        $lineTotal = (float) $item->total ?: (((float) $item->price + $addonUnit) * $item->quantity);
 
                         $addonsHtml = '';
                         if ($item->addons->isNotEmpty()) {

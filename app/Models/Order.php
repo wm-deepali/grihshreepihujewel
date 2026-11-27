@@ -48,6 +48,7 @@ class Order extends Model
         'cgst_amount',
         'sgst_amount',
         'igst_amount',
+        'tax_inclusive',
 
         'payment_method',
         'payment_status',

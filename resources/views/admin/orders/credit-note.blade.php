@@ -1,4 +1,8 @@
+@php
+    $cnGst = (float) ($cn['tax'] ?? 0) > 0;
+@endphp
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -149,71 +153,78 @@
             </div>
 
             {{-- Items --}}
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px">#</th>
-                        <th>Item Description</th>
-                        <th class="center" style="width:70px">Qty</th>
-                        <th class="right" style="width:110px">Unit Price</th>
-                        <th class="right" style="width:110px">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($cn['items'] as $i => $item)
-                        @php
-                            $variantLabel = null;
-                            if (!empty($item->selected_attributes)) {
-                                $variantLabel = collect($item->selected_attributes)->map(function ($value, $key) {
-                                    if (is_array($value)) {
-                                        $attrName = $value['attribute'] ?? $value['name'] ?? $key;
-                                        $attrVal = $value['value'] ?? $value['label'] ?? reset($value);
-                                        return $attrName . ': ' . $attrVal;
-                                    }
-                                    return $key . ': ' . $value;
-                                })->join(' · ');
-                            }
-                            $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
-                            $lineTotal = ($item->price * $item->quantity) + $item->addons->sum('price');
-                        @endphp
-                        <tr>
-                            <td style="color:#8c9196;font-size:12px">{{ $i + 1 }}</td>
-                            <td>
-                                <div class="item-name">{{ $item->product_name ?? ($item->product->name ?? 'Product') }}</div>
-                                @if($variantLabel)<div class="item-variant">{{ $variantLabel }}</div>@endif
-                                @if($sku)<div class="item-sku">SKU: {{ $sku }}</div>@endif
-                                @if($item->addons->isNotEmpty())
-                                    <div class="item-variant" style="margin-top:3px">
-                                        @foreach($item->addons as $addon)
-                                            + {{ $addon->detail }} (&#8377;{{ number_format($addon->price, 2) }})<br>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="center">{{ $item->quantity }}</td>
-                            <td class="right">&#8377;{{ number_format($item->price, 2) }}</td>
-                            <td class="right">&#8377;{{ number_format($lineTotal, 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+<table class="items-table">
+    <thead>
+        <tr>
+            <th style="width:40px">#</th>
+            <th>Item Description</th>
+            @if($cnGst)<th class="center" style="width:60px">GST</th>@endif
+            <th class="center" style="width:60px">Qty</th>
+            <th class="right" style="width:105px">Unit Price</th>
+            <th class="right" style="width:105px">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($cn['items'] as $i => $item)
+            @php
+                $variantLabel = null;
+                if (!empty($item->selected_attributes)) {
+                    $variantLabel = collect($item->selected_attributes)->map(function ($value, $key) {
+                        if (is_array($value)) {
+                            $attrName = $value['attribute'] ?? $value['name'] ?? $key;
+                            $attrVal = $value['value'] ?? $value['label'] ?? reset($value);
+                            return $attrName . ': ' . $attrVal;
+                        }
+                        return $key . ': ' . $value;
+                    })->join(' · ');
+                }
+                $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
+                $addonUnit = (float) $item->addons->sum('price');
+                $lineTotal = ((float) $item->price + $addonUnit) * $item->quantity;
+                $rate = (float) ($item->tax_rate ?? 0);
+            @endphp
+            <tr>
+                <td style="color:#8c9196;font-size:12px">{{ $i + 1 }}</td>
+                <td>
+                    <div class="item-name">{{ $item->product_name ?? ($item->product->name ?? 'Product') }}</div>
+                    @if($variantLabel)<div class="item-variant">{{ $variantLabel }}</div>@endif
+                    @if($sku)<div class="item-sku">SKU: {{ $sku }}</div>@endif
+                    @if($item->addons->isNotEmpty())
+                        <div class="item-variant" style="margin-top:3px">
+                            @foreach($item->addons as $addon)
+                                + {{ $addon->detail }} (&#8377;{{ number_format($addon->price, 2) }} each)<br>
+                            @endforeach
+                        </div>
+                    @endif
+                </td>
+                @if($cnGst)
+                    <td class="center">{{ $rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.') . '%' : '-' }}</td>
+                @endif
+                <td class="center">{{ $item->quantity }}</td>
+                <td class="right">&#8377;{{ number_format($item->price, 2) }}</td>
+                <td class="right">&#8377;{{ number_format($lineTotal, 2) }}</td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
 
             {{-- Totals --}}
             <div class="totals-wrap">
                 <div class="totals-left">
                     <div class="inv-notes">
-                        <p>
-                            <strong>Reason:</strong> {{ $cn['reason'] }}<br>
-                            This credit note reverses the GST charged on
-                            @if($invoice) invoice <strong>{{ $invoice->invoice_number }}</strong> @else order <strong>#{{ $order->order_number }}</strong> @endif
-                            and confirms the refund of &#8377;{{ number_format($cn['refund_amount'], 2) }} to the customer.
-                        </p>
-                    </div>
+    <p>
+        <strong>Reason:</strong> {{ $cn['reason'] }}<br>
+        This credit note
+        @if($cnGst) reverses the GST charged on @else is issued against @endif
+        @if($invoice) invoice <strong>{{ $invoice->invoice_number }}</strong> @else order <strong>#{{ $order->order_number }}</strong> @endif
+        and confirms the refund of &#8377;{{ number_format($cn['refund_amount'], 2) }} to the customer.
+    </p>
+</div>
                 </div>
                 <div class="totals-right">
                     <table class="totals-table">
                         <tr>
-                            <td class="t-label">Taxable Value Reversed</td>
+                            <td class="t-label">{{ $cnGst ? 'Taxable Value Reversed' : 'Order Value Reversed' }}</td>
                             <td class="t-value">− &#8377;{{ number_format($cn['taxable'], 2) }}</td>
                         </tr>
                         @if($setting?->show_gst_breakup)

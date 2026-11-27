@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Services\Tax;
 use App\Services\ShippingCalculator;
 use Illuminate\Database\Eloquent\Model;
 
@@ -58,115 +58,35 @@ class Cart extends Model
 
     public function recalculateTotals()
     {
-        $invoiceSetting = InvoiceSetting::first();
+        $subtotal = (float) $this->items()->sum('total');
+        $discount = (float) ($this->discount ?? 0);
+        $taxableAmount = max($subtotal - $discount, 0);
 
-        $subtotal = $this->items()->sum('total');
+        // per-line GST from tax classes (all zeros / null when GST is switched off)
+        $tax = Tax::forCart($this, $discount);
+        $taxAmount = $tax['tax'];
 
-        $discount = $this->discount ?? 0;
+        if ($taxAmount > 0 && !Tax::inclusive()) {
+            $grandTotal = $taxableAmount + $taxAmount;   // GST added on top
+            $displaySubtotal = $subtotal;
+        } elseif ($taxAmount > 0) {
+            $grandTotal = $taxableAmount;                // prices already include GST
+            $displaySubtotal = $subtotal - $taxAmount;
+        } else {
+            $grandTotal = $taxableAmount;
+            $displaySubtotal = $subtotal;
+        }
 
-        $taxableAmount = max(
-            $subtotal - $discount,
-            0
-        );
-
-        $taxAmount = 0;
-        $grandTotal = $taxableAmount;
-        $displaySubtotal = $subtotal; // 👈 default — raw items sum, discount subtracted separately in blade
-
-        $gstType = null;
-
-        $cgstRate = 0;
-        $sgstRate = 0;
-        $igstRate = 0;
-
-        $cgstAmount = 0;
-        $sgstAmount = 0;
-        $igstAmount = 0;
-
-        if (
-            $invoiceSetting &&
-            $invoiceSetting->business_type === 'registered'
-        ) {
-            if ($this->customer_id) {
-
-                $defaultAddress = CustomerAddress::where(
-                    'customer_id',
-                    $this->customer_id
-                )
-                    ->where('is_default', 1)
-                    ->first();
-
-                if (
-                    $defaultAddress &&
-                    $defaultAddress->state_id ==
-                    $invoiceSetting->company_state
-                ) {
-
-                    $gstType = 'cgst_sgst';
-
-                    $cgstRate = $invoiceSetting->cgst ?? 0;
-                    $sgstRate = $invoiceSetting->sgst ?? 0;
-
-                    $gstPercentage =
-                        $cgstRate + $sgstRate;
-
-                } else {
-
-                    $gstType = 'igst';
-
-                    $igstRate =
-                        $invoiceSetting->igst ?? 0;
-
-                    $gstPercentage = $igstRate;
-                }
-
-            } else {
-
-                $gstType = 'cgst_sgst';
-
-                $cgstRate = $invoiceSetting->cgst ?? 0;
-                $sgstRate = $invoiceSetting->sgst ?? 0;
-
-                $gstPercentage =
-                    $cgstRate + $sgstRate;
-            }
-
-            if ($invoiceSetting->tax_type === 'exclusive') {
-
-                $taxAmount =
-                    ($taxableAmount * $gstPercentage)
-                    / 100;
-
-                $grandTotal =
-                    $taxableAmount + $taxAmount;
-
-                $displaySubtotal = $subtotal; // 👈 raw, as-is (GST added on top)
-
-            } else {
-
-                $taxAmount =
-                    ($taxableAmount * $gstPercentage)
-                    /
-                    (100 + $gstPercentage);
-
-                $grandTotal = $taxableAmount;
-
-                $displaySubtotal = $subtotal - $taxAmount; // 👈 sirf tax hataya, discount nahi
-            }
-
-            if ($gstType === 'cgst_sgst') {
-
-                $cgstAmount =
-                    round($taxAmount / 2, 2);
-
-                $sgstAmount =
-                    round($taxAmount / 2, 2);
-
-            } else {
-
-                $igstAmount =
-                    round($taxAmount, 2);
-            }
+        // snapshot each line's rate (the order copies this when it is placed)
+        foreach ($tax['lines'] as $itemId => $line) {
+            CartItem::where('id', $itemId)
+                ->where(fn($q) => $q->whereNull('tax_rate')->orWhere('tax_rate', '!=', $line['rate']))
+                ->update(['tax_rate' => $line['rate']]);
+        }
+        if (!$tax['lines']) {
+            $this->items()
+                ->where(fn($q) => $q->whereNull('tax_rate')->orWhere('tax_rate', '!=', 0))
+                ->update(['tax_rate' => 0]);
         }
 
         // Shipping: on top of the payable amount, not taxed. Unknown zone
@@ -179,19 +99,18 @@ class Cart extends Model
         }
 
         $this->update([
-
             'subtotal' => round($displaySubtotal, 2),
             'discount' => round($discount, 2),
 
-            'gst_type' => $gstType,
+            'gst_type' => $tax['type'],
 
-            'cgst_rate' => $cgstRate,
-            'sgst_rate' => $sgstRate,
-            'igst_rate' => $igstRate,
+            'cgst_rate' => $tax['cgst_rate'],
+            'sgst_rate' => $tax['sgst_rate'],
+            'igst_rate' => $tax['igst_rate'],
 
-            'cgst_amount' => $cgstAmount,
-            'sgst_amount' => $sgstAmount,
-            'igst_amount' => $igstAmount,
+            'cgst_amount' => $tax['cgst'],
+            'sgst_amount' => $tax['sgst'],
+            'igst_amount' => $tax['igst'],
 
             'tax_amount' => round($taxAmount, 2),
             'shipping_charge' => round($shippingCharge, 2),

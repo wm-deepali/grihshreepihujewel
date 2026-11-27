@@ -51,6 +51,9 @@ class InvoiceService
             ])->filter()->implode(', ');
         }
 
+        // GST switched off when the order was placed => no GST fields on the invoice at all
+        $gstApplied = (float) $order->tax_amount > 0 && !empty($order->gst_type);
+
         $data = [
             'order_id' => $order->id,
             'invoice_number' => AdminSettingController::generateInvoiceNumber(),
@@ -63,16 +66,16 @@ class InvoiceService
 
             'subtotal' => $order->subtotal,
             'discount' => $order->discount,
-            'tax_amount' => $order->tax_amount,
+            'tax_amount' => $gstApplied ? $order->tax_amount : 0,
             'grand_total' => $order->grand_total,
 
-            'gst_type' => $order->gst_type,
-            'cgst_rate' => $order->cgst_rate,
-            'sgst_rate' => $order->sgst_rate,
-            'igst_rate' => $order->igst_rate,
-            'cgst_amount' => $order->cgst_amount,
-            'sgst_amount' => $order->sgst_amount,
-            'igst_amount' => $order->igst_amount,
+            'gst_type' => $gstApplied ? $order->gst_type : null,
+            'cgst_rate' => $gstApplied ? $order->cgst_rate : null,
+            'sgst_rate' => $gstApplied ? $order->sgst_rate : null,
+            'igst_rate' => $gstApplied ? $order->igst_rate : null,
+            'cgst_amount' => $gstApplied ? $order->cgst_amount : null,
+            'sgst_amount' => $gstApplied ? $order->sgst_amount : null,
+            'igst_amount' => $gstApplied ? $order->igst_amount : null,
 
             'status' => 'generated',
         ];
@@ -80,6 +83,11 @@ class InvoiceService
         // Shipping sirf un projects me jahan dono tables me column hai
         if (Schema::hasColumn('orders', 'shipping_charge') && Schema::hasColumn('invoices', 'shipping_charge')) {
             $data['shipping_charge'] = $order->shipping_charge;
+        }
+
+        // Snapshot of inclusive/exclusive as it was when the order was placed
+        if (Schema::hasColumn('orders', 'tax_inclusive') && Schema::hasColumn('invoices', 'tax_inclusive')) {
+            $data['tax_inclusive'] = $order->tax_inclusive;
         }
 
         return Invoice::create($data);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Tax;
 use App\Models\{Brand, Category, CategoryAttribute, Collection, GiftingOccasion, Product, Coupon};
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -258,6 +259,7 @@ class FrontController extends Controller
     }
 
     // best sellers by units sold, then rating (optionally limited to some categories)
+    // badge: collection badge first; falls back to "Best Seller" when it has actual sales
     private function bestSellers(array $categoryIds = [])
     {
         return Product::visible()
@@ -268,7 +270,9 @@ class FrontController extends Controller
             ->orderByDesc('avg_rating')
             ->limit(10)
             ->get()
-            ->map(fn($p) => $p->toCard($p->sold_qty > 0 ? ['best', 'fa-crown', 'Best Seller'] : null));
+            ->map(fn($p) => $p->toCard(
+                $p->collectionBadge() ?? ($p->sold_qty > 0 ? config('product_badges.best-seller') : null)
+            ));
     }
 
     // recently viewed: session list filled by Product::trackView() (newest first)
@@ -288,48 +292,12 @@ class FrontController extends Controller
             ->map(fn($p) => $p->toCard());
     }
 
-    public function productShow(string $slug)
+    // category + subcategory attribute config (subcategory row wins)
+    private function catAttrs(Product $product)
     {
-        // status check only, so an out-of-stock product still opens (scopeVisible would 404 it)
-        $product = Product::where('status', 1)
-            ->where('slug', $slug)
-            ->with([
-                'images',
-                'brand:id,name',
-                'category:id,name,slug,size_chart',
-                'subcategory:id,name,slug,size_chart',
-                'occasions',
-                'collections',
-                'addons',
-                'attributeValues.attribute',
-                'attributeValues.value',
-                'variants.values',
-                'variants.images',
-            ])
-            ->withAvg('approvedReviews as avg_rating', 'rating')
-            ->withCount('approvedReviews as reviews_count')
-            ->firstOrFail();
-
-
-        Product::trackView($product->id);
-
-        // ---------- breadcrumb: All Products > Category > Subcategory ----------
-        $crumbs = [['All Products', route('products')]];
-        foreach ([$product->category, $product->subcategory] as $c) {
-            if ($c) {
-                $crumbs[] = [$c->name, route('category.show', $c->slug)];
-            }
-        }
-
-        // ---------- info-tags: occasions + collections ----------
-        $tags = $product->occasions->pluck('title')
-            ->merge($product->collections->pluck('name'))
-            ->filter()->unique()->values();
-
-        // ---------- attributes: category + subcategory config (subcategory row wins) ----------
         $catIds = array_filter([$product->category_id, $product->subcategory_id]);
 
-        $catAttrs = CategoryAttribute::whereIn('category_id', $catIds)
+        return CategoryAttribute::whereIn('category_id', $catIds)
             ->where('status', 1)
             ->with('attribute')
             ->get()
@@ -337,28 +305,35 @@ class FrontController extends Controller
             ->unique('attribute_id')
             ->sortBy('sort_order')
             ->values();
+    }
 
-        // values this product actually has, grouped by attribute
+    // gallery: default image first, placeholder if there are none
+    private function buildGallery(Product $product)
+    {
+        $gallery = $product->images
+            ->sortByDesc('is_default')
+            ->values()
+            ->map(fn($img) => [
+                'url' => asset('storage/' . $img->image),
+                'thumb' => asset('storage/' . ($img->thumb ?? $img->image)),
+                'alt' => $product->name,
+            ]);
+
+        if ($gallery->isEmpty()) {
+            $placeholder = asset('assets/images/home/pro2.png');
+            $gallery = collect([['url' => $placeholder, 'thumb' => $placeholder, 'alt' => $product->name]]);
+        }
+
+        return $gallery;
+    }
+
+    // selectable attributes (colour / size etc.)
+    private function buildOptions(Product $product, $catAttrs = null)
+    {
+        $catAttrs ??= $this->catAttrs($product);
         $chosen = $product->attributeValues->groupBy('attribute_id');
 
-        // info-facts: NON-selectable, highest priority (sort_order) first, max 6
-        $allFacts = $catAttrs->where('is_selectable', false)
-            ->map(function ($ca) use ($chosen) {
-                $vals = $chosen->get($ca->attribute_id);
-                if (!$ca->attribute || !$vals)
-                    return null;
-
-                $text = $vals->map(fn($pv) => $pv->value?->value)->filter()->implode(', ');
-                return $text ? ['label' => $ca->attribute->name, 'value' => $text] : null;
-            })
-            ->filter()->values();
-
-        $facts = $allFacts->take(6);   // key facts at the top
-        $specs = $allFacts;            // full list for the Specifications accordion
-        $pairsWith = $specs->firstWhere('label', 'Pairs With')['value'] ?? null;
-
-        // opt-cards: selectable ones
-        $options = $catAttrs->where('is_selectable', true)
+        return $catAttrs->where('is_selectable', true)
             ->map(function ($ca) use ($chosen) {
                 $vals = $chosen->get($ca->attribute_id);
                 if (!$ca->attribute || !$vals)
@@ -382,25 +357,128 @@ class FrontController extends Controller
                 ];
             })
             ->filter()->values();
+    }
+
+    // variant data for the detail page / quick view script (price / stock / sku / images)
+    private function buildPd(Product $product): array
+    {
+        return [
+            'base' => [
+                'mrp' => (float) $product->mrp,
+                'price' => (float) $product->price,
+                'stock' => (int) $product->stock,
+                'sku' => $product->sku,
+                'minQty' => max(1, (int) $product->min_qty),
+                'dispatch' => $product->delivery_time,
+            ],
+            'variants' => $product->variants->where('status', true)->groupBy('type')
+                ->map(fn($group) => $group->map(fn($v) => [
+                    'id' => $v->id,
+                    'values' => $v->values->pluck('attribute_value_id')->map(fn($i) => (int) $i)->values(),
+                    'sku' => $v->sku,
+                    'mrp' => (float) $v->mrp,
+                    'price' => (float) $v->price,
+                    'stock' => (int) $v->stock,
+                    'available' => (bool) $v->is_available,
+                    'images' => $v->images->map(fn($i) => [
+                        'url' => asset('storage/' . $i->image),
+                        'thumb' => asset('storage/' . ($i->thumb ?? $i->image)),
+                    ])->values(),
+                ])->values()),
+        ];
+    }
+
+    // "Inclusive of all taxes" / "+ 18% GST extra"; null when GST is off or the product has no GST
+    private function taxNote(Product $product): ?string
+    {
+        if (!Tax::enabled()) {
+            return null;
+        }
+
+        $rate = Tax::rateFor($product);
+
+        if ($rate <= 0) {
+            return null;
+        }
+
+        return Tax::inclusive()
+            ? 'Inclusive of all taxes'
+            : '+ ' . rtrim(rtrim(number_format($rate, 2), '0'), '.') . '% GST extra';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | product detail
+    |--------------------------------------------------------------------------
+    */
+    public function productShow(string $slug)
+    {
+        // status check only, so an out-of-stock product still opens (scopeVisible would 404 it)
+        $product = Product::where('status', 1)
+            ->where('slug', $slug)
+            ->with([
+                'images',
+                'brand:id,name',
+                'category:id,name,slug,size_chart',
+                'subcategory:id,name,slug,size_chart',
+                'occasions',
+                'collections',
+                'addons',
+                'attributeValues.attribute',
+                'attributeValues.value',
+                'variants.values',
+                'variants.images',
+            ])
+            ->withAvg('approvedReviews as avg_rating', 'rating')
+            ->withCount('approvedReviews as reviews_count')
+            ->firstOrFail();
+
+        Product::trackView($product->id);
+
+        // ---------- breadcrumb: All Products > Category > Subcategory ----------
+        $crumbs = [['All Products', route('products')]];
+        foreach ([$product->category, $product->subcategory] as $c) {
+            if ($c) {
+                $crumbs[] = [$c->name, route('category.show', $c->slug)];
+            }
+        }
+
+        // ---------- info-tags: occasions + collections ----------
+        $tags = $product->occasions->pluck('title')
+            ->merge($product->collections->pluck('name'))
+            ->filter()->unique()->values();
+
+        // ---------- attributes: category + subcategory config (subcategory row wins) ----------
+        $catAttrs = $this->catAttrs($product);
+
+        // values this product actually has, grouped by attribute
+        $chosen = $product->attributeValues->groupBy('attribute_id');
+
+        // info-facts: NON-selectable, highest priority (sort_order) first, max 6
+        $allFacts = $catAttrs->where('is_selectable', false)
+            ->map(function ($ca) use ($chosen) {
+                $vals = $chosen->get($ca->attribute_id);
+                if (!$ca->attribute || !$vals)
+                    return null;
+
+                $text = $vals->map(fn($pv) => $pv->value?->value)->filter()->implode(', ');
+                return $text ? ['label' => $ca->attribute->name, 'value' => $text] : null;
+            })
+            ->filter()->values();
+
+        $facts = $allFacts->take(6);   // key facts at the top
+        $specs = $allFacts;            // full list for the Specifications accordion
+        $pairsWith = $specs->firstWhere('label', 'Pairs With')['value'] ?? null;
+
+        // opt-cards: selectable ones
+        $options = $this->buildOptions($product, $catAttrs);
 
         // ---------- size guide: only when the category has a chart ----------
         $sizeChart = trim((string) ($product->subcategory?->size_chart ?: $product->category?->size_chart));
         $sizeChart = strip_tags($sizeChart) !== '' ? $sizeChart : null;
 
-        // ---------- gallery: default image first, placeholder if there are none ----------
-        $gallery = $product->images
-            ->sortByDesc('is_default')
-            ->values()
-            ->map(fn($img) => [
-                'url' => asset('storage/' . $img->image),
-                'thumb' => asset('storage/' . ($img->thumb ?? $img->image)),
-                'alt' => $product->name,
-            ]);
-
-        if ($gallery->isEmpty()) {
-            $placeholder = asset('assets/images/home/pro2.png');
-            $gallery = collect([['url' => $placeholder, 'thumb' => $placeholder, 'alt' => $product->name]]);
-        }
+        // ---------- gallery ----------
+        $gallery = $this->buildGallery($product);
 
         // ---------- recently viewed (current product removed) ----------
         $recentlyViewed = $this->recentlyViewed()
@@ -470,30 +548,8 @@ class FrontController extends Controller
         $coupons = Coupon::available()->latest('id')->limit(3)->get();
 
         // ---------- variant data for the page script (price / stock / sku / images) ----------
-        $pd = [
-            'base' => [
-                'mrp' => (float) $product->mrp,
-                'price' => (float) $product->price,
-                'stock' => (int) $product->stock,
-                'sku' => $product->sku,
-                'minQty' => max(1, (int) $product->min_qty),
-                'dispatch' => $product->delivery_time,
-            ],
-            'variants' => $product->variants->where('status', true)->groupBy('type')
-                ->map(fn($group) => $group->map(fn($v) => [
-                    'id' => $v->id,
-                    'values' => $v->values->pluck('attribute_value_id')->map(fn($i) => (int) $i)->values(),
-                    'sku' => $v->sku,
-                    'mrp' => (float) $v->mrp,
-                    'price' => (float) $v->price,
-                    'stock' => (int) $v->stock,
-                    'available' => (bool) $v->is_available,
-                    'images' => $v->images->map(fn($i) => [
-                        'url' => asset('storage/' . $i->image),
-                        'thumb' => asset('storage/' . ($i->thumb ?? $i->image)),
-                    ])->values(),
-                ])->values()),
-        ];
+        $pd = $this->buildPd($product);
+        $taxNote = $this->taxNote($product);
 
         return view('front-pages.product-detail', compact(
             'product',
@@ -514,8 +570,48 @@ class FrontController extends Controller
             'coupons',
             'specs',
             'pairsWith',
-            'pd'
+            'pd',
+            'taxNote'
         ));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | quick view popup (JSON)
+    |--------------------------------------------------------------------------
+    */
+    public function quickView(int $product)
+    {
+        $product = Product::where('status', 1)
+            ->with([
+                'images',
+                'brand:id,name',
+                'category:id,name,slug',
+                'subcategory:id,name,slug',
+                'collections:id,name',
+                'attributeValues.attribute',
+                'attributeValues.value',
+                'variants.values',
+                'variants.images',
+            ])
+            ->withAvg('approvedReviews as avg_rating', 'rating')
+            ->withCount('approvedReviews as reviews_count')
+            ->findOrFail($product);
+
+        return response()->json([
+            'status' => true,
+            'id' => $product->id,
+            'name' => $product->name,
+            'brand' => $product->brand?->name ?? $product->subcategory?->name ?? $product->category?->name,
+            'rate' => $product->reviews_count ? number_format($product->avg_rating, 1) : null,
+            'url' => route('product.show', $product->slug),
+            'desc' => Str::limit(strip_tags((string) $product->short_description), 220),
+            'is_new' => (bool) ($product->created_at && $product->created_at->gt(now()->subDays(30))),
+            'badge' => $product->collectionBadge(),   // [class, icon, label] or null
+            'gallery' => $this->buildGallery($product)->values(),
+            'options' => $this->buildOptions($product)->values(),
+            'pd' => $this->buildPd($product),
+            'tax_note' => $this->taxNote($product),
+        ]);
+    }
 }

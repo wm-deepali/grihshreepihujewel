@@ -4,6 +4,10 @@
   $subtotal = (float) $items->sum('total');
   $discount = (float) ($miniCart->discount ?? 0);
 
+  $gstOn = \App\Services\Tax::enabled();
+  $taxInclusive = $gstOn && \App\Services\Tax::inclusive();
+  $taxAmt = $gstOn ? (float) ($miniCart->tax_amount ?? 0) : 0;
+
   // free-shipping progress (same basis as CartController: items total - coupon discount)
   $threshold = (float) (\App\Models\ShippingSetting::first()?->free_delivery_threshold ?? 0);
   $payable = max(0, $subtotal - $discount);
@@ -87,6 +91,16 @@
       <p class="cp-note">
         <i class="fa-solid fa-ticket" aria-hidden="true"></i>
         {{ $miniCart->coupon_code ? 'Coupon ' . $miniCart->coupon_code . ': ' : 'Discount: ' }}-₹{{ number_format($discount) }}
+      </p>
+    @endif
+    @if($gstOn && $taxAmt > 0)
+      <p class="cp-note">
+        <i class="fa-solid fa-percent" aria-hidden="true"></i>
+        @if($taxInclusive)
+          Inclusive of GST (₹{{ number_format($taxAmt, 2) }})
+        @else
+          + GST ₹{{ number_format($taxAmt, 2) }} added at checkout
+        @endif
       </p>
     @endif
     <div class="cp-btns">

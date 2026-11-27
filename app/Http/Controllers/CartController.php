@@ -6,11 +6,13 @@ use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\CartItem;
-use App\Models\ProductAddon;
 use Illuminate\Http\Request;
+use App\Models\ProductAddon;
 use App\Models\ProductVariant;
 use App\Models\AttributeValue;
 use App\Models\ShippingSetting;
+use App\Models\CategoryAttribute;
+use App\Models\ProductAttributeValue;
 use App\Services\Tracking\PixelTracker;
 use Illuminate\Validation\ValidationException;
 
@@ -91,6 +93,40 @@ class CartController extends Controller
 
                     if ($match) {
                         $request->merge([$type . '_variant_id' => $match->id]);
+                    }
+                }
+            }
+        }
+
+        // Nothing picked a default yet (options exist but no stock variants): use the first value of
+        // each selectable attribute, same as the detail page selects on load
+        if (!$request->filled('selected_values')) {
+            $selectableIds = CategoryAttribute::whereIn('category_id', array_filter([$product->category_id, $product->subcategory_id]))
+                ->where('status', 1)
+                ->where('is_selectable', true)
+                ->pluck('attribute_id')
+                ->unique();
+
+            if ($selectableIds->isNotEmpty()) {
+                $defaults = ProductAttributeValue::where('product_id', $product->id)
+                    ->whereIn('attribute_id', $selectableIds)
+                    ->orderBy('id')
+                    ->get()
+                    ->groupBy('attribute_id')
+                    ->map(fn($g) => (int) $g->first()->attribute_value_id)
+                    ->values()
+                    ->all();
+
+                if ($defaults) {
+                    $request->merge(['selected_values' => $defaults]);
+
+                    foreach (['price', 'image', 'stock', 'sku'] as $type) {
+                        if ($request->filled($type . '_variant_id')) {
+                            continue;
+                        }
+                        if ($match = $this->bestVariant($product, $type, $defaults)) {
+                            $request->merge([$type . '_variant_id' => $match->id]);
+                        }
                     }
                 }
             }
@@ -313,6 +349,20 @@ class CartController extends Controller
             ->map(fn($i) => (int) $i)
             ->sort()
             ->implode('-');
+    }
+
+    /** Most specific usable variant of a type whose values are all inside the selection */
+    private function bestVariant(Product $product, string $type, array $valueIds): ?ProductVariant
+    {
+        return $product->variants
+            ->where('type', $type)
+            ->filter(fn($v) => $v->status && $v->is_available !== false)
+            ->filter(function ($v) use ($valueIds) {
+                $ids = $v->values->pluck('attribute_value_id')->map(fn($i) => (int) $i)->all();
+                return $ids && empty(array_diff($ids, $valueIds));
+            })
+            ->sortByDesc(fn($v) => $v->values->count())
+            ->first();
     }
 
     public function cart()

@@ -1,16 +1,12 @@
 @php
+  $s = $summary ?? \App\Services\CartSummary::for($cart);
   $items = $cart->items;
   $itemsTotal = (float) $items->sum('total');
-  $unitMrp = fn($i) => (float) ($i->priceVariant->mrp ?? $i->product->mrp ?? 0) + (float) $i->addons->sum('price');
-  $totalMrp = (float) $items->sum(fn($i) => $unitMrp($i) * $i->quantity);
-  $mrpDiscount = max(0, $totalMrp - $itemsTotal);
-  $couponOff = (float) ($cart->discount ?? 0);
-  $addonsTotal = (float) $items->sum(fn($i) => $i->addons->sum('price') * $i->quantity);
+  $addonsTotal = (float) array_sum($s['addons']);
   $hasAddons = $items->contains(fn($i) => $i->addons->isNotEmpty());
-  $saved = $mrpDiscount + $couponOff;
-  $shipFee = (float) ($cart->shipping_charge ?? 0);
+  $shipFee = (float) $s['shipping'];
   $threshold = (float) (\App\Models\ShippingSetting::first()?->free_delivery_threshold ?? 0);
-  $shipFree = $threshold > 0 && max(0, $itemsTotal - $couponOff) >= $threshold;
+  $shipFree = $threshold > 0 && max(0, $itemsTotal - $s['coupon']) >= $threshold;
 @endphp
 
 <ul class="mini-list">
@@ -33,18 +29,20 @@
 </ul>
 
 <dl class="rows">
-  <div class="row"><dt>Total MRP</dt><dd>₹{{ number_format($totalMrp) }}</dd></div>
-  @if($mrpDiscount > 0)
-    <div class="row is-green"><dt>Discount on MRP</dt><dd>−₹{{ number_format($mrpDiscount) }}</dd></div>
+  <div class="row"><dt>Total MRP</dt><dd>₹{{ number_format($s['total_mrp']) }}</dd></div>
+  @if($s['mrp_discount'] > 0)
+    <div class="row is-green"><dt>Discount on MRP</dt><dd>−₹{{ number_format($s['mrp_discount']) }}</dd></div>
   @endif
-  @if($couponOff > 0)
-    <div class="row is-green"><dt>Coupon ({{ $cart->coupon_code }})</dt><dd>−₹{{ number_format($couponOff) }}</dd></div>
+  @if($s['coupon'] > 0)
+    <div class="row is-green"><dt>Coupon ({{ $s['coupon_code'] }})</dt><dd>−₹{{ number_format($s['coupon']) }}</dd></div>
   @endif
   @if($hasAddons)
     <div class="row"><dt>Gift Packaging</dt><dd class="{{ $addonsTotal > 0 ? '' : 'is-green' }}">{{ $addonsTotal > 0 ? '₹' . number_format($addonsTotal) : 'Free' }}</dd></div>
   @endif
-  @if($cart->tax_amount > 0 && $cart->gst_type)
-    <div class="row"><dt>GST</dt><dd>₹{{ number_format($cart->tax_amount, 2) }}</dd></div>
+  @if($s['tax'] > 0)
+    <div class="row"><dt>GST</dt><dd>₹{{ number_format($s['tax'], 2) }}</dd></div>
+  @elseif($s['tax_included'] > 0)
+    <div class="row"><dt>GST (included)</dt><dd>₹{{ number_format($s['tax_included'], 2) }}</dd></div>
   @endif
   <div class="row">
     <dt>Shipping Fee</dt>
@@ -57,11 +55,11 @@
     @endif
   </div>
   <div class="row row-total">
-    <dt>{{ $totalLabel }}<small>Inclusive of all taxes</small></dt>
-    <dd>₹{{ number_format($cart->grand_total) }}</dd>
+    <dt>{{ $totalLabel }}@if($s['gst_on'])<small>{{ $s['tax_inclusive'] ? 'Inclusive of all taxes' : 'Including GST' }}</small>@endif</dt>
+    <dd>₹{{ number_format($s['total']) }}</dd>
   </div>
 </dl>
 
-@if($saved > 0)
-  <p class="save-chip"><i class="fa-solid fa-piggy-bank" aria-hidden="true"></i> You are saving ₹{{ number_format($saved) }} on this order</p>
+@if($s['saved'] > 0)
+  <p class="save-chip"><i class="fa-solid fa-piggy-bank" aria-hidden="true"></i> You are saving ₹{{ number_format($s['saved']) }} on this order</p>
 @endif

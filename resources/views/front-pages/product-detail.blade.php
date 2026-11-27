@@ -19,6 +19,8 @@
 
   $phoneTel = preg_replace('/[^\d+]/', '', (string) ($general->phone ?? ''));
   $telLink = $phoneTel ? 'tel:' . $phoneTel : null;
+
+  $isWished = in_array($product->id, $wishedIds ?? []);
 @endphp
 
 @section('title', $product->name . ' | ' . config('app.name'))
@@ -47,8 +49,14 @@
         <!-- ============ GALLERY ============ -->
         <div class="detail-gallery">
           <div class="gallery-main">
-            @if($product->created_at && $product->created_at->gt(now()->subDays(30)))
-              <span class="gallery-tag">New</span>
+            @php
+              $badge = $product->collectionBadge()
+                ?? (($product->created_at && $product->created_at->gt(now()->subDays(30)))
+                  ? ['new', 'fa-sparkles', 'New']
+                  : null);
+            @endphp
+            @if($badge)
+              <span class="gallery-tag {{ $badge[0] }}"><i class="fa-solid {{ $badge[1] }}"></i> {{ $badge[2] }}</span>
             @endif
             <div class="swiper detailMain">
               <div class="swiper-wrapper">
@@ -131,7 +139,7 @@
               <p class="price-save" @if(!$pct) style="display:none" @endif><i class="fa-solid fa-tags"></i> You save
                 <b>₹{{ number_format($product->mrp - $product->price) }}</b>
               </p>
-              <p class="price-tax">Inclusive of all taxes</p>
+              @if($taxNote)<p class="price-tax">{{ $taxNote }}</p>@endif
             </div>
           </div>
 
@@ -249,7 +257,11 @@
                     class="fa-solid fa-plus"></i></button>
               </div>
               @if($general->wishlist)
-                <button type="button" class="wish-link"><i class="fa-regular fa-heart"></i> Add to Wishlist</button>
+                <button type="button" class="wish-link js-wish {{ $isWished ? 'is-active' : '' }}"
+                  data-product-id="{{ $product->id }}" aria-pressed="{{ $isWished ? 'true' : 'false' }}">
+                  <i class="{{ $isWished ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                  <span>{{ $isWished ? 'Added to Wishlist' : 'Add to Wishlist' }}</span>
+                </button>
               @endif
             </div>
             <div class="act-btns">
@@ -914,6 +926,55 @@
         $(".price-off, .ds-off").text(pct + "% OFF").toggle(pct > 0);
         $(".price-save").toggle(pct > 0).find("b").text(money((cur.mrp - cur.price) * qty));
       }
+
+      // ---------- wishlist ----------
+      var IS_CUSTOMER = @json((bool) auth('customer')->check());
+      var WISH_URL = "{{ route('wishlist.toggle') }}";
+
+      function setWish($b, on) {
+        $b.toggleClass("is-active", on).attr("aria-pressed", on);
+        $b.find("i").attr("class", (on ? "fa-solid" : "fa-regular") + " fa-heart");
+        $b.find("span").text(on ? "Added to Wishlist" : "Add to Wishlist");
+      }
+
+      $(document).on("click", ".js-wish", function () {
+        var $b = $(this);
+
+        // guests: open the login popup (the page reloads after login)
+        if (!IS_CUSTOMER) {
+          $('[data-model=".login-pop"]').first().trigger("click");
+          return;
+        }
+        if ($b.data("busy")) return;
+        $b.data("busy", true);
+
+        $.ajax({
+          url: WISH_URL, method: "POST", data: { product_id: $b.data("product-id") },
+          headers: { "X-CSRF-TOKEN": CSRF, Accept: "application/json" }
+        })
+          .done(function (res) {
+            res = res || {};
+            if (res.status === false || res.success === false) {
+              return notify("error", "Wishlist", res.message || "Could not update wishlist.");
+            }
+            var on = res.added !== undefined ? !!res.added
+              : res.wishlisted !== undefined ? !!res.wishlisted
+                : res.in_wishlist !== undefined ? !!res.in_wishlist
+                  : !$b.hasClass("is-active");
+            setWish($b, on);
+            if (res.count !== undefined) $(".wishlist-count").text(res.count);
+            notify("success", on ? "Added to Wishlist" : "Removed from Wishlist", $b.closest(".detail-info").find("h1").text());
+          })
+          .fail(function (xhr) {
+            if (xhr.status === 401 || xhr.status === 419) {
+              $('[data-model=".login-pop"]').first().trigger("click");
+              return;
+            }
+            var j = xhr.responseJSON || {};
+            notify("error", "Wishlist", j.message || "Something went wrong. Please try again.");
+          })
+          .always(function () { $b.data("busy", false); });
+      });
 
       // ---------- options -> price / stock / sku / images ----------
       function refresh() {

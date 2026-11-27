@@ -383,6 +383,7 @@ class CheckoutController extends Controller
                 ...$billing,
 
                 'gst_type' => $cart->gst_type,
+                'tax_inclusive' => \App\Services\Tax::enabled() ? \App\Services\Tax::inclusive() : null,
 
                 'cgst_rate' => $cart->cgst_rate,
                 'sgst_rate' => $cart->sgst_rate,
@@ -432,6 +433,7 @@ class CheckoutController extends Controller
                     'quantity' => $item->quantity,
                     'price' => $item->price,
                     'total' => $item->total,
+                    'tax_rate' => (float) ($item->tax_rate ?? 0),
                 ]);
 
                 foreach ($item->addons as $addon) {
@@ -622,7 +624,14 @@ class CheckoutController extends Controller
 
     public function orderSuccess($id)
     {
-        $order = Order::with(['items.product', 'items.imageVariant', 'items.addons', 'state', 'city'])
+        $order = Order::with([
+            'items.product.images',
+            'items.priceVariant',
+            'items.imageVariant.images',
+            'items.addons',
+            'state',
+            'city',
+        ])
             ->where('customer_id', auth('customer')->id())
             ->findOrFail($id);
 

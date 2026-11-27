@@ -170,11 +170,14 @@ class ProductController extends Controller
         // ✅ Brand dropdown (Inventory card)
         $brands = Brand::orderBy('name')->get();
 
+        $taxClasses = \App\Models\TaxClass::where('status', 1)->orderBy('rate')->get();
+
         return view('admin.products.create', compact(
             'categories',
             'occasions',
             'collections',
-            'brands'
+            'brands',
+            'taxClasses'
         ));
 
     }
@@ -231,6 +234,7 @@ class ProductController extends Controller
 
             // ✅ multiple images per image-type variant
             'variants_image.*.images.*' => 'nullable|image|max:2048',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
         ]);
 
 
@@ -239,6 +243,7 @@ class ProductController extends Controller
         try {
 
             $product = Product::create([
+                'tax_class_id' => $request->tax_class_id,
                 'category_id' => $request->category_id,
                 'subcategory_id' => $request->subcategory_id,
                 'brand_id' => $request->brand_id ?: null,
@@ -532,6 +537,9 @@ class ProductController extends Controller
         // ✅ Brand dropdown (Inventory card)
         $brands = Brand::orderBy('name')->get();
 
+        $taxClasses = \App\Models\TaxClass::where('status', 1)
+            ->orWhere('id', $product->tax_class_id)->orderBy('rate')->get();
+
         return view(
             'admin.products.edit',
             compact(
@@ -545,6 +553,7 @@ class ProductController extends Controller
                 'existingVariantsByType',
                 'collections',
                 'brands',
+                'taxClasses'
             )
         );
     }
@@ -574,13 +583,14 @@ class ProductController extends Controller
             // ✅ multiple images per image-type variant + per-image delete
             'variants_image.*.images.*' => 'nullable|image|max:2048',
             'delete_variant_images.*' => 'nullable|integer',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
         ]);
         DB::beginTransaction();
 
         try {
 
             $product->update([
-
+                'tax_class_id' => $request->tax_class_id,
                 'category_id' => $request->category_id,
                 'subcategory_id' => $request->subcategory_id,
                 'brand_id' => $request->brand_id ?: null,

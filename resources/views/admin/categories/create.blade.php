@@ -444,6 +444,21 @@
                                 </div>
 
                                 <div class="field-group">
+                                    <label class="field-label">Tax Class</label>
+                                    <select name="tax_class_id" class="field-select">
+                                        <option value="">— Use default class —</option>
+                                        @foreach($taxClasses as $tc)
+                                            <option value="{{ $tc->id }}" {{ old('tax_class_id') == $tc->id ? 'selected' : '' }}>
+                                                {{ $tc->name }}
+                                                ({{ rtrim(rtrim(number_format($tc->rate, 2), '0'), '.') }}%){{ $tc->is_default ? ' · Default' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="field-hint">Applies to every product in this category unless the product
+                                        has its own class.</div>
+                                </div>
+
+                                <div class="field-group">
                                     <label class="field-label">Sort Order</label>
                                     <input type="number" name="sort_order" class="field-input" placeholder="0"
                                         style="max-width:120px">

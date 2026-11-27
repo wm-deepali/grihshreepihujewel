@@ -28,7 +28,9 @@ class OrderItem extends Model
 
         'price',
         'total',
+        'tax_rate',
     ];
+
 
     protected $casts = [
         'selected_attributes' => 'array',

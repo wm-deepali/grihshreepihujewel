@@ -1,3 +1,9 @@
+@php
+    $gstApplied = (float) $invoice->tax_amount > 0 && !empty($invoice->gst_type);
+    $inclusive = $invoice->tax_inclusive;                         // true / false / null (old invoices)
+    $pct = fn($n) => rtrim(rtrim(number_format((float) $n, 2), '0'), '.');
+    $taxable = (float) $invoice->subtotal - (float) $invoice->discount;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 
@@ -492,7 +498,7 @@
                         {{ $setting->company_name ?? config('app.name') }}
                     </div>
                 @endif
-                <div class="brand-tagline">Tax Invoice</div>
+                <div class="brand-tagline">{{ $gstApplied ? 'Tax Invoice' : 'Invoice' }}</div>
                 <div class="brand-address">
 
                     @if($setting?->company_address)
@@ -590,6 +596,12 @@
                             {{ $order->created_at->format('d M Y') }}
                         </div>
                     </div>
+                    @if($gstApplied && $order->state)
+                        <div class="meta-info-row">
+                            <div class="meta-info-label" style="text-align:right;padding-right:10px">Place of Supply</div>
+                            <div class="meta-info-value" style="text-align:right">{{ $order->state->name }}</div>
+                        </div>
+                    @endif
                     @if($order->payment_method)
                         @php
                             // COD + admin ne payment update ki hai → chosen method (Cash / UPI / Net Banking / Payment Link)
@@ -627,9 +639,9 @@
             </div>
 
             {{-- GST type badge --}}
-            @if($invoice->gst_type)
+            @if($gstApplied)
                 <div class="gst-summary" style="margin-bottom:16px">
-                    <span class="gst-pill">{{ strtoupper($invoice->gst_type) }} Applied</span>
+                    <span class="gst-pill">{{ $invoice->gst_type === 'igst' ? 'IGST' : 'CGST + SGST' }} Applied</span>
                 </div>
             @endif
 
@@ -639,15 +651,16 @@
                     <tr>
                         <th style="width:40px">#</th>
                         <th>Item Description</th>
-                        <th class="center" style="width:70px">Qty</th>
-                        <th class="right" style="width:110px">Unit Price</th>
-                        <th class="right" style="width:110px">Total</th>
+                        @if($gstApplied)
+                        <th class="center" style="width:60px">GST</th>@endif
+                        <th class="center" style="width:60px">Qty</th>
+                        <th class="right" style="width:105px">Unit Price</th>
+                        <th class="right" style="width:105px">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->items as $i => $item)
                         @php
-                            // Variant label from the selected_attributes snapshot
                             $variantLabel = null;
                             if (!empty($item->selected_attributes)) {
                                 $variantLabel = collect($item->selected_attributes)
@@ -662,35 +675,32 @@
                                     ->join(' · ');
                             }
 
-                            // SKU: sku variant > snapshot sku column > product sku
                             $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
 
-                            $addonsTotal = $item->addons->sum('price');
-                            $lineTotal = ($item->price * $item->quantity) + $addonsTotal;
+                            $addonUnit = (float) $item->addons->sum('price');
+                            $lineTotal = (float) $item->total ?: (((float) $item->price + $addonUnit) * $item->quantity);
+                            $rate = (float) ($item->tax_rate ?? 0);
                         @endphp
                         <tr>
                             <td style="color:#8c9196;font-size:12px">{{ $i + 1 }}</td>
                             <td>
-                                <div class="item-name">
-                                    {{ $item->product_name ?? ($item->product->name ?? 'Product') }}
+                                <div class="item-name">{{ $item->product_name ?? ($item->product->name ?? 'Product') }}
                                 </div>
-
                                 @if($variantLabel)
-                                    <div class="item-variant">{{ $variantLabel }}</div>
-                                @endif
-
+                                <div class="item-variant">{{ $variantLabel }}</div>@endif
                                 @if($sku)
-                                    <div class="item-sku">SKU: {{ $sku }}</div>
-                                @endif
-
+                                <div class="item-sku">SKU: {{ $sku }}</div>@endif
                                 @if($item->addons->isNotEmpty())
                                     <div class="item-variant" style="margin-top:3px">
                                         @foreach($item->addons as $addon)
-                                            + {{ $addon->detail }} (&#8377;{{ number_format($addon->price, 2) }})<br>
+                                            + {{ $addon->detail }} (&#8377;{{ number_format($addon->price, 2) }} each)<br>
                                         @endforeach
                                     </div>
                                 @endif
                             </td>
+                            @if($gstApplied)
+                                <td class="center">{{ $rate > 0 ? $pct($rate) . '%' : '-' }}</td>
+                            @endif
                             <td class="center">{{ $item->quantity }}</td>
                             <td class="right">&#8377;{{ number_format($item->price, 2) }}</td>
                             <td class="right">&#8377;{{ number_format($lineTotal, 2) }}</td>
@@ -717,7 +727,7 @@
                 <div class="totals-right">
                     <table class="totals-table" style="margin-top:16px">
                         <tr>
-                            <td class="t-label">Subtotal</td>
+                            <td class="t-label">Subtotal{{ $gstApplied && $inclusive ? ' (excl. GST)' : '' }}</td>
                             <td class="t-value">&#8377;{{ number_format($invoice->subtotal, 2) }}</td>
                         </tr>
 
@@ -728,6 +738,36 @@
                             </tr>
                         @endif
 
+                        @if($gstApplied)
+                            <tr>
+                                <td class="t-label"><strong>Taxable Value</strong></td>
+                                <td class="t-value">&#8377;{{ number_format($taxable, 2) }}</td>
+                            </tr>
+
+                            @if($setting?->show_gst_breakup)
+                                @if($invoice->gst_type === 'igst')
+                                    <tr>
+                                        <td class="t-label">IGST ({{ $pct($invoice->igst_rate) }}%)</td>
+                                        <td class="t-value">&#8377;{{ number_format($invoice->igst_amount, 2) }}</td>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <td class="t-label">CGST ({{ $pct($invoice->cgst_rate) }}%)</td>
+                                        <td class="t-value">&#8377;{{ number_format($invoice->cgst_amount, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="t-label">SGST ({{ $pct($invoice->sgst_rate) }}%)</td>
+                                        <td class="t-value">&#8377;{{ number_format($invoice->sgst_amount, 2) }}</td>
+                                    </tr>
+                                @endif
+                            @else
+                                <tr>
+                                    <td class="t-label">GST</td>
+                                    <td class="t-value">&#8377;{{ number_format($invoice->tax_amount, 2) }}</td>
+                                </tr>
+                            @endif
+                        @endif
+
                         @if(($invoice->shipping_charge ?? 0) > 0)
                             <tr>
                                 <td class="t-label">Shipping</td>
@@ -735,69 +775,20 @@
                             </tr>
                         @endif
 
-                        {{-- GST rows --}}
-                        @if($setting?->show_gst_breakup)
-
-                            @if($invoice->tax_amount > 0)
-
-                                @if($invoice->gst_type === 'igst' && $invoice->igst_amount > 0)
-
-                                    <tr>
-                                        <td class="t-label">
-                                            IGST ({{ $invoice->igst_rate }}%)
-                                        </td>
-                                        <td class="t-value">
-                                            ₹{{ number_format($invoice->igst_amount, 2) }}
-                                        </td>
-                                    </tr>
-
-                                @else
-
-                                    @if($invoice->cgst_amount > 0)
-                                        <tr>
-                                            <td class="t-label">
-                                                CGST ({{ $invoice->cgst_rate }}%)
-                                            </td>
-                                            <td class="t-value">
-                                                ₹{{ number_format($invoice->cgst_amount, 2) }}
-                                            </td>
-                                        </tr>
-                                    @endif
-
-                                    @if($invoice->sgst_amount > 0)
-                                        <tr>
-                                            <td class="t-label">
-                                                SGST ({{ $invoice->sgst_rate }}%)
-                                            </td>
-                                            <td class="t-value">
-                                                ₹{{ number_format($invoice->sgst_amount, 2) }}
-                                            </td>
-                                        </tr>
-                                    @endif
-
-                                @endif
-
-                            @endif
-
-                        @else
-
-                            @if($invoice->tax_amount > 0)
-
-                                <tr>
-                                    <td class="t-label">GST</td>
-                                    <td class="t-value">
-                                        ₹{{ number_format($invoice->tax_amount, 2) }}
-                                    </td>
-                                </tr>
-
-                            @endif
-
-                        @endif
                         <tr class="t-total">
                             <td class="t-label">Grand Total</td>
                             <td class="t-value">&#8377;{{ number_format($invoice->grand_total, 2) }}</td>
                         </tr>
+
+                        @if($gstApplied && $inclusive !== null)
+                            <tr>
+                                <td colspan="2" style="text-align:right;font-size:10.5px;color:#8c9196;padding-top:2px">
+                                    {{ $inclusive ? 'Item prices include GST.' : 'GST charged in addition to item prices.' }}
+                                </td>
+                            </tr>
+                        @endif
                     </table>
+
                 </div>
             </div>
 

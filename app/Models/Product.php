@@ -11,7 +11,7 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
-
+        'tax_class_id',
         'category_id',
         'subcategory_id',
         'brand_id',
@@ -171,6 +171,7 @@ class Product extends Model
     public function scopeForCard($query)
     {
         return $query->with(['images', 'brand:id,name', 'collections:id,name', 'category:id,name', 'subcategory:id,name'])
+            ->withCount(['variants as variants_count' => fn($q) => $q->where('status', true)])
             ->withAvg('approvedReviews as avg_rating', 'rating');
     }
 
@@ -205,9 +206,6 @@ class Product extends Model
     {
         $pct = $this->discount_percent;
 
-        // first collection of the product becomes the badge text
-        $collection = $this->collections->first();
-
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -219,15 +217,14 @@ class Product extends Model
             'price' => '₹' . number_format($this->price),
             'old' => $pct ? '₹' . number_format($this->mrp) : null,
             'save' => $pct ? $pct . '%' : null,
-            'badge' => $badge ?? (
-                $collection
-                ? ['collection', 'fa-gem', $collection->name]
-                : (
-                    ($this->created_at && $this->created_at->gt(now()->subDays(30)))
+            'in_stock' => $this->stock > 0,
+            'min_qty' => max(1, (int) $this->min_qty),
+            'has_options' => ($this->variants_count ?? 0) > 0,
+            'badge' => $badge
+                ?? $this->collectionBadge()
+                ?? (($this->created_at && $this->created_at->gt(now()->subDays(30)))
                     ? ['new', 'fa-sparkles', 'New']
-                    : null
-                )
-            ),
+                    : null),
         ];
     }
 
@@ -332,6 +329,25 @@ class Product extends Model
             })
             ->orderBy('id')
             ->first();
+    }
+
+    public function collectionBadge(): ?array
+    {
+        $slugs = $this->collections->map(fn($c) => Str::slug($c->name))->all();
+
+        foreach (config('product_badges', []) as $slug => $badge) {
+            if (in_array($slug, $slugs, true)) {
+                return $badge;
+            }
+        }
+
+        $first = $this->collections->first();
+        return $first ? ['collection', 'fa-gem', $first->name] : null;
+    }
+
+    public function taxClass()
+    {
+        return $this->belongsTo(TaxClass::class);
     }
 
 }

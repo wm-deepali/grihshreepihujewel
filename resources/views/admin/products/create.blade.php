@@ -967,10 +967,13 @@
                             </div>
                             <div class="section-card-body">
 
-                                <div class="field-hint" style="margin-bottom:14px;">MRP and Discount are optional. Leave
-                                    blank if not applicable — Final Price will simply equal MRP (or 0 if MRP is also
-                                    blank). If none of the selected variant attributes are marked Price Dependent, this
-                                    product-level price is what customers pay regardless of variant chosen.</div>
+                                @if(\App\Services\Tax::enabled())
+                                    <div class="field-hint" style="margin-bottom:14px;">
+                                        Prices are entered
+                                        <b>{{ \App\Services\Tax::inclusive() ? 'including' : 'excluding' }} GST</b> (GST
+                                        &amp; Invoice settings).
+                                    </div>
+                                @endif
 
                                 <div class="pricing-grid">
                                     <div class="field-group" style="margin:0">
@@ -1115,6 +1118,21 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                </div>
+
+                                <div class="field-group">
+                                    <label class="field-label">Tax Class</label>
+                                    <select name="tax_class_id" class="field-select">
+                                        <option value="">— Use category / default class —</option>
+                                        @foreach($taxClasses as $tc)
+                                            <option value="{{ $tc->id }}" {{ old('tax_class_id') == $tc->id ? 'selected' : '' }}>
+                                                {{ $tc->name }}
+                                                ({{ rtrim(rtrim(number_format($tc->rate, 2), '0'), '.') }}%){{ $tc->is_default ? ' · Default' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <div class="field-hint">Only set this if this product's GST differs from its
+                                        category.</div>
                                 </div>
 
                                 <div class="inv-grid">

@@ -809,8 +809,9 @@
                                             // SKU: sku variant > snapshot sku column > product sku
                                             $sku = optional($item->skuVariant)->sku ?? ($item->sku ?? optional($item->product)->sku);
 
-                                            $addonsTotal = $item->addons->sum('price');
-                                            $lineTotal = ($item->price * $item->quantity) + $addonsTotal;
+                                            $addonUnit = (float) $item->addons->sum('price');
+                                            $addonsTotal = $addonUnit * $item->quantity;
+                                            $lineTotal = (float) $item->total ?: (((float) $item->price + $addonUnit) * $item->quantity);
                                         @endphp
                                         <tr>
                                             <td>
@@ -834,6 +835,12 @@
                                                             <div class="product-sku">SKU: {{ $sku }}</div>
                                                         @endif
 
+                                                        @if(($item->tax_rate ?? 0) > 0)
+                                                            <div class="product-variant">GST
+                                                                {{ rtrim(rtrim(number_format((float) $item->tax_rate, 2), '0'), '.') }}%
+                                                            </div>
+                                                        @endif
+
                                                         @if($item->addons->isNotEmpty())
                                                             <div class="product-variant" style="margin-top:4px">
                                                                 @foreach($item->addons as $addon)
@@ -851,23 +858,18 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3"
-                                            style="text-align:right;color:var(--text-hint);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">
-                                            Subtotal
-                                        </td>
-                                        <td><span class="subtotal-cell">₹{{ number_format($order->subtotal, 2) }}</span>
-                                        </td>
-                                    </tr>
-                                </tfoot>
                             </table>
                         </div>
 
                         {{-- Price breakdown --}}
+                        @php
+                            $gstApplied = (float) $order->tax_amount > 0 && !empty($order->gst_type);
+                            $pct = fn($n) => rtrim(rtrim(number_format((float) $n, 2), '0'), '.');
+                        @endphp
                         <div style="padding:16px 20px;border-top:1px solid var(--border);background:#fafafa">
                             <div class="price-row">
-                                <span class="label">Subtotal</span>
+                                <span
+                                    class="label">Subtotal{{ $gstApplied && $order->tax_inclusive ? ' (excl. GST)' : '' }}</span>
                                 <span class="value">₹{{ number_format($order->subtotal, 2) }}</span>
                             </div>
 
@@ -877,13 +879,34 @@
                                         Discount
                                         @if($order->coupon_code)
                                             <span
-                                                style="font-family:'SF Mono','Fira Code',monospace;font-size:11px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:4px;margin-left:4px">
-                                                {{ $order->coupon_code }}
-                                            </span>
+                                                style="font-family:'SF Mono','Fira Code',monospace;font-size:11px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:4px;margin-left:4px">{{ $order->coupon_code }}</span>
                                         @endif
                                     </span>
                                     <span class="value">− ₹{{ number_format($order->discount, 2) }}</span>
                                 </div>
+                            @endif
+
+                            @if($gstApplied)
+                                <div class="price-row">
+                                    <span class="label">Taxable Value</span>
+                                    <span class="value">₹{{ number_format($order->subtotal - $order->discount, 2) }}</span>
+                                </div>
+
+                                @if($order->gst_type === 'igst')
+                                    <div class="price-row">
+                                        <span class="label">IGST ({{ $pct($order->igst_rate) }}%)</span>
+                                        <span class="value">₹{{ number_format($order->igst_amount, 2) }}</span>
+                                    </div>
+                                @else
+                                    <div class="price-row">
+                                        <span class="label">CGST ({{ $pct($order->cgst_rate) }}%)</span>
+                                        <span class="value">₹{{ number_format($order->cgst_amount, 2) }}</span>
+                                    </div>
+                                    <div class="price-row">
+                                        <span class="label">SGST ({{ $pct($order->sgst_rate) }}%)</span>
+                                        <span class="value">₹{{ number_format($order->sgst_amount, 2) }}</span>
+                                    </div>
+                                @endif
                             @endif
 
                             <div class="price-row">
@@ -897,33 +920,17 @@
                                 </span>
                             </div>
 
-                            {{-- GST breakdown --}}
-                            @if($order->tax_amount > 0)
-                                @if($order->gst_type === 'igst' && $order->igst_amount > 0)
-                                    <div class="price-row">
-                                        <span class="label">IGST ({{ $order->igst_rate }}%)</span>
-                                        <span class="value">₹{{ number_format($order->igst_amount, 2) }}</span>
-                                    </div>
-                                @else
-                                    @if($order->cgst_amount > 0)
-                                        <div class="price-row">
-                                            <span class="label">CGST ({{ $order->cgst_rate }}%)</span>
-                                            <span class="value">₹{{ number_format($order->cgst_amount, 2) }}</span>
-                                        </div>
-                                    @endif
-                                    @if($order->sgst_amount > 0)
-                                        <div class="price-row">
-                                            <span class="label">SGST ({{ $order->sgst_rate }}%)</span>
-                                            <span class="value">₹{{ number_format($order->sgst_amount, 2) }}</span>
-                                        </div>
-                                    @endif
-                                @endif
-                            @endif
-
                             <div class="price-row total">
                                 <span class="label">Total</span>
                                 <span class="value">₹{{ number_format($order->grand_total, 2) }}</span>
                             </div>
+
+                            @if($gstApplied)
+                                <div style="font-size:11.5px;color:var(--text-hint);margin-top:8px;text-align:right">
+                                    {{ $order->tax_inclusive === null ? '' : ($order->tax_inclusive ? 'Item prices include GST · ' : 'GST added on top of item prices · ') }}Place
+                                    of supply: {{ $order->state?->name ?? '-' }}
+                                </div>
+                            @endif
                         </div>
                     </div>
 

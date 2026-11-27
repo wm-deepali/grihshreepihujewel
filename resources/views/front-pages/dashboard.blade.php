@@ -338,8 +338,12 @@
                     $firstSlug = $oItems->first()?->product?->slug;
                     $firstUrl = $firstSlug ? route('product.show', $firstSlug) : url('products');
 
-                    // ---- price summary ----
                     $money = fn($n) => '₹' . number_format((float) $n);
+                    $itemsGross = (float) $oItems->sum('total');
+                    $gstOn = (float) $o->tax_amount > 0;
+                    // inclusive: stored subtotal is ex-GST, so itemsGross - tax == subtotal
+                    $inclusive = $gstOn && ($o->tax_inclusive ?? (abs($itemsGross - $o->tax_amount - $o->subtotal) < 0.02));
+
                     if ($refundCase) {
                       $sumTitle = 'Refund details';
                       $summary = [
@@ -349,17 +353,21 @@
                       ];
                     } else {
                       $sumTitle = 'Price details';
-                      $summary = [['Subtotal', $money($o->subtotal), '', '']];
+                      // inclusive: show the price the customer saw (GST inside); exclusive: GST is its own line
+                      $summary = [['Subtotal', $money($inclusive ? $itemsGross : $o->subtotal), '', '']];
                       if ($o->discount > 0) {
                         $summary[] = ['Coupon' . ($o->coupon_code ? ' (' . $o->coupon_code . ')' : ''), '− ' . $money($o->discount), 'green', ''];
                       }
-                      if ($o->tax_amount > 0) {
+                      if ($gstOn && !$inclusive) {
                         $summary[] = ['GST', '₹' . number_format($o->tax_amount, 2), '', ''];
                       }
                       $summary[] = $o->shipping_charge > 0
                         ? ['Shipping', $money($o->shipping_charge), '', '']
                         : ['Shipping', 'Free', 'green', ''];
                       $summary[] = [$isPaid ? 'Total paid' : 'Total payable', $money($o->grand_total), '', 'total'];
+                      if ($gstOn && $inclusive) {
+                        $summary[] = ['Includes GST', '₹' . number_format($o->tax_amount, 2), '', ''];
+                      }
                     }
 
                     // ---- progress timeline ----
@@ -470,7 +478,7 @@
                                   ->map(fn($v) => is_array($v) ? ($v['value'] ?? $v['label'] ?? null) : $v)
                                   ->filter()->implode(' · ');
                                 $sub = collect([$attrs, 'Qty ' . $item->quantity])->filter()->implode(' · ');
-                                $line = ($item->price * $item->quantity) + $item->addons->sum('price');
+                                $line = (float) $item->total ?: (((float) $item->price + (float) $item->addons->sum('price')) * $item->quantity);
                               @endphp
                               <div class="od-item">
                                 <span class="thumb">@if($img)<img src="{{ $img }}" alt="" loading="lazy" />@endif</span>

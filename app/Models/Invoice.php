@@ -33,6 +33,7 @@ class Invoice extends Model
         'cgst_amount',
         'sgst_amount',
         'igst_amount',
+        'tax_inclusive',
 
         'status',
     ];

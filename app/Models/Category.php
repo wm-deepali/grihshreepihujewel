@@ -10,6 +10,7 @@ class Category extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'tax_class_id',
         'name',
         'slug',
         'parent_id',
@@ -125,4 +126,10 @@ class Category extends Model
     {
         return $this->hasMany(Product::class, 'subcategory_id');
     }
+
+    public function taxClass()
+    {
+        return $this->belongsTo(TaxClass::class);
+    }
+
 }

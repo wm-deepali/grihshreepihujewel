@@ -102,88 +102,53 @@ trait FinalizesOrderPayment
         | Order Summary HTML
         |--------------------------------------------------------------------------
         */
-        $orderSummary = "
-        <div style='margin-top:16px;'>
-            <div style='display:table;width:100%;padding:5px 0;'>
-                <span style='display:table-cell;font-size:13px;color:#666;'>Subtotal</span>
-                <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
-                    ₹ " . number_format($order->subtotal, 2) . "
-                </span>
-            </div>
-    ";
+        $money = fn($n) => '₹ ' . number_format((float) $n, 2);
+        $pct = fn($n) => rtrim(rtrim(number_format((float) $n, 2), '0'), '.');
+        $row = fn($label, $value, $style = '') => "
+    <div style='display:table;width:100%;padding:5px 0;'>
+        <span style='display:table-cell;font-size:13px;color:#666;{$style}'>{$label}</span>
+        <span style='display:table-cell;text-align:right;font-size:13px;color:#333;{$style}'>{$value}</span>
+    </div>";
+
+        $gstApplied = (float) $order->tax_amount > 0 && !empty($order->gst_type);
+        $taxable = (float) $order->subtotal - (float) $order->discount;
+
+        $orderSummary = "<div style='margin-top:16px;'>";
+        $orderSummary .= $row('Subtotal' . ($gstApplied && $order->tax_inclusive ? ' (excl. GST)' : ''), $money($order->subtotal));
 
         if ($order->discount > 0) {
             $discountLabel = 'Discount' . ($order->coupon_code ? " ({$order->coupon_code})" : '');
-            $orderSummary .= "
-            <div style='display:table;width:100%;padding:5px 0;'>
-                <span style='display:table-cell;font-size:13px;color:#2e7d32;font-weight:500;'>{$discountLabel}</span>
-                <span style='display:table-cell;text-align:right;font-size:13px;color:#2e7d32;font-weight:500;'>
-                    − ₹ " . number_format($order->discount, 2) . "
-                </span>
-            </div>
-        ";
+            $orderSummary .= $row($discountLabel, '− ' . $money($order->discount), 'color:#2e7d32;font-weight:500;');
         }
 
-        if ($order->shipping_charge > 0) {
-            $orderSummary .= "
-        <div style='display:table;width:100%;padding:5px 0;'>
-            <span style='display:table-cell;font-size:13px;color:#666;'>Shipping</span>
-            <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
-                ₹ " . number_format($order->shipping_charge, 2) . "
-            </span>
-        </div>
-    ";
-        }
+        if ($gstApplied) {
+            $orderSummary .= $row('Taxable Value', $money($taxable));
 
-        if ($order->tax_amount > 0) {
-
-            if ($order->gst_type === 'igst' && $order->igst_amount > 0) {
-
-                $orderSummary .= "
-                <div style='display:table;width:100%;padding:5px 0;'>
-                    <span style='display:table-cell;font-size:13px;color:#666;'>IGST ({$order->igst_rate}%)</span>
-                    <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
-                        ₹ " . number_format($order->igst_amount, 2) . "
-                    </span>
-                </div>
-            ";
-
+            if ($order->gst_type === 'igst') {
+                $orderSummary .= $row("IGST ({$pct($order->igst_rate)}%)", $money($order->igst_amount));
             } else {
-
-                if ($order->cgst_amount > 0) {
-                    $orderSummary .= "
-                    <div style='display:table;width:100%;padding:5px 0;'>
-                        <span style='display:table-cell;font-size:13px;color:#666;'>CGST ({$order->cgst_rate}%)</span>
-                        <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
-                            ₹ " . number_format($order->cgst_amount, 2) . "
-                        </span>
-                    </div>
-                ";
-                }
-
-                if ($order->sgst_amount > 0) {
-                    $orderSummary .= "
-                    <div style='display:table;width:100%;padding:5px 0;'>
-                        <span style='display:table-cell;font-size:13px;color:#666;'>SGST ({$order->sgst_rate}%)</span>
-                        <span style='display:table-cell;text-align:right;font-size:13px;color:#333;'>
-                            ₹ " . number_format($order->sgst_amount, 2) . "
-                        </span>
-                    </div>
-                ";
-                }
+                $orderSummary .= $row("CGST ({$pct($order->cgst_rate)}%)", $money($order->cgst_amount));
+                $orderSummary .= $row("SGST ({$pct($order->sgst_rate)}%)", $money($order->sgst_amount));
             }
         }
 
+        if ($order->shipping_charge > 0) {
+            $orderSummary .= $row('Shipping', $money($order->shipping_charge));
+        }
+
         $orderSummary .= "
-            <hr style='border:none;border-top:1px solid #d4dbd9;margin:10px 0;'>
-            <div style='display:table;width:100%;padding:5px 0;'>
-                <span style='display:table-cell;font-size:15px;font-weight:600;color:#1a1a1a;'>Grand Total</span>
-                <span style='display:table-cell;text-align:right;font-size:16px;font-weight:700;color:#1F5552;'>
-                    ₹ " . number_format($order->grand_total, 2) . "
-                </span>
-            </div>
-        </div>
-    ";
+    <hr style='border:none;border-top:1px solid #d4dbd9;margin:10px 0;'>
+    <div style='display:table;width:100%;padding:5px 0;'>
+        <span style='display:table-cell;font-size:15px;font-weight:600;color:#1a1a1a;'>Grand Total</span>
+        <span style='display:table-cell;text-align:right;font-size:16px;font-weight:700;color:#1F5552;'>" . $money($order->grand_total) . "</span>
+    </div>";
+
+        if ($gstApplied && $order->tax_inclusive !== null) {
+            $note = $order->tax_inclusive ? 'Item prices include GST.' : 'GST is charged in addition to item prices.';
+            $orderSummary .= "<div style='text-align:right;font-size:11px;color:#7a9e9c;padding-top:4px;'>{$note}</div>";
+        }
+
+        $orderSummary .= "</div>";
 
         /*
         |--------------------------------------------------------------------------
@@ -227,6 +192,9 @@ trait FinalizesOrderPayment
             '{order_items}' => $orderItems,
             '{order_summary}' => $orderSummary,
             '{shipping_address}' => $shippingAddress,
+            '{taxable_value}' => '₹' . number_format($order->subtotal - $order->discount, 2),
+            '{tax_amount}' => '₹' . number_format((float) $order->tax_amount, 2),
+            '{shipping_charge}' => $order->shipping_charge > 0 ? '₹' . number_format($order->shipping_charge, 2) : 'FREE',
         ];
 
         // Customer - Order Confirmed

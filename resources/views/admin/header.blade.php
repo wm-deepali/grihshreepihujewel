@@ -182,9 +182,11 @@
 
         {{-- Admin Setting --}}
         <li class="{{ request()->routeIs(
+    'admin.admin-setting.*',
     'admin.settings.*',
     'admin.notifications.index',
-    'admin.security.*'
+    'admin.security.*',
+    'admin.redirect-settings.*'
 ) ? 'active' : '' }}">
             <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
             <ul>
@@ -195,8 +197,8 @@
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'smtp']) }}">SMTP</a></li>
                 <li><a href="{{ route('admin.settings.email-templates.index') }}">Email Template Settings</a></li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'gst']) }}">GST & Invoice</a></li>
-                <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'couriers']) }}">Courier Management</a>
-                </li>
+                <li><a href="{{ route('admin.settings.tax-classes.index') }}">Tax Classes</a></li>
+                <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'couriers']) }}">Courier Management</a></li>
                 <li><a href="{{ route('admin.admin-setting.index', ['tab' => 'tracking']) }}">Tracking & Pixels</a></li>
                 <li><a href="{{ route('admin.notifications.index') }}">Notification Centre</a></li>
                 <li><a href="{{ route('admin.security.system-logs') }}">System Logs</a></li>

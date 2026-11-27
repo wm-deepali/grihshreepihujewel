@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Cart;
-use App\Models\InvoiceSetting;
 
 class CartSummary
 {
@@ -13,7 +12,6 @@ class CartSummary
 
         $totalMrp = 0.0;
         $sellTotal = 0.0;
-        $dyeTotal = 0.0;
         $addonLines = [];
 
         foreach ($items as $item) {
@@ -34,13 +32,10 @@ class CartSummary
         $coupon      = $cart && $cart->coupon_code ? (float) $cart->discount : 0.0;
         $mrpDiscount = max(0, $totalMrp - $sellTotal);
 
-        // GST is its own line only when it is added on top (exclusive)
-        $invoice      = InvoiceSetting::first();
-        $taxExclusive = $cart
-            && $invoice
-            && $invoice->business_type === 'registered'
-            && $invoice->tax_type === 'exclusive'
-            && (float) $cart->tax_amount > 0;
+        // GST: its own added line only when exclusive; shown as "included" info when inclusive
+        $gstOn     = Tax::enabled();
+        $inclusive = $gstOn && Tax::inclusive();
+        $taxAmount = ($cart && $gstOn) ? (float) $cart->tax_amount : 0.0;
 
         $shippingCharge = (float) ($cart->shipping_charge ?? 0);
         $shippingKnown  = true;
@@ -55,10 +50,12 @@ class CartSummary
             'total_mrp'      => $totalMrp,
             'mrp_discount'   => $mrpDiscount,
             'addons'         => $addonLines,
-            'dye'            => $dyeTotal,
             'coupon_code'    => $cart?->coupon_code,
             'coupon'         => $coupon,
-            'tax'            => $taxExclusive ? (float) $cart->tax_amount : 0.0,
+            'gst_on'         => $gstOn,
+            'tax_inclusive'  => $inclusive,
+            'tax'            => ($gstOn && !$inclusive) ? $taxAmount : 0.0,   // added on top
+            'tax_included'   => $inclusive ? $taxAmount : 0.0,                // already inside prices
             'shipping'       => $shippingCharge,
             'shipping_known' => $shippingKnown,
             'total'          => (float) ($cart->grand_total ?? 0),

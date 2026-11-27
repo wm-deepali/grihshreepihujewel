@@ -1044,31 +1044,28 @@
         if (previewBox) previewBox.style.display = 'none';
     }
 
-    function toggleBusinessType() {
 
-        let businessType = $('#business_type').val();
+</script>
+<script>
+    // GST switch: ON = fields visible and editable, OFF = greyed out and disabled
+    (function () {
+        var sw = document.getElementById('gstEnabled');
+        if (!sw) return;
 
-        if (businessType === 'registered') {
+        function apply() {
+            var on = sw.checked;
 
-            $('.gst-field').show();
+            document.querySelectorAll('.gst-field').forEach(function (el) {
+                el.style.display = '';                 // undo any display:none, keep the CSS layout
+                el.style.opacity = on ? '' : '.45';
 
-        } else {
-
-            $('.gst-field').hide();
-
+                if (el.matches('input, select, textarea')) el.disabled = !on;
+                el.querySelectorAll('input, select, textarea').forEach(function (i) { i.disabled = !on; });
+                el.querySelectorAll('a').forEach(function (a) { a.style.pointerEvents = on ? '' : 'none'; });
+            });
         }
-    }
 
-    $(document).ready(function () {
-
-        toggleBusinessType();
-
-        $('#business_type').on('change', function () {
-
-            toggleBusinessType();
-
-        });
-
-    });
-
+        sw.addEventListener('change', apply);
+        apply();
+    })();
 </script>

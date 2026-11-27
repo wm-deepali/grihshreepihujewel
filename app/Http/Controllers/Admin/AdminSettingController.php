@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\State;
+use App\Services\Tax;
 use App\Models\Setting;
 use App\Models\Courier;
 use App\Models\SmtpSetting;
@@ -50,9 +51,12 @@ class AdminSettingController extends Controller
 
     public function invoiceSettingStore(Request $request)
     {
+        $gst = $request->boolean('gst_enabled');
+
         $rules = [
             // Company
             'company_name' => 'required|string|max:255',
+            'company_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'company_address' => 'required|string',
             'company_state' => 'required|exists:states,id',
             'company_city' => 'required|exists:cities,id',
@@ -67,51 +71,49 @@ class AdminSettingController extends Controller
             'invoice_date_format' => 'nullable|in:d/m/Y,d M Y,m-d-Y',
             // Tax
             'tax_type' => 'nullable|in:inclusive,exclusive',
-            'business_type' => 'nullable|in:registered,unregistered',
             // Footer
             'terms_conditions' => 'nullable|string',
         ];
 
-        // GST Validation Only For Registered
-        if ($request->business_type == 'registered') {
-            $rules['company_gstin'] = 'required|string|max:15';
-            $rules['company_pan'] = 'required|string|max:10';
-            $rules['cgst'] = 'required|numeric|min:0|max:100';
-            $rules['sgst'] = 'required|numeric|min:0|max:100';
-            $rules['igst'] = 'required|numeric|min:0|max:100';
+        // GSTIN / PAN are required only when GST is enabled
+        if ($gst) {
+            $rules['company_gstin'] = ['required', 'string', 'size:15', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/i'];
+            $rules['company_pan'] = ['required', 'string', 'size:10', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/i'];
         }
 
         $validated = $request->validate($rules);
 
-        // Checkboxes
-        $validated['show_gst_breakup'] =
-            $request->has('show_gst_breakup');
-        $validated['auto_generate_invoice'] =
-            $request->has('auto_generate_invoice');
-        $validated['email_invoice_customer'] =
-            $request->has('email_invoice_customer');
+        // GST switch (business_type is kept in sync for any older code that still reads it)
+        $validated['gst_enabled'] = $gst;
+        $validated['business_type'] = $gst ? 'registered' : 'unregistered';
 
-        // Unregistered Business
-        if ($request->business_type == 'unregistered') {
+        // Checkboxes
+        $validated['show_gst_breakup'] = $gst && $request->has('show_gst_breakup');
+        $validated['auto_generate_invoice'] = $request->has('auto_generate_invoice');
+        $validated['email_invoice_customer'] = $request->has('email_invoice_customer');
+
+        if ($gst) {
+            $validated['company_gstin'] = strtoupper($validated['company_gstin']);
+            $validated['company_pan'] = strtoupper($validated['company_pan']);
+        } else {
             $validated['company_gstin'] = null;
             $validated['company_pan'] = null;
-            $validated['cgst'] = 0;
-            $validated['sgst'] = 0;
-            $validated['igst'] = 0;
-            $validated['show_gst_breakup'] = 0;
         }
 
-        // Logo Upload
+        // Logo upload (replace the old file)
+        $existing = InvoiceSetting::first();
+
         if ($request->hasFile('company_logo')) {
-            $validated['company_logo'] = $request
-                ->file('company_logo')
-                ->store('company', 'public');
+            if ($existing?->company_logo && Storage::disk('public')->exists($existing->company_logo)) {
+                Storage::disk('public')->delete($existing->company_logo);
+            }
+            $validated['company_logo'] = $request->file('company_logo')->store('company', 'public');
+        } else {
+            unset($validated['company_logo']); // keep the current logo
         }
 
-        InvoiceSetting::updateOrCreate(
-            ['id' => 1],
-            $validated
-        );
+        InvoiceSetting::updateOrCreate(['id' => 1], $validated);
+        Tax::flush();
 
         return redirect()
             ->route('admin.admin-setting.index', ['tab' => 'gst'])

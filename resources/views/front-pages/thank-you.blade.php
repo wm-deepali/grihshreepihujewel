@@ -25,19 +25,27 @@
       . ($order->pincode ? ' - ' . $order->pincode : ''),
   ])->filter()->implode(', ');
 
-  // MRP-based figures (shown only when MRP data is available)
+  // ---- price summary: rows add up to the total (MRP - discounts + packaging + GST if exclusive + shipping) ----
+  $itemsGross = (float) $items->sum('total');                       // qty x (price + addons)
   $totalMrp = (float) $items->sum(function ($i) {
-    $addon = (float) $i->addons->sum('price');
-    $mrp = (float) ($i->priceVariant->mrp ?? $i->product->mrp ?? 0);
-    return $mrp > 0 ? ($mrp + $addon) * $i->quantity : (float) $i->total;
+    $unit = (float) $i->price;
+    $mrp = (float) (($i->priceVariant?->mrp ?: $i->product?->mrp) ?: $unit);
+    return max($mrp, $unit) * $i->quantity;
   });
-  $itemsTotal = (float) $items->sum('total');
-  $mrpDiscount = max(0, $totalMrp - $itemsTotal);
+  $sellTotal = (float) $items->sum(fn($i) => (float) $i->price * $i->quantity);
+  $addonsTotal = (float) $items->sum(fn($i) => (float) $i->addons->sum('price') * $i->quantity);
+  $hasAddons = $items->contains(fn($i) => $i->addons->isNotEmpty());
+  $mrpDiscount = max(0, $totalMrp - $sellTotal);
+
   $couponOff = (float) $order->discount;
   $shipFee = (float) $order->shipping_charge;
   $tax = (float) $order->tax_amount;
   $grand = (float) $order->grand_total;
   $saved = $mrpDiscount + $couponOff;
+
+  $gstApplied = $tax > 0 && !empty($order->gst_type);
+  // inclusive: stored subtotal is ex-GST, so itemsGross - tax == subtotal (used for orders placed before tax_inclusive existed)
+  $inclusive = $gstApplied && ($order->tax_inclusive ?? (abs($itemsGross - $tax - (float) $order->subtotal) < 0.02));
 @endphp
 
 @section('content')
@@ -91,9 +99,12 @@
                 $attrs = collect($item->selected_attributes ?? [])
                   ->pluck('value')->filter()->implode(' · ');
                 $sub = collect([$attrs, 'Qty ' . $item->quantity])->filter()->implode(' · ');
-                $img = $item->display_image
-                  ?? $item->imageVariant?->images?->first()?->image
-                  ?? $item->product?->images?->first()?->image;
+
+                $img = $item->display_image;
+                if (!$img) {
+                  $raw = $item->imageVariant?->images?->first()?->image ?? $item->product?->images?->first()?->image;
+                  $img = $raw ? asset('storage/' . $raw) : null;
+                }
               @endphp
               <li>
                 @if($img)
@@ -119,8 +130,17 @@
             @if($couponOff > 0)
               <li><span>Coupon @if($order->coupon_code)({{ $order->coupon_code }})@endif</span><b class="is-green">−₹{{ number_format($couponOff) }}</b></li>
             @endif
-            @if($tax > 0)
-              <li><span>GST</span><b>₹{{ number_format($tax, 2) }}</b></li>
+            @if($hasAddons)
+              <li>
+                <span>Gift Packaging</span>
+                <b class="{{ $addonsTotal > 0 ? '' : 'is-green' }}">{{ $addonsTotal > 0 ? '₹' . number_format($addonsTotal) : 'Free' }}</b>
+              </li>
+            @endif
+            @if($gstApplied)
+              <li>
+                <span>GST{{ $inclusive ? ' (included)' : '' }}</span>
+                <b>₹{{ number_format($tax, 2) }}</b>
+              </li>
             @endif
             <li>
               <span>Shipping</span>

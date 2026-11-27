@@ -3,14 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Cart;
-use App\Models\GoogleSetting;
 use App\Models\SeoPage;
 use App\Models\Setting;
-use App\Models\Category;
-use App\Models\Attribute;
-use App\Models\Collection;
-use App\Models\Announcement;
-use App\Models\GiftingOccasion;
+use App\Models\Wishlist;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -30,9 +25,10 @@ class AppServiceProvider extends ServiceProvider
 
             if ($shared === null) {
                 $name = Route::currentRouteName();
+                $customerId = auth('customer')->id();
 
-                $cart = auth('customer')->check()
-                    ? Cart::where('customer_id', auth('customer')->id())->first()
+                $cart = $customerId
+                    ? Cart::where('customer_id', $customerId)->first()
                     : Cart::where('session_id', session()->getId())->first();
 
                 if ($cart) {
@@ -48,11 +44,17 @@ class AppServiceProvider extends ServiceProvider
                     ]);
                 }
 
+                $wishedIds = $customerId
+                    ? Wishlist::where('customer_id', $customerId)->pluck('product_id')->all()
+                    : [];
+
                 $shared = [
                     'seo' => $name ? SeoPage::forKey($name) : null,
                     'general' => Setting::first() ?? new Setting(),
                     'miniCart' => $cart ?? new Cart(),
                     'cartCount' => $cart ? (int) $cart->items->sum('quantity') : 0,
+                    'wishedIds' => $wishedIds,
+                    'wishCount' => count($wishedIds),
                 ];
             }
 

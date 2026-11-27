@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Category;
+use App\Models\TaxClass;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -73,12 +74,25 @@ class CategoryController extends Controller
         ));
     }
 
+    /**
+     * Tax classes for the dropdown: active ones, plus the category's current class
+     * even if it was deactivated later (so saving the form never silently clears it).
+     */
+    private function taxClassOptions(?int $currentId = null)
+    {
+        return TaxClass::where('status', 1)
+            ->when($currentId, fn($q) => $q->orWhere('id', $currentId))
+            ->orderBy('rate')
+            ->get();
+    }
+
     // ✅ Create
     public function create()
     {
         $parents = Category::whereNull('parent_id')->get();
+        $taxClasses = $this->taxClassOptions();
 
-        return view('admin.categories.create', compact('parents'));
+        return view('admin.categories.create', compact('parents', 'taxClasses'));
     }
 
     /**
@@ -139,6 +153,7 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'size_chart' => 'nullable|string',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
         ]);
 
         $image = null;
@@ -170,6 +185,9 @@ class CategoryController extends Controller
             // ✅ FIXED
             'parent_id' => $request->parent_id ?: null,
 
+            // GST: empty = inherit (product's category / default tax class)
+            'tax_class_id' => $request->tax_class_id ?: null,
+
             // FLAGS
             'is_popular' => $request->is_popular ?? 0,
             'is_featured' => $request->is_featured ?? 0,
@@ -194,11 +212,14 @@ class CategoryController extends Controller
             ->where('id', '!=', $id)
             ->get();
 
+        $taxClasses = $this->taxClassOptions($category->tax_class_id);
+
         $redirect = $request->redirect;
 
         return view('admin.categories.edit', compact(
             'category',
             'parents',
+            'taxClasses',
             'redirect'
         ));
     }
@@ -211,6 +232,7 @@ class CategoryController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'size_chart' => 'nullable|string',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
         ]);
 
         $image = $category->image;
@@ -245,6 +267,9 @@ class CategoryController extends Controller
 
             // ✅ FIXED
             'parent_id' => $request->parent_id ?: null,
+
+            // GST: empty = inherit (product's category / default tax class)
+            'tax_class_id' => $request->tax_class_id ?: null,
 
             'is_popular' => $request->is_popular ?? 0,
             'is_featured' => $request->is_featured ?? 0,

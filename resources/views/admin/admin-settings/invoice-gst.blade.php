@@ -7,6 +7,8 @@
         </ul>
     </div>
 @endif
+@php $gstOn = (bool) old('gst_enabled', $invoice_setting->gst_enabled ?? true); @endphp
+
 <form method="POST" action="{{ route('admin.invoice-settings.store') }}" enctype="multipart/form-data">
     @csrf
     <div class="settings-layout">
@@ -41,54 +43,26 @@
                             <div class="upload-label">Upload Invoice Logo</div>
                             <div class="upload-sub">PNG, JPG · recommended 300×80px, will appear on PDF invoices</div>
                         </div>
-                        {{-- Existing Logo --}}
+
                         @if(!empty($invoice_setting->company_logo))
-
                             <div style="margin-top:15px;text-align:center">
-
                                 <img src="{{ asset('storage/' . $invoice_setting->company_logo) }}" alt="Company Logo"
-                                    style="
-                                                                        max-width:100%;
-                                                                        max-height:120px;
-                                                                        border-radius:8px;
-                                                                        border:1px solid #ddd;
-                                                                        padding:5px;
-                                                                    ">
-
+                                    style="max-width:100%;max-height:120px;border-radius:8px;border:1px solid #ddd;padding:5px;">
                             </div>
-
                         @endif
 
-                        {{-- Preview --}}
                         <div id="imagePreview" style="display:none;margin-top:15px;text-align:center">
-
-                            <img id="previewImg" src="" alt="Preview" style="
-                        width:120px;
-                        border-radius:8px;
-                        border:1px solid #ddd;
-                    ">
-
+                            <img id="previewImg" src="" alt="Preview"
+                                style="width:120px;border-radius:8px;border:1px solid #ddd;">
                             <div style="margin-top:8px">
-
-                                <button type="button" onclick="clearImage()" style="
-                            font-size:12px;
-                            color:#b22222;
-                            background:none;
-                            border:none;
-                            cursor:pointer;
-                            padding:0;
-                        ">
-
-                                    <i class="fa fa-times"></i>
-                                    Remove
-
+                                <button type="button" onclick="clearImage()"
+                                    style="font-size:12px;color:#b22222;background:none;border:none;cursor:pointer;padding:0;">
+                                    <i class="fa fa-times"></i> Remove
                                 </button>
-
                             </div>
-
                         </div>
-
                     </div>
+
                     <div class="field-group col-full">
                         <label class="field-label">Full Registered Address <span class="req">*</span></label>
                         <textarea class="field-textarea" name="company_address" rows="3"
@@ -103,34 +77,22 @@
                         <select class="field-select" name="company_state" id="state_id" required>
                             <option value="">Select State</option>
                             @foreach($states as $state)
-
                                 <option value="{{ $state->id }}" {{ old('company_state', $invoice_setting->company_state ?? '') == $state->id ? 'selected' : '' }}>
-
                                     {{ $state->name }}
-
                                 </option>
-
                             @endforeach
                         </select>
+                        <span class="field-hint gst-field">Used to decide CGST + SGST (same state) or IGST (other state).</span>
                     </div>
                     <div class="field-group">
                         <label class="field-label">City <span class="req">*</span></label>
                         <select name="company_city" id="city_id" class="field-select" required>
-
-                            <option value="">
-                                Select City
-                            </option>
-
+                            <option value="">Select City</option>
                             @if(!empty($invoice_setting->company_city) && $invoice_setting->city)
-
                                 <option value="{{ $invoice_setting->city->id }}" selected>
-
                                     {{ $invoice_setting->city->name }}
-
                                 </option>
-
                             @endif
-
                         </select>
                     </div>
 
@@ -177,50 +139,29 @@
             <!-- Tax / GST -->
             <div class="settings-section" id="inv-tax">
                 <div class="settings-section-title"><i class="fa-solid fa-percent"></i> Tax / GST Settings</div>
-                <p class="settings-section-desc">Define how GST is applied to orders and displayed on invoices.</p>
+                <p class="settings-section-desc">Switch GST on or off for the whole store and choose how prices are treated.</p>
 
-                <div class="form-grid">
-
-                    <div class="field-group gst-field">
-
-                        <label class="field-label">
-                            CGST (%)
-                        </label>
-
-                        <input type="number" step="0.01" name="cgst" class="field-input"
-                            value="{{ old('cgst', $invoice_setting->cgst ?? 9) }}">
-
+                {{-- master switch --}}
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-info-label">Enable GST</div>
+                        <div class="toggle-info-sub">
+                            When off, no GST is charged and none is shown on the site, cart, orders, invoices or emails.
+                        </div>
                     </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="gst_enabled" id="gstEnabled" value="1" {{ $gstOn ? 'checked' : '' }}>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
 
-                    <div class="field-group gst-field">
-
-                        <label class="field-label">
-                            SGST (%)
-                        </label>
-
-                        <input type="number" step="0.01" name="sgst" class="field-input"
-                            value="{{ old('sgst', $invoice_setting->sgst ?? 9) }}">
-
-                    </div>
-
-                    <div class="field-group gst-field">
-
-                        <label class="field-label">
-                            IGST (%)
-                        </label>
-
-                        <input type="number" step="0.01" name="igst" class="field-input"
-                            value="{{ old('igst', $invoice_setting->igst ?? 18) }}">
-
-                    </div>
-
+                <div class="form-grid gst-field" style="margin-top:16px">
                     <div class="field-group">
                         <label class="field-label">Tax Inclusive / Exclusive</label>
                         <select class="field-select" name="tax_type">
                             <option value="inclusive" {{ old('tax_type', $invoice_setting->tax_type ?? 'inclusive') == 'inclusive' ? 'selected' : '' }}>
                                 Tax Inclusive (prices include GST)
                             </option>
-
                             <option value="exclusive" {{ old('tax_type', $invoice_setting->tax_type ?? '') == 'exclusive' ? 'selected' : '' }}>
                                 Tax Exclusive (GST added on checkout)
                             </option>
@@ -228,16 +169,15 @@
                     </div>
 
                     <div class="field-group">
-                        <label class="field-label">Business Type</label>
-                        <select class="field-select" name="business_type" id="business_type">
-                            <option value="registered" {{ old('business_type', $invoice_setting->business_type ?? 'registered') == 'registered' ? 'selected' : '' }}>
-                                Registered
-                            </option>
-
-                            <option value="unregistered" {{ old('business_type', $invoice_setting->business_type ?? '') == 'unregistered' ? 'selected' : '' }}>
-                                Unregistered
-                            </option>
-                        </select>
+                        <label class="field-label">GST Rates</label>
+                        <a href="{{ route('admin.settings.tax-classes.index') }}" class="btn-secondary-dash"
+                            style="display:inline-block;text-align:center">
+                            <i class="fa-solid fa-percent"></i> Manage Tax Classes
+                        </a>
+                        <span class="field-hint">
+                            Rates now come from Tax Classes (per category or product, plus one default).
+                            CGST/SGST/IGST are worked out from the rate automatically.
+                        </span>
                     </div>
                 </div>
 
@@ -279,27 +219,17 @@
                     <div class="field-group">
                         <label class="field-label">Year in Invoice No.</label>
                         <select class="field-select" id="invYear" name="invoice_year_format" onchange="updatePreview()">
-                            <option value="none" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? '') == 'none' ? 'selected' : '' }}>
-                                None
-                            </option>
-
-                            <option value="slash" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? 'slash') == 'slash' ? 'selected' : '' }}>
-                                FY Slash (2025-26)
-                            </option>
-
-                            <option value="year" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? '') == 'year' ? 'selected' : '' }}>
-                                Year Only (2025)
-                            </option>
+                            <option value="none" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? '') == 'none' ? 'selected' : '' }}>None</option>
+                            <option value="slash" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? 'slash') == 'slash' ? 'selected' : '' }}>FY Slash (2025-26)</option>
+                            <option value="year" {{ old('invoice_year_format', $invoice_setting->invoice_year_format ?? '') == 'year' ? 'selected' : '' }}>Year Only (2025)</option>
                         </select>
                     </div>
                     <div class="field-group">
                         <label class="field-label">Separator</label>
                         <select class="field-select" id="invSep" name="invoice_separator" onchange="updatePreview()">
-                            <option value="/" {{ old('invoice_separator', $invoice_setting->invoice_separator ?? '/') == '/' ? 'selected' : '' }}>/</option>
-
-                            <option value="-" {{ old('invoice_separator', $invoice_setting->invoice_separator ?? '-') == '-' ? 'selected' : '' }}>-</option>
-
-                            <option value="#" {{ old('invoice_separator', $invoice_setting->invoice_separator ?? '') == '#' ? 'selected' : '' }}>#</option>
+                            @foreach(['/', '-', '#'] as $sep)
+                                <option value="{{ $sep }}" {{ old('invoice_separator', $invoice_setting->invoice_separator ?? '/') == $sep ? 'selected' : '' }}>{{ $sep }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="field-group col-full">
@@ -312,17 +242,9 @@
                     <div class="field-group">
                         <label class="field-label">Invoice Date Format</label>
                         <select class="field-select" name="invoice_date_format">
-                            <option value="d/m/Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? '') == 'd/m/Y' ? 'selected' : '' }}>
-                                DD/MM/YYYY
-                            </option>
-
-                            <option value="d M Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? 'd M Y') == 'd M Y' ? 'selected' : '' }}>
-                                D MMM YYYY
-                            </option>
-
-                            <option value="m-d-Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? '') == 'm-d-Y' ? 'selected' : '' }}>
-                                MM-DD-YYYY
-                            </option>
+                            <option value="d/m/Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? '') == 'd/m/Y' ? 'selected' : '' }}>DD/MM/YYYY</option>
+                            <option value="d M Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? 'd M Y') == 'd M Y' ? 'selected' : '' }}>D MMM YYYY</option>
+                            <option value="m-d-Y" {{ old('invoice_date_format', $invoice_setting->invoice_date_format ?? '') == 'm-d-Y' ? 'selected' : '' }}>MM-DD-YYYY</option>
                         </select>
                     </div>
                 </div>
@@ -345,7 +267,6 @@
                         <label class="toggle-switch">
                             <input type="checkbox" name="email_invoice_customer" value="1" {{ old('email_invoice_customer', $invoice_setting->email_invoice_customer ?? 1) ? 'checked' : '' }}><span class="toggle-track"></span></label>
                     </div>
-
                 </div>
             </div>
 
@@ -353,7 +274,7 @@
     </div>
 
     <div class="action-bar">
-        <button class="btn-secondary-dash">Discard Changes</button>
+        <button type="button" class="btn-secondary-dash" onclick="window.location.reload()">Discard Changes</button>
         <button class="btn-primary-dash" type="submit">
             <i class="fa fa-save"></i> Save GST &amp; Invoice Settings
         </button>
