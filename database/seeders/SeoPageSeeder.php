@@ -9,7 +9,7 @@ class SeoPageSeeder extends Seeder
 {
     public function run(): void
     {
-        $brand = 'Archana Saree Emporium';
+        $brand = 'Grih Shree & Pihu Jewel';
         $base  = rtrim(config('app.url'), '/');
 
         $defaults = [

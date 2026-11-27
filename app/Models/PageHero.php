@@ -28,7 +28,7 @@ class PageHero extends Model
     /** Shown until the admin saves a row for that page. */
     public const DEFAULTS = [
         'about' => [
-            'eyebrow' => 'Archana Saree Emporium',
+            'eyebrow' => 'Grih Shree & Pihu Jewel',
             'title' => "A Legacy of\nTimeless Indian Elegance",
             'description' => "Celebrating the beauty of Indian drapes through timeless craftsmanship, thoughtful curation and styles made for life's most memorable occasions.",
             'tag' => 'The Archana Edit',

@@ -825,14 +825,6 @@
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
   <script>
-    $(window).on("load scroll", function () {
-      setTimeout(function () {
-        $("header").addClass("header-fixed");
-      }, 10);
-    });
-  </script>
-
-  <script>
     (function () {
       var CSRF = $('meta[name="csrf-token"]').attr("content");
       var $pop = function () { return $(".cart-pop"); };

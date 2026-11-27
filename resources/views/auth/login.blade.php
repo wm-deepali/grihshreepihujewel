@@ -4,7 +4,7 @@
 
     <style>
         /* =====================================================
-           ARCHANA SAREE EMPORIUM - THEME VARIABLES
+           Grih Shree & Pihu Jewel - THEME VARIABLES
            Sirf yahin se poori login theme control hoti hai.
            --aw-primary ki value site ke :root (--primary) se match kar do.
            ===================================================== */
@@ -170,7 +170,7 @@
 
     @php
         $loginLogo = $general?->admin_login_logo;
-        $siteName = $general?->site_name ?? 'Archana Saree Emporium';
+        $siteName = $general?->site_name ?? 'Grih Shree & Pihu Jewel';
         $tagline = $general?->tagline ?? 'Premium Sarees · Designer Lehengas · Bridal Wear';
     @endphp
 

@@ -8,7 +8,7 @@
   <meta name="keywords" content="Web Mingo E-Commerce Admin">
   <meta name="author" content="Webmingo">
   <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>Admin Dashboard | Archana Saree Emporium</title>
+  <title>Admin Dashboard | Grih Shree & Pihu Jewel</title>
 
   @php
       $favicon = $general?->favicon;
@@ -226,7 +226,7 @@ body {
             <!-- Logo -->
             <div class="admin-logo">
                 <div class="admin-logo-text">
-                    <span class="admin-logo-brand">Archana Saree Emporium</span>
+                    <span class="admin-logo-brand">Grih Shree & Pihu Jewel</span>
                     <span class="admin-logo-sub">Admin Panel</span>
                 </div>
             </div>

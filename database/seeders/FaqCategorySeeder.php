@@ -34,7 +34,7 @@ class FaqCategorySeeder extends Seeder
 
             'Shopping & Collections' => [
                 [
-                    'What collections can I shop at Archana Saree Emporium?',
+                    'What collections can I shop at Grih Shree & Pihu Jewel?',
                     'Explore our curated collection of premium sarees, designer lehengas, bridal wear and occasion-ready styles. Our collections are designed for weddings, festive celebrations, parties and special moments.',
                 ],
                 [
@@ -125,7 +125,7 @@ class FaqCategorySeeder extends Seeder
 
             'Store & Support' => [
                 [
-                    'Can I visit Archana Saree Emporium in person?',
+                    'Can I visit Grih Shree & Pihu Jewel in person?',
                     'Yes. If you prefer to explore the collection in person, you can visit our store during business hours. Please use the Contact page for the latest store address, opening hours and directions.',
                 ],
                 [
@@ -133,7 +133,7 @@ class FaqCategorySeeder extends Seeder
                     'Yes. WhatsApp is a convenient way to ask about product availability, colours, sizes, styling options and general shopping queries before placing your order.',
                 ],
                 [
-                    'How can I contact Archana Saree Emporium?',
+                    'How can I contact Grih Shree & Pihu Jewel?',
                     'You can contact our team through phone, WhatsApp, email or by visiting the store. Please visit the Contact page for the available contact details and store information.',
                 ],
             ],

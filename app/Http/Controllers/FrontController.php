@@ -14,7 +14,89 @@ class FrontController extends Controller
 {
     public function home()
     {
-        return view('front-pages.home');
+        $brands = Brand::active()->ordered()->get();
+
+        // "All" tab + one tab per brand that has items
+        $tabs = fn(string $allLabel, callable $items) => collect([['label' => $allLabel, 'items' => $items(null)]])
+            ->merge(
+                $brands->map(fn($b) => ['label' => $b->menu_label_text, 'items' => $items($b->id)])
+                    ->filter(fn($t) => $t['items']->isNotEmpty())
+            )
+            ->values();
+
+        // ---------- Shop by Collection ----------
+        $parents = Category::active()->parents()
+            ->whereHas('brand', fn($q) => $q->where('status', 1))
+            ->with('brand:id,name,slug')
+            ->orderBy('sort_order')->orderBy('name');
+
+        $featured = (clone $parents)->where('is_featured', 1)->get();
+        $cats = $featured->isNotEmpty() ? $featured : $parents->limit(12)->get();
+
+        $cards = $cats->map(fn($c) => [
+            'brand_id' => $c->brand_id,
+            'img' => $c->image_url,
+            'name' => $c->name,
+            'brand' => $c->brand->name,
+            'text' => $c->sub_title,
+            'url' => route('category.show', $c->slug),
+        ]);
+
+        $collTabs = $tabs('All', fn($id) => $id ? $cards->where('brand_id', $id)->values() : $cards);
+
+        // ---------- Best Sellers / New Arrivals / Recently Viewed ----------
+        $bestSellerTabs = $tabs('All Favourites', fn($id) => $this->bestSellers(brandId: $id, limit: 8));
+        $newArrivalTabs = $tabs('All New Arrivals', fn($id) => $this->newArrivals($id, 8));
+        $recentlyViewed = $this->recentlyViewed();
+
+        // ---------- Occasions ----------
+        $fallbacks = ['cat5.png', 'pro2.png', 'pro3.png', 'pro1.png'];
+
+        $occasionTiles = GiftingOccasion::where('status', 1)
+            ->orderBy('title')
+            ->limit(8)
+            ->get()
+            ->values()
+            ->map(fn($o, $i) => [
+                'title' => $o->title,
+                'img' => !empty($o->image)
+                    ? asset('storage/' . $o->image)
+                    : asset('assets/images/home/' . $fallbacks[$i % count($fallbacks)]),
+                'url' => route('products', ['occasion' => [$o->id]]),
+            ]);
+
+        // ---------- Reviews (approved, 4★ and above, featured first) ----------
+        $homeReviews = collect();
+
+        if (Setting::current()->product_reviews ?? true) {
+            $homeReviews = ProductReview::approved()
+                ->where('rating', '>=', 4)
+                ->whereNotNull('review')
+                ->with(['customer:id,name', 'product:id,name'])
+                ->orderByDesc('featured')
+                ->latest('id')
+                ->limit(8)
+                ->get()
+                ->filter(fn($r) => $r->product)          // skip reviews whose product is gone
+                ->map(fn($r) => [
+                    'stars' => $r->rating,
+                    'title' => $r->title,
+                    'text' => Str::limit(strip_tags((string) $r->review), 260),
+                    'name' => $r->customer?->name ?: 'Customer',
+                    'product' => $r->product->name,
+                    'verified' => $r->verified_purchase,
+                ])
+                ->values();
+        }
+
+        return view('front-pages.home', compact(
+            'collTabs',
+            'bestSellerTabs',
+            'newArrivalTabs',
+            'recentlyViewed',
+            'occasionTiles',
+            'homeReviews'
+        ));
     }
 
     /*
@@ -264,19 +346,32 @@ class FrontController extends Controller
 
     // best sellers by units sold, then rating (optionally limited to some categories)
     // badge: collection badge first; falls back to "Best Seller" when it has actual sales
-    private function bestSellers(array $categoryIds = [])
+    private function bestSellers(array $categoryIds = [], ?int $brandId = null, int $limit = 10)
     {
         return Product::visible()
             ->forCard()
             ->when($categoryIds, fn($q) => $q->filter(['category_ids' => $categoryIds]))
+            ->when($brandId, fn($q) => $q->filter(['brand' => $brandId]))
             ->withSum('orderDetails as sold_qty', 'quantity')
             ->orderByDesc('sold_qty')
             ->orderByDesc('avg_rating')
-            ->limit(10)
+            ->limit($limit)
             ->get()
             ->map(fn($p) => $p->toCard(
                 $p->collectionBadge() ?? ($p->sold_qty > 0 ? config('product_badges.best-seller') : null)
             ));
+    }
+
+    // newest products (optionally one brand), badge: collection badge first, else "New"
+    private function newArrivals(?int $brandId = null, int $limit = 8)
+    {
+        return Product::visible()
+            ->forCard()
+            ->when($brandId, fn($q) => $q->filter(['brand' => $brandId]))
+            ->latest('id')
+            ->limit($limit)
+            ->get()
+            ->map(fn($p) => $p->toCard($p->collectionBadge() ?? config('product_badges.new')));
     }
 
     // recently viewed: session list filled by Product::trackView() (newest first)

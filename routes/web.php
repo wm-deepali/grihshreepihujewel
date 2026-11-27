@@ -14,7 +14,6 @@ use App\Http\Controllers\Admin\{
     PaymentController,
     TaxClassController,
     RedirectController,
-    HomeReelController,
     HomePageController,
     CustomerController,
     CategoryController,
@@ -25,8 +24,6 @@ use App\Http\Controllers\Admin\{
     DashboardController,
     NdrReportController,
     AttributeController,
-    HomeStoryController,
-    HomeSliderController,
     StoredCartController,
     CreditNoteController,
     CollectionController,
@@ -38,7 +35,6 @@ use App\Http\Controllers\Admin\{
     OrderReportController,
     OrderReturnController,
     AdminSettingController,
-    HomeCampaignController,
     ReturnReasonController,
     AnnouncementController,
     CouponReportController,
@@ -200,22 +196,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // ✅ MAIN DASHBOARD
         Route::get('/home-page', [HomePageController::class, 'index'])
             ->name('home-page.index');
-
-        Route::prefix('home/sliders')->name('home.sliders.')->group(function () {
-            Route::get('/', [HomeSliderController::class, 'index'])->name('index');
-            Route::get('/create', [HomeSliderController::class, 'create'])->name('create');
-            Route::post('/store', [HomeSliderController::class, 'store'])->name('store');
-            Route::get('/edit/{id}', [HomeSliderController::class, 'edit'])->name('edit');
-            Route::put('/update/{id}', [HomeSliderController::class, 'update'])->name('update');
-            Route::delete('/delete/{id}', [HomeSliderController::class, 'destroy'])->name('destroy');
-        });
-        Route::get('campaign', [HomeCampaignController::class, 'edit'])->name('campaign.edit');
-        Route::put('campaign', [HomeCampaignController::class, 'update'])->name('campaign.update');
-
-        Route::get('story', [HomeStoryController::class, 'edit'])->name('story.edit');
-        Route::put('story', [HomeStoryController::class, 'update'])->name('story.update');
-
-        Route::resource('reels', HomeReelController::class)->except(['show']);
 
         Route::get('subscribers', [NewsletterSubscriberController::class, 'index'])->name('subscribers.index');
         Route::get('subscribers/export', [NewsletterSubscriberController::class, 'export'])->name('subscribers.export');

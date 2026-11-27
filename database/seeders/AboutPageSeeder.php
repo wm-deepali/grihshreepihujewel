@@ -46,7 +46,7 @@ class AboutPageSeeder extends Seeder
                 'fields' => [
                     'eyebrow' => 'The Archana Story',
                     'title' => "Rooted in Tradition.\nCurated for Today.",
-                    'description' => 'Archana Saree Emporium brings together timeless Indian textiles and a contemporary eye for styling, for women who appreciate quality, craftsmanship and quiet elegance.',
+                    'description' => 'Grih Shree & Pihu Jewel brings together timeless Indian textiles and a contemporary eye for styling, for women who appreciate quality, craftsmanship and quiet elegance.',
                     'description_2' => 'Every saree is chosen for the way it feels, drapes and photographs in real life, so that what arrives at your door is exactly what you imagined when you first saw it.',
                 ],
                 'images' => ['image' => 'ower1.jpeg'],
@@ -62,7 +62,7 @@ class AboutPageSeeder extends Seeder
                 'fields' => [
                     'eyebrow' => 'Who We Are',
                     'title' => 'More Than a Saree Store',
-                    'description' => 'Archana Saree Emporium is built around one simple idea: helping you find the right saree for the moments that matter. Weddings, festivities, family celebrations and the everyday occasions that deserve a little more grace.',
+                    'description' => 'Grih Shree & Pihu Jewel is built around one simple idea: helping you find the right saree for the moments that matter. Weddings, festivities, family celebrations and the everyday occasions that deserve a little more grace.',
                     'description_2' => 'We believe a saree is never just a garment. It is a feeling, a tradition passed on and a story you carry from one celebration to the next.',
                     'description_3' => 'Our work is to make that choice feel effortless, personal and beautifully unhurried.',
                     'btn_text' => 'Explore Sarees',
@@ -167,7 +167,7 @@ class AboutPageSeeder extends Seeder
             'quote' => [
                 'fields' => [
                     'title' => "Some sarees are worn for an occasion.\nThe unforgettable ones become part of the memory.",
-                    'tag' => 'Archana Saree Emporium',
+                    'tag' => 'Grih Shree & Pihu Jewel',
                 ],
                 'images' => ['image' => 'offer2.png'],
             ],
