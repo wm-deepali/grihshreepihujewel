@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\{
     DashboardController,
     NdrReportController,
     AttributeController,
+    HomeBannerController,
     StoredCartController,
     CreditNoteController,
     CollectionController,
@@ -194,8 +195,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 
         // ✅ MAIN DASHBOARD
-        Route::get('/home-page', [HomePageController::class, 'index'])
-            ->name('home-page.index');
+        Route::get('/home-page', [HomePageController::class, 'index'])->name('home-page.index');
+
+        Route::resource('banners', HomeBannerController::class)->except('show')->names('home.banners');
+        Route::post('banners/{banner}/toggle', [HomeBannerController::class, 'toggle'])->name('home.banners.toggle');
 
         Route::get('subscribers', [NewsletterSubscriberController::class, 'index'])->name('subscribers.index');
         Route::get('subscribers/export', [NewsletterSubscriberController::class, 'export'])->name('subscribers.export');

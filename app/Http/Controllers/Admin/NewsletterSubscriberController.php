@@ -22,7 +22,7 @@ class NewsletterSubscriberController extends Controller
         $totalCount = NewsletterSubscriber::count();
         $activeCount = NewsletterSubscriber::active()->count();
 
-        return view('admin.home.subscribers.index', compact('subscribers', 'totalCount', 'activeCount'));
+        return view('admin.subscribers.index', compact('subscribers', 'totalCount', 'activeCount'));
     }
 
     public function toggle($id)

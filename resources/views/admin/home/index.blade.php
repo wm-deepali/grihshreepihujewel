@@ -311,6 +311,26 @@
             <!-- Widget grid -->
             <div class="widget-grid">
 
+                <!-- Hero Banners -->
+                <div class="widget-card">
+                    <div class="widget-head">
+                        <div class="widget-icon wi-blue"><i class="fa fa-picture-o"></i></div>
+                        <div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span class="widget-num">1</span>
+                                <span class="widget-title">Hero Banners</span>
+                            </div>
+                            <span class="type-badge tb-multiple"><i class="fa fa-clone"></i> Multiple</span>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-hint)">Sliding banners at the top of the homepage:
+                        image, heading, text and buttons.</div>
+                    <div class="widget-actions">
+                        <a href="{{ route('admin.home.banners.index') }}" class="btn-manage"><i
+                                class="fa fa-pencil"></i> Manage</a>
+                    </div>
+                </div>
+
                 <!-- 1. Newsletter Subscribers -->
                 <div class="widget-card">
                     <div class="widget-head">
@@ -326,7 +346,7 @@
                     <div style="font-size:12px;color:var(--text-hint)">Emails collected from the homepage subscribe
                         form, with CSV export.</div>
                     <div class="widget-actions">
-                        <a href="{{ route('admin.home.subscribers.index') }}" class="btn-manage"><i
+                        <a href="{{ route('admin.subscribers.index') }}" class="btn-manage"><i
                                 class="fa fa-eye"></i> View</a>
                     </div>
                 </div>

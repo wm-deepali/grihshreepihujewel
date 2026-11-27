@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Tax;
-use App\Models\{Brand, Category, CategoryAttribute, Collection, GiftingOccasion, Product, Coupon};
+use App\Models\{Brand, Category, CategoryAttribute, Collection, GiftingOccasion, HomeBanner, Product, Coupon};
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -23,6 +23,40 @@ class FrontController extends Controller
                     ->filter(fn($t) => $t['items']->isNotEmpty())
             )
             ->values();
+
+        // ---------- Hero banners (static slides when none are active) ----------
+        $heroSlides = HomeBanner::active()->ordered()->get()->map(fn($b) => [
+            'eyebrow' => $b->eyebrow,
+            'title' => $b->title,
+            'desc' => $b->description,
+            'img' => $b->image_url,
+            'mobile_img' => $b->mobile_image_url,
+            'btn1' => [$b->button_1_text, $b->button_1_url],
+            'btn2' => [$b->button_2_text, $b->button_2_url],
+        ]);
+
+        if ($heroSlides->isEmpty()) {
+            $heroSlides = collect([
+                [
+                    'eyebrow' => 'Grih Shree & Pihu Jewel',
+                    'title' => "Beautiful Living.\nTimeless Adornment.",
+                    'desc' => 'Discover thoughtfully curated home essentials and beautiful jewellery for everyday moments and special occasions.',
+                    'img' => asset('assets/images/home/banner.jpg'),
+                    'mobile_img' => null,
+                    'btn1' => ['Shop Home & Living', '/products'],
+                    'btn2' => ['Explore Jewellery', '/products'],
+                ],
+                [
+                    'eyebrow' => 'The Art of Beautiful Living',
+                    'title' => "Make Every Corner\nFeel Like Home.",
+                    'desc' => 'Bring warmth, comfort and character to your spaces with beautiful bedding, handcrafted decor and everyday essentials.',
+                    'img' => asset('assets/images/home/banner2.jpg'),
+                    'mobile_img' => null,
+                    'btn1' => ['Explore Home & Living', '/products'],
+                    'btn2' => [null, null],
+                ],
+            ]);
+        }
 
         // ---------- Shop by Collection ----------
         $parents = Category::active()->parents()
@@ -77,7 +111,7 @@ class FrontController extends Controller
                 ->latest('id')
                 ->limit(8)
                 ->get()
-                ->filter(fn($r) => $r->product)          // skip reviews whose product is gone
+                ->filter(fn($r) => $r->product)
                 ->map(fn($r) => [
                     'stars' => $r->rating,
                     'title' => $r->title,
@@ -89,13 +123,18 @@ class FrontController extends Controller
                 ->values();
         }
 
+        // ---------- Shop by price ----------
+        $priceTiles = $this->priceTiles();
+
         return view('front-pages.home', compact(
+            'heroSlides',
             'collTabs',
             'bestSellerTabs',
             'newArrivalTabs',
             'recentlyViewed',
             'occasionTiles',
-            'homeReviews'
+            'homeReviews',
+            'priceTiles'
         ));
     }
 

@@ -69,76 +69,75 @@
   @endphp
 
   {{-- ===================== HERO BANNER ===================== --}}
+  @php
+    // "/products" -> full url, "https://..." stays as is, empty -> no button
+    $heroHref = fn($u) => \Illuminate\Support\Str::startsWith((string) $u, ['http://', 'https://', '#'])
+      ? $u
+      : url(ltrim((string) $u, '/'));
+  @endphp
+
   <section class="home-banner">
     <div class="swiper singleSlider">
       <div class="swiper-wrapper">
-        <div class="swiper-slide">
-          <div class="slide-img">
-            <img src="{{ asset('assets/images/home/banner.jpg') }}" alt="Beautiful living" />
-          </div>
-          <div class="container-fluid">
-            <div class="hero-grid">
-              <div class="slide-content">
-                <span class="hero-eyebrow">Grih Shree &amp; Pihu Jewel</span>
-                <h1 class="hero-title">Beautiful Living.<br />Timeless Adornment.</h1>
-                <p class="hero-desc">
-                  Discover thoughtfully curated home essentials and beautiful jewellery for everyday moments and
-                  special occasions.
-                </p>
-                <div class="hero-btns">
-                  <a href="{{ url('categories') }}" class="btn btn-white">Shop Home &amp; Living</a>
-                  <a href="{{ url('categories') }}" class="btn btn-outline-white">Explore Jewellery</a>
+        @foreach($heroSlides as $s)
+          <div class="swiper-slide">
+            <div class="slide-img">
+              <picture style="display:contents">
+                @if($s['mobile_img'])
+                  <source media="(max-width: 767px)" srcset="{{ $s['mobile_img'] }}" />
+                @endif
+                <img src="{{ $s['img'] }}" alt="{{ strip_tags(str_replace("\n", ' ', $s['title'])) }}" @if(!$loop->first)
+                loading="lazy" @endif />
+              </picture>
+            </div>
+            <div class="container-fluid">
+              <div class="hero-grid">
+                <div class="slide-content">
+                  @if($s['eyebrow'])<span class="hero-eyebrow">{{ $s['eyebrow'] }}</span>@endif
+                  <h1 class="hero-title">{!! nl2br(e($s['title'])) !!}</h1>
+                  @if($s['desc'])
+                  <p class="hero-desc">{{ $s['desc'] }}</p>@endif
+                  @if(filled($s['btn1'][0]) || filled($s['btn2'][0]))
+                    <div class="hero-btns">
+                      @if(filled($s['btn1'][0]))
+                        <a href="{{ $heroHref($s['btn1'][1] ?: '/products') }}" class="btn btn-white">{{ $s['btn1'][0] }}</a>
+                      @endif
+                      @if(filled($s['btn2'][0]))
+                        <a href="{{ $heroHref($s['btn2'][1] ?: '/products') }}"
+                          class="btn btn-outline-white">{{ $s['btn2'][0] }}</a>
+                      @endif
+                    </div>
+                  @endif
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        @endforeach
+      </div>
 
-        <div class="swiper-slide">
-          <div class="slide-img">
-            <img src="{{ asset('assets/images/home/banner2.jpg') }}" alt="Home and living" />
-            {{-- for video use this instead of img:
-            <video src="{{ asset('assets/videos/hero.mp4') }}" autoplay muted loop playsinline></video> --}}
-          </div>
+      @if($heroSlides->count() > 1)
+        <div class="slider-ui">
           <div class="container-fluid">
-            <div class="hero-grid">
-              <div class="slide-content">
-                <span class="hero-eyebrow">The Art of Beautiful Living</span>
-                <h1 class="hero-title">Make Every Corner<br />Feel Like Home.</h1>
-                <p class="hero-desc">
-                  Bring warmth, comfort and character to your spaces with beautiful bedding, handcrafted decor and
-                  everyday essentials.
-                </p>
-                <div class="hero-btns">
-                  <a href="{{ url('categories') }}" class="btn btn-white">Explore Home &amp; Living</a>
-                </div>
+            <div class="ui-row">
+              <div class="swiper-pagination"></div>
+              <div class="hero-nav">
+                <button type="button" class="hero-arrow singleSlider-prev" aria-label="Previous">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 4l-8 8 8 8" />
+                  </svg>
+                </button>
+                <button type="button" class="hero-arrow singleSlider-next" aria-label="Next">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 4l8 8-8 8" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="slider-ui">
-        <div class="container-fluid">
-          <div class="ui-row">
-            <div class="swiper-pagination"></div>
-            <div class="hero-nav">
-              <button type="button" class="hero-arrow singleSlider-prev" aria-label="Previous">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M15 4l-8 8 8 8" />
-                </svg>
-              </button>
-              <button type="button" class="hero-arrow singleSlider-next" aria-label="Next">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M9 4l8 8-8 8" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      @endif
     </div>
   </section>
 
@@ -636,7 +635,7 @@
       </div>
     </section>
   @endif
-  
+
   {{-- ===================== INSTAGRAM ===================== --}}
   <section class="home-secN">
     <div class="container">
